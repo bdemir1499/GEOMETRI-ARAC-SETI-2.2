@@ -1,3 +1,6 @@
+
+let isDrawingLasso = false;
+let lassoPoints = [];
 let drawnStrokes = [];
 window.drawnStrokes = drawnStrokes;
 let isDrawing = false;
@@ -239,6 +242,30 @@ const fillOptions = document.getElementById('fill-options');
 const fillColorBoxes = document.querySelectorAll('#fill-options .color-box');
 let currentFillColor = '#FF69B4';
 
+// --- CANLANDIR VE KES MENÜSÜ ---
+const btnSnapshotMain = document.getElementById('btn-snapshot-main');
+const snapshotOptions = document.getElementById('snapshot-options');
+const btnSnapshotBox = document.getElementById('btn-snapshot-box');
+const btnSnapshotLasso = document.getElementById('btn-snapshot-lasso');
+
+if (btnSnapshotMain) {
+    btnSnapshotMain.addEventListener('click', () => {
+        snapshotOptions.classList.toggle('hidden');
+    });
+}
+if (btnSnapshotBox) {
+    btnSnapshotBox.addEventListener('click', () => {
+        setActiveTool('snapshot'); // Senin mevcut standart kutu aracın
+        snapshotOptions.classList.add('hidden');
+    });
+}
+if (btnSnapshotLasso) {
+    btnSnapshotLasso.addEventListener('click', () => {
+        setActiveTool('lasso'); // YENİ: Serbest kesim aracımız
+        snapshotOptions.classList.add('hidden');
+    });
+}
+
 // 4. Resim ve PDF Yükleme Araçları
 
 
@@ -349,6 +376,21 @@ function redrawAllStrokes() {
 
     // 3. NESNELERİ ÇİZ (For döngüsü başlıyor)
     for (const stroke of drawnStrokes) {
+
+// --- KESİLMİŞ ALANLARI SİLEN MASKE ---
+else if (stroke.type === 'lasso-mask') {
+    ctx.save();
+    // Bu sihirli komut, çizildiği yerdeki pikselleri silip şeffaf yapar
+    ctx.globalCompositeOperation = 'destination-out'; 
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (let i = 1; i < stroke.points.length; i++) {
+        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
         
         // --- KALEM (PEN) GRAFİK TABLET DESTEKLİ ---
         if (stroke.type === 'pen') {
@@ -669,6 +711,67 @@ else if (stroke.type === 'rectangle') {
     // ---------------------------------------------------------
 
 } // <-- FONKSİYON BURADA KAPANIYOR
+
+function processLassoCut() {
+    if (lassoPoints.length < 3) return;
+
+    // 1. Çizilen alanın sınırlarını (Bounding Box) bul
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    lassoPoints.forEach(p => {
+        if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+    });
+
+    const width = maxX - minX;
+    const height = maxY - minY;
+    if (width < 10 || height < 10) return; // Çok küçükse işlem yapma
+
+    // 2. Arka planda geçici (görünmez) bir kanvas oluştur
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = width;
+    offCanvas.height = height;
+    const offCtx = offCanvas.getContext('2d');
+
+    // 3. Çizilen şekli bu kanvasa maske (clip) olarak uygula
+    offCtx.beginPath();
+    offCtx.moveTo(lassoPoints[0].x - minX, lassoPoints[0].y - minY);
+    for (let i = 1; i < lassoPoints.length; i++) {
+        offCtx.lineTo(lassoPoints[i].x - minX, lassoPoints[i].y - minY);
+    }
+    offCtx.closePath();
+    offCtx.clip();
+
+    // 4. Ana kanvastaki görüntüyü makaslanmış alanın içine kopyala
+    offCtx.drawImage(canvas, minX, minY, width, height, 0, 0, width, height);
+
+    // 5. Elde edilen parçayı resme çevir
+    const imgSrc = offCanvas.toDataURL('image/png');
+
+    // 6. *** ÖNEMLİ *** Orijinal şekli "delmek" (silmek) için maske ekle
+    drawnStrokes.push({
+        type: 'lasso-mask',
+        points: [...lassoPoints]
+    });
+
+    // 7. Kestiğimiz parçayı yeni bir "Taşınabilir Obje" olarak sahneye ekle
+    const newImgStroke = {
+        type: 'image',
+        imgData: imgSrc,
+        x: minX,
+        y: minY,
+        width: width,
+        height: height,
+        rotation: 0,
+        isBackground: false
+    };
+    
+    drawnStrokes.push(newImgStroke);
+    
+    // İşlem bitince otomatik "Taşı" aracına geç ve kestiğin parçayı seç
+    selectedItem = newImgStroke;
+    setActiveTool('move');
+    redrawAllStrokes();
+}
 
 function undoLastStroke() {
     if (drawnStrokes.length > 0) {
@@ -1366,6 +1469,13 @@ canvas.addEventListener('pointerdown', (e) => {
         lastDist = 0;
     }
 
+if (currentTool === 'lasso') {
+    isDrawingLasso = true;
+    lassoPoints = [getPointerPos(e)];
+    return;
+}
+
+
     // --- PARDUS ÇİFT SİNYAL (HAYALET FARE) ENGELLEYİCİ ---
     if (e.pointerType === 'touch') {
         // Gerçek parmak değdiyse, sistemdeki sahte fareleri sil
@@ -1658,7 +1768,25 @@ canvas.addEventListener('pointermove', (e) => {
     const pos = getPointerPos(e); 
     currentMousePos = pos;
 
+    if (currentTool === 'lasso' && isDrawingLasso) {
+    const pos = getPointerPos(e);
+    lassoPoints.push(pos);
     
+    // Kement çizgisini anlık olarak ekranda göster (Neon Yeşil)
+    redrawAllStrokes();
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+    for (let i = 1; i < lassoPoints.length; i++) {
+        ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+    }
+    ctx.strokeStyle = '#00FFCC'; 
+    ctx.setLineDash([5, 5]); 
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+    return;
+}
 
     
     // --- 1. TAŞIMA (MOVE) MANTIĞI ---
@@ -2073,6 +2201,13 @@ canvas.addEventListener('pointerup', (e) => {
         redrawAllStrokes();
         return; // app.js burada durur, tahtaya fazladan çizgi atmaz.
     }
+
+if (currentTool === 'lasso' && isDrawingLasso) {
+    isDrawingLasso = false;
+    processLassoCut(); // Çizim bitince makası çalıştır
+    lassoPoints = [];
+    return;
+}
 
     // --- B) TAŞIMA (MOVE) MANTIĞI ---
     if (currentTool === 'move' && isMoving) {

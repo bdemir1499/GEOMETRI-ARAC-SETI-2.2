@@ -125,7 +125,17 @@
         
         <button id="btn-upload" class="tool-button">Resim/Dosya(PDFKitap) Yükle</button>
         <input type="file" id="file-input" accept="image/*, application/pdf" style="display: none;">
-        <button id="btn-animate" class="tool-button">Canlandır</button>
+
+
+        <div class="tool-group">
+            <button id="btn-snapshot-main" class="tool-button" title="Kopyala / Kes">
+                Canlandır ✂️
+            </button>
+            <div id="snapshot-options" class="tool-options hidden">
+                <button id="btn-snapshot-box" class="tool-button-sub">Kutu (Standart)</button>
+                <button id="btn-snapshot-lasso" class="tool-button-sub">Serbest Kes</button>
+            </div>
+        </div>
 
         
         <div id="pdf-controls" class="tool-options-right hidden" style="flex-direction: column; align-items: center; margin-top: 10px; padding: 5px; width: 100%;">
