@@ -368,29 +368,43 @@ function redrawAllStrokes() {
     ctx.setTransform(1, 0, 0, 1, 0, 0); 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // SADECE BU SATIRI EKLE:
+    // GÜVENLİK KİLİDİ
     if (!window.drawnStrokes || window.drawnStrokes.length === 0) return;
+
+    // --- BÜYÜK ÇÖZÜM: KATMAN (Z-INDEX) KORUMASI ---
+    // Arka planı (sayfayı veya pdf'i) her zaman zorla en alta gönderir.
+    // Böylece kopyalar, makaslar ve çizimler ASLA sayfanın altında kalmaz!
+    window.drawnStrokes.sort((a, b) => {
+        if (a.isBackground && !b.isBackground) return -1;
+        if (!a.isBackground && b.isBackground) return 1;
+        return 0;
+    });
 
     ctx.save();
     // (Buradaki translate ve scale satırlarını tamamen sildik. Zemin artık sabit!)
+for (const stroke of drawnStrokes) {
 
-    // 3. NESNELERİ ÇİZ (For döngüsü başlıyor)
-    for (const stroke of drawnStrokes) {
-
-// --- KESİLMİŞ ALANLARI SİLEN MASKE ---
-else if (stroke.type === 'lasso-mask') {
-    ctx.save();
-    // Bu sihirli komut, çizildiği yerdeki pikselleri silip şeffaf yapar
-    ctx.globalCompositeOperation = 'destination-out'; 
-    ctx.beginPath();
-    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-    for (let i = 1; i < stroke.points.length; i++) {
-        ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-}
+  // --- AKILLI BOYAMA MASKESİ ---
+        if (stroke.type === 'lasso-mask') {
+            ctx.save();
+            
+            // Lazerle şeffaf delme iptal, akıllı tarayıcının bulduğu renkle boyama devrede!
+            ctx.fillStyle = stroke.fillColor || "white"; 
+            
+            ctx.beginPath();
+            if (stroke.points && stroke.points.length > 0) {
+                ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                for (let i = 1; i < stroke.points.length; i++) {
+                    ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                }
+            }
+            ctx.closePath();
+            
+            // Kestiğin tam o noktayı, sensörlerin bulduğu sarı renge pürüzsüzce boyar
+            ctx.fill(); 
+            ctx.restore();
+            continue; 
+        }
         
         // --- KALEM (PEN) GRAFİK TABLET DESTEKLİ ---
         if (stroke.type === 'pen') {
@@ -424,6 +438,9 @@ else if (stroke.type === 'lasso-mask') {
 
        // --- RESİM / PDF VE CANLANDIR (SNAPSHOT) KOPYASI ---
         else if (stroke.type === 'image') {
+
+// YENİ ŞART: Kestiğimiz kopya değilse, kesinlikle ana zemindir. Sona sakla!
+if (stroke.isBackground !== false) continue;
             let imgToDraw = null;
 
             // 1. KAYNAK KONTROLÜ (Kayıp olan Canlandır kodunu geri ekledik)
@@ -692,6 +709,33 @@ else if (stroke.type === 'rectangle') {
 
     ctx.restore();
 
+// === EKLENECEK YENİ BÖLÜM: SAYFAYI EN ARKAYA ÇİZ ===
+    // Deliğin arkasından görünmesi için PDF'i her şeyin altına (destination-over) çiziyoruz
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over'; 
+    for (const stroke of drawnStrokes) {
+    if (stroke.type === 'image' && stroke.isBackground !== false) {
+            let imgToDraw = null;
+            if (stroke.img && stroke.img instanceof HTMLImageElement) {
+                imgToDraw = stroke.img; 
+            } else if (stroke.imgObj) {
+                imgToDraw = stroke.imgObj; 
+            }
+
+            if (imgToDraw && (imgToDraw.complete || imgToDraw.readyState >= 2)) {
+                ctx.save();
+                const centerX = stroke.x + (stroke.width / 2);
+                const centerY = stroke.y + (stroke.height / 2);
+                ctx.translate(centerX, centerY);
+                ctx.rotate((stroke.rotation || 0) * Math.PI / 180);
+                ctx.drawImage(imgToDraw, -stroke.width / 2, -stroke.height / 2, stroke.width, stroke.height);
+                ctx.restore();
+            }
+        }
+    }
+    ctx.restore();
+    // ====================================================
+
     // --- YENİ EKLENEN KISIM: OTOMATİK HARF SENKRONİZASYONU ---
     // Ekranda o an var olan en yüksek harfi bulur
     let maxCode = 64; 
@@ -715,7 +759,6 @@ else if (stroke.type === 'rectangle') {
 function processLassoCut() {
     if (lassoPoints.length < 3) return;
 
-    // 1. Çizilen alanın sınırlarını (Bounding Box) bul
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     lassoPoints.forEach(p => {
         if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
@@ -724,15 +767,13 @@ function processLassoCut() {
 
     const width = maxX - minX;
     const height = maxY - minY;
-    if (width < 10 || height < 10) return; // Çok küçükse işlem yapma
+    if (width < 5 || height < 5) return; 
 
-    // 2. Arka planda geçici (görünmez) bir kanvas oluştur
     const offCanvas = document.createElement('canvas');
     offCanvas.width = width;
     offCanvas.height = height;
     const offCtx = offCanvas.getContext('2d');
 
-    // 3. Çizilen şekli bu kanvasa maske (clip) olarak uygula
     offCtx.beginPath();
     offCtx.moveTo(lassoPoints[0].x - minX, lassoPoints[0].y - minY);
     for (let i = 1; i < lassoPoints.length; i++) {
@@ -740,20 +781,55 @@ function processLassoCut() {
     }
     offCtx.closePath();
     offCtx.clip();
-
-    // 4. Ana kanvastaki görüntüyü makaslanmış alanın içine kopyala
     offCtx.drawImage(canvas, minX, minY, width, height, 0, 0, width, height);
-
-    // 5. Elde edilen parçayı resme çevir
     const imgSrc = offCanvas.toDataURL('image/png');
 
-    // 6. *** ÖNEMLİ *** Orijinal şekli "delmek" (silmek) için maske ekle
+    // =========================================================
+    // --- 10 MİLYON DOLARLIK AKILLI ZEMİN TARAYICI ---
+    // =========================================================
+    let smartColor = "white"; // Eğer hiçbir şey bulamazsa sayfa rengi beyaz olur
+    try {
+        const cX = minX + width / 2;
+        const cY = minY + height / 2;
+        // Kestiğin şeklin kendi rengini oku (Örn: Pembe)
+        const centerPixel = ctx.getImageData(cX, cY, 1, 1).data;
+
+        // Dışarıya 15 piksel taşan 4 adet sensör noktası belirliyoruz
+        const margin = 15;
+        const scanPoints = [
+            { x: minX - margin, y: cY }, // Sol dış
+            { x: maxX + margin, y: cY }, // Sağ dış
+            { x: cX, y: minY - margin }, // Üst dış
+            { x: cX, y: maxY + margin }  // Alt dış
+        ];
+
+        for (let p of scanPoints) {
+            if (p.x >= 0 && p.y >= 0 && p.x < canvas.width && p.y < canvas.height) {
+                const px = ctx.getImageData(p.x, p.y, 1, 1).data;
+                if (px[3] > 0) { // Şeffaf değilse
+                    // Dış piksel, kestiğimiz parçanın renginden FARKLI mı diye bak:
+                    const diff = Math.abs(px[0] - centerPixel[0]) + Math.abs(px[1] - centerPixel[1]) + Math.abs(px[2] - centerPixel[2]);
+                    if (diff > 50) { 
+                        // Renk pembeye benzemiyorsa zemin rengi budur (Sarıyı buldu!)
+                        smartColor = `rgb(${px[0]}, ${px[1]}, ${px[2]})`;
+                        break; // Zemin rengini bulunca taramayı durdur
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Akıllı tarayıcı CORS engeline takıldı veya okuyamadı.", e);
+    }
+    // =========================================================
+
+    // 1. ZEMİN RENGİYLE YAMA YAPAN MASKE EKLENİYOR
     drawnStrokes.push({
         type: 'lasso-mask',
-        points: [...lassoPoints]
+        points: lassoPoints.map(p => ({ x: p.x, y: p.y })),
+        fillColor: smartColor // Bulduğumuz sarı rengi maskenin içine hapsettik!
     });
 
-    // 7. Kestiğimiz parçayı yeni bir "Taşınabilir Obje" olarak sahneye ekle
+    // 2. KESTİĞİN PARÇAYI (KOPYAYI) LİSTEYE EKLE
     const newImgStroke = {
         type: 'image',
         imgData: imgSrc,
@@ -762,16 +838,25 @@ function processLassoCut() {
         width: width,
         height: height,
         rotation: 0,
-        isBackground: false
+        isBackground: false,
+        imgObj: null 
     };
     
+    const tempImg = new Image();
+    tempImg.src = imgSrc;
+    tempImg.onload = () => {
+        newImgStroke.imgObj = tempImg;
+        if (window.redrawAllStrokes) window.redrawAllStrokes();
+    };
     drawnStrokes.push(newImgStroke);
     
-    // İşlem bitince otomatik "Taşı" aracına geç ve kestiğin parçayı seç
     selectedItem = newImgStroke;
-    setActiveTool('move');
-    redrawAllStrokes();
+    if (typeof setActiveTool === 'function') setActiveTool('move');
+    else currentTool = 'move';
+    
+    if (window.redrawAllStrokes) window.redrawAllStrokes();
 }
+
 
 function undoLastStroke() {
     if (drawnStrokes.length > 0) {
@@ -798,6 +883,8 @@ function clearAllStrokes() {
     
     redrawAllStrokes();
 }
+
+
 
 function findHit(pos) {
     for (let i = drawnStrokes.length - 1; i >= 0; i--) {
@@ -1469,28 +1556,32 @@ canvas.addEventListener('pointerdown', (e) => {
         lastDist = 0;
     }
 
-if (currentTool === 'lasso') {
-    isDrawingLasso = true;
-    lassoPoints = [getPointerPos(e)];
-    return;
-}
-
-
-    // --- PARDUS ÇİFT SİNYAL (HAYALET FARE) ENGELLEYİCİ ---
-    if (e.pointerType === 'touch') {
-        // Gerçek parmak değdiyse, sistemdeki sahte fareleri sil
-        for (let key of pointers.keys()) {
-            if (pointers.get(key).pointerType === 'mouse') pointers.delete(key);
+// --- YENİ ÇOKGEN KESME ARACI (Tıkla-Tıkla) ---
+    if (currentTool === 'lasso') {
+        const pos = getPointerPos(e);
+        
+        if (!isDrawingLasso) {
+            // İlk tıklama: Kesime başla
+            isDrawingLasso = true;
+            lassoPoints = [pos];
+        } else {
+            // Sonraki tıklamalar: Başlangıç noktasına yakınsa KESİMİ BİTİR
+            const startPoint = lassoPoints[0];
+            const dist = Math.hypot(pos.x - startPoint.x, pos.y - startPoint.y);
+            
+            if (lassoPoints.length > 2 && dist < 20) {
+                isDrawingLasso = false;
+                processLassoCut(); // Kesimi yap
+                lassoPoints = [];  // Hafızayı temizle
+            } else {
+                // Değilse yeni köşe ekle
+                lassoPoints.push(pos);
+            }
         }
-    } else if (e.pointerType === 'mouse') {
-        // Fare sinyali geldiyse ama ekranda parmak varsa, fareyi reddet!
-        let hasTouch = false;
-        for (let p of pointers.values()) {
-            if (p.pointerType === 'touch' || p.pointerType === 'pen') hasTouch = true;
-        }
-        if (hasTouch) return; // İşlemi iptal et, hayalet fareyi içeri alma
+        redrawAllStrokes();
+        return;
     }
-    // ----------------------------------------------------
+
 
     // --- BUNU EKLE: Parmağı ekrana değdiği an kaydet ---
     pointers.set(e.pointerId, e); 
@@ -1768,25 +1859,35 @@ canvas.addEventListener('pointermove', (e) => {
     const pos = getPointerPos(e); 
     currentMousePos = pos;
 
+    // --- ÇOKGEN KESME ÖNİZLEMESİ ---
     if (currentTool === 'lasso' && isDrawingLasso) {
-    const pos = getPointerPos(e);
-    lassoPoints.push(pos);
-    
-    // Kement çizgisini anlık olarak ekranda göster (Neon Yeşil)
-    redrawAllStrokes();
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
-    for (let i = 1; i < lassoPoints.length; i++) {
-        ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+        const pos = getPointerPos(e);
+        redrawAllStrokes(); // Ekranı tazele
+        
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+        
+        // Önceki köşeleri çiz
+        for (let i = 1; i < lassoPoints.length; i++) {
+            ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+        }
+        
+        // Fare imlecine giden canlı çizgiyi çiz
+        ctx.lineTo(pos.x, pos.y); 
+        ctx.strokeStyle = '#00FFCC'; 
+        ctx.setLineDash([5, 5]); 
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Kapatmak için nereye tıklanacağını gösteren YEŞİL HEDEF DAİRESİ
+        ctx.beginPath();
+        ctx.arc(lassoPoints[0].x, lassoPoints[0].y, 15, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 255, 204, 0.4)';
+        ctx.fill();
+        ctx.restore();
+        return;
     }
-    ctx.strokeStyle = '#00FFCC'; 
-    ctx.setLineDash([5, 5]); 
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
-    return;
-}
 
     
     // --- 1. TAŞIMA (MOVE) MANTIĞI ---
@@ -2202,12 +2303,6 @@ canvas.addEventListener('pointerup', (e) => {
         return; // app.js burada durur, tahtaya fazladan çizgi atmaz.
     }
 
-if (currentTool === 'lasso' && isDrawingLasso) {
-    isDrawingLasso = false;
-    processLassoCut(); // Çizim bitince makası çalıştır
-    lassoPoints = [];
-    return;
-}
 
     // --- B) TAŞIMA (MOVE) MANTIĞI ---
     if (currentTool === 'move' && isMoving) {
