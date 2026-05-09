@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V7 (İNSANCIL ÇEMBER TOLERANSI) ---
+// --- AKILLI ŞEKİL TANIMA V8 (KALP VE YILDIZ DESTEKLİ NİHAİ SÜRÜM) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3410,10 +3410,14 @@ function akilliSekilTani(stroke) {
     const w = maxX - minX; 
     const h = maxY - minY;
     const maxBoyut = Math.max(w, h);
+    let cx = minX + w / 2;
+    let cy = minY + h / 2;
 
     if (maxBoyut < 40) return null;
     const kutuCevresi = 2 * (w + h);
-    if (totalDistance > kutuCevresi * 1.25) return null; 
+    
+    // Yıldız çizerken git-gel çok olduğu için yıldızın karmaşıklık sınırını biraz daha yüksek tutuyoruz
+    if (totalDistance > kutuCevresi * 1.8) return null; 
 
     // 1. DÜZ ÇİZGİ TESPİTİ
     if (directDistance > 60 && (totalDistance / directDistance) < 1.10) {
@@ -3429,10 +3433,7 @@ function akilliSekilTani(stroke) {
         let leftMinY = Infinity, leftMaxY = -Infinity;
         let rightMinY = Infinity, rightMaxY = -Infinity;
 
-        // Köşe analizleri için (Çember vs Kare ayrımı)
         let distTL = Infinity, distTR = Infinity, distBL = Infinity, distBR = Infinity;
-        let cx = minX + w / 2;
-        let cy = minY + h / 2;
         let totalR = 0;
 
         pts.forEach(p => {
@@ -3485,20 +3486,76 @@ function akilliSekilTani(stroke) {
         }
 
         // ==========================================================
-        // B. ÇEMBER / ELİPS (Çift Doğrulamalı ve Toleranslı)
+        // B. KALP (HEART) TESPİTİ
         // ==========================================================
+        let bottomPoint = pts.reduce((max, p) => p.y > max.y ? p : max, pts[0]);
+        let topLobePoints = pts.filter(p => Math.abs(p.x - cx) > w * 0.15 && p.y < cy);
+        let midDipPoints = pts.filter(p => Math.abs(p.x - cx) < w * 0.15 && p.y < cy);
+        
+        if (topLobePoints.length > 0 && midDipPoints.length > 0) {
+            let highestLobe = topLobePoints.reduce((min, p) => p.y < min.y ? p : min, topLobePoints[0]);
+            let dipPoint = midDipPoints.reduce((max, p) => p.y > max.y ? p : max, midDipPoints[0]);
+            
+            // Üstteki orta çukur, loblardan aşağıdaysa ve alt uç ortaya yakınsa bu KALP'tir!
+            if (dipPoint.y > highestLobe.y + h * 0.10 && Math.abs(bottomPoint.x - cx) < w * 0.25) {
+                const rawHeart = [];
+                for (let t = 0; t <= Math.PI * 2; t += 0.1) {
+                    rawHeart.push({
+                        x: 16 * Math.pow(Math.sin(t), 3),
+                        y: -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t))
+                    });
+                }
+                // Kalbi çizdiğin kutunun içine sığdırıyoruz
+                let rMinX = Infinity, rMaxX = -Infinity, rMinY = Infinity, rMaxY = -Infinity;
+                rawHeart.forEach(p => {
+                    if (p.x < rMinX) rMinX = p.x; if (p.x > rMaxX) rMaxX = p.x;
+                    if (p.y < rMinY) rMinY = p.y; if (p.y > rMaxY) rMaxY = p.y;
+                });
+                const heartPath = rawHeart.map(p => ({
+                    x: minX + ((p.x - rMinX) / (rMaxX - rMinX)) * w,
+                    y: minY + ((p.y - rMinY) / (rMaxY - rMinY)) * h
+                }));
+                heartPath.push(heartPath[0]);
+                // Kalemi değiştirmeden kusursuz vektörü fırlat!
+                return { type: 'pen', path: heartPath, color: col, baseWidth: wid, width: wid };
+            }
+        }
+
+        // ==========================================================
+        // C. YILDIZ (STAR) TESPİTİ
+        // ==========================================================
+        let keskinDonusSayisi = 0;
+        for (let i = 5; i < pts.length - 5; i += 3) {
+            let a1 = Math.atan2(pts[i].y - pts[i-5].y, pts[i].x - pts[i-5].x);
+            let a2 = Math.atan2(pts[i+5].y - pts[i].y, pts[i+5].x - pts[i].x);
+            let diff = Math.abs(a2 - a1);
+            if (diff > Math.PI) diff = 2 * Math.PI - diff;
+            if (diff > 1.0) keskinDonusSayisi++; // Yaklaşık 60 dereceden keskin dönüş
+        }
+        
+        // Kare veya üçgende en fazla 3-4 keskin dönüş olur, Yıldızda ise çok daha fazladır.
+        if (keskinDonusSayisi > 5 && Math.abs(w - h) < maxBoyut * 0.5) {
+            const starPath = [];
+            for (let i = 0; i < 11; i++) {
+                let r = i % 2 === 0 ? w/2 : w/4;
+                let ang = (Math.PI * 2 * i / 10) - Math.PI / 2;
+                starPath.push({ x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r });
+            }
+            return { type: 'pen', path: starPath, color: col, baseWidth: wid, width: wid };
+        }
+
+        // D. ÇEMBER / ELİPS 
         let avgR = totalR / pts.length;
         let sapma = 0;
         pts.forEach(p => { sapma += Math.abs(Math.hypot(p.x - cx, p.y - cy) - avgR); });
         let sapmaOrani = sapma / (pts.length * avgR); 
         const avgCornerDist = (distTL + distTR + distBL + distBR) / 4;
 
-        // Toleransı Artırdık: Artık köşeler %10 boşsa ve sapma %22'nin altındaysa (el titremesini affeder)
         if (Math.abs(w - h) < (maxBoyut * 0.5) && avgCornerDist > (maxBoyut * 0.10) && sapmaOrani < 0.22) {
             return { type: 'arc', cx: cx, cy: cy, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
         }
         
-        // C. YAMUK / TRAPEZOİD
+        // E. YAMUK / TRAPEZOİD
         if ((topW < bottomW * 0.85 && topW >= bottomW * 0.45) || (bottomW < topW * 0.85 && bottomW >= topW * 0.45)) {
             const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
             return [
@@ -3509,7 +3566,7 @@ function akilliSekilTani(stroke) {
             ];
         }
 
-        // D. DİKDÖRTGEN / KARE 
+        // F. DİKDÖRTGEN / KARE 
         return { type: 'rectangle', x: minX, y: minY, width: w, height: h, rotation: 0, color: col, showEdgeLabels: false };
     }
     
