@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V3 (ÜÇGEN ÖNCELİKLİ KUSURSUZ ALGORİTMA) ---
+// --- AKILLI ŞEKİL TANIMA V4 (YAZI VE KARALAMA KORUMALI) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3402,12 +3402,13 @@ function akilliSekilTani(stroke) {
     for (let i = 1; i < pts.length; i++) totalDistance += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
 
     // 1. DÜZ ÇİZGİ
+    // (Yazı yazarken yatayda ilerlesek bile totalDistance çok yüksek çıkar, yazılar düz çizgiye dönüşmez)
     if (directDistance > 40 && (totalDistance / directDistance) < 1.15) {
         return { type: 'straightLine', p1: start, p2: end, color: stroke.color, width: stroke.baseWidth || 3 };
     }
 
-    // 2. KAPALI ŞEKİLLER
-    if (directDistance < 50) {
+    // 2. KAPALI ŞEKİLLER (Üçgen, Kare, Çember vb.)
+    if (directDistance < 60) {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         pts.forEach(p => {
             if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
@@ -3415,13 +3416,24 @@ function akilliSekilTani(stroke) {
         });
         
         const w = maxX - minX; const h = maxY - minY;
-        if (w < 20 || h < 20) return null;
+        
+        // ==========================================================
+        // --- YENİ: YAZI VE KARALAMA KALKANI ---
+        // ==========================================================
+        // Kural 1: Harfler genelde küçüktür. 30 pikselden dar/kısaysa normal yazı olarak bırak.
+        if (w < 30 || h < 30) return null; 
+
+        // Kural 2: Karmaşıklık (Git-Gel) Filtresi. 
+        // Bir geometrik şeklin çizgisi, onu saran kutunun çevresine yakındır. 
+        // Eğer kalem içeride çok dolaştıysa (Yani uzunluk çevreyi 1.5 kat aşıyorsa) bu yazıdır!
+        const kutuCevresi = 2 * (w + h);
+        if (totalDistance > kutuCevresi * 1.5) return null; 
+        // ==========================================================
 
         // --- ÖNCE ÜÇGEN VE YAMUK İÇİN GENİŞLİK ANALİZİ ---
         let topMinX = Infinity, topMaxX = -Infinity;
         let bottomMinX = Infinity, bottomMaxX = -Infinity;
 
-        // Üst %35 ve Alt %35'i tara (Üçgeni daha net yakalamak için)
         pts.forEach(p => {
             if (p.y < minY + h * 0.35) { if (p.x < topMinX) topMinX = p.x; if (p.x > topMaxX) topMaxX = p.x; }
             if (p.y > maxY - h * 0.35) { if (p.x < bottomMinX) bottomMinX = p.x; if (p.x > bottomMaxX) bottomMaxX = p.x; }
@@ -3441,12 +3453,12 @@ function akilliSekilTani(stroke) {
             return c;
         };
 
-        // A. ÜÇGEN (Üst taraf veya alt taraf çok darsa - İLK BUNA BAK)
+        // A. ÜÇGEN
         if (topW < bottomW * 0.45 || bottomW < topW * 0.45) {
             const isUp = topW < bottomW;
-            const p1 = { x: (topMinX + topMaxX) / 2, y: minY }; // Tepe noktası
-            const p2 = { x: minX, y: maxY }; // Sol alt
-            const p3 = { x: maxX, y: maxY }; // Sağ alt
+            const p1 = { x: (topMinX + topMaxX) / 2, y: minY }; 
+            const p2 = { x: minX, y: maxY }; 
+            const p3 = { x: maxX, y: maxY }; 
 
             const l1 = getChar(), l2 = getChar(), l3 = getChar();
             
@@ -3466,7 +3478,7 @@ function akilliSekilTani(stroke) {
             }
         }
 
-        // B. ÇEMBER / ELİPS (Eğer üçgen DEĞİLSE ve köşeler boşsa)
+        // B. ÇEMBER / ELİPS
         let distTL = Infinity, distTR = Infinity, distBL = Infinity, distBR = Infinity;
         pts.forEach(p => {
             const dTL = Math.hypot(p.x - minX, p.y - minY); if (dTL < distTL) distTL = dTL;
