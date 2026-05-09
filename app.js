@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V4 (YAZI VE KARALAMA KORUMALI) ---
+// --- AKILLI ŞEKİL TANIMA V5 (ASKERİ DÜZEY YAZI/HARF KALKANI) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3401,36 +3401,37 @@ function akilliSekilTani(stroke) {
     let totalDistance = 0;
     for (let i = 1; i < pts.length; i++) totalDistance += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
 
-    // 1. DÜZ ÇİZGİ
-    // (Yazı yazarken yatayda ilerlesek bile totalDistance çok yüksek çıkar, yazılar düz çizgiye dönüşmez)
-    if (directDistance > 40 && (totalDistance / directDistance) < 1.15) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    pts.forEach(p => {
+        if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+    });
+    
+    const w = maxX - minX; 
+    const h = maxY - minY;
+    const maxBoyut = Math.max(w, h);
+
+    // KURAL 1: Çok küçük karalamaları ve normal boydaki harfleri tamamen yoksay (40px altı)
+    if (maxBoyut < 40) return null;
+
+    // KURAL 2: Karmaşıklık (Git-gel) Filtresi. 
+    // B, P, R, S gibi karmaşık harfleri engeller. Çizgi uzunluğu, hayali kutunun çevresini %25'ten fazla aşamaz.
+    const kutuCevresi = 2 * (w + h);
+    if (totalDistance > kutuCevresi * 1.25) return null; 
+
+    // 1. DÜZ ÇİZGİ TESPİTİ (I, l ve tire harflerini engellemek için çok sıkılaştırıldı)
+    // En az 60px uzunluğunda olmalı ve el titremesi %10'u geçmemeli.
+    if (directDistance > 60 && (totalDistance / directDistance) < 1.10) {
         return { type: 'straightLine', p1: start, p2: end, color: stroke.color, width: stroke.baseWidth || 3 };
     }
 
-    // 2. KAPALI ŞEKİLLER (Üçgen, Kare, Çember vb.)
-    if (directDistance < 60) {
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        pts.forEach(p => {
-            if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
-            if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
-        });
-        
-        const w = maxX - minX; const h = maxY - minY;
-        
-        // ==========================================================
-        // --- YENİ: YAZI VE KARALAMA KALKANI ---
-        // ==========================================================
-        // Kural 1: Harfler genelde küçüktür. 30 pikselden dar/kısaysa normal yazı olarak bırak.
-        if (w < 30 || h < 30) return null; 
+    // ==========================================================
+    // KURAL 3: KESİN KAPANMA KONTROLÜ (V, U, C gibi harfleri engeller)
+    // Başlangıç ve bitiş arasındaki boşluk, şeklin kendi boyutunun %25'inden küçük olmalı!
+    // ==========================================================
+    const tamKapaliMi = directDistance < (maxBoyut * 0.25) && directDistance < 40;
 
-        // Kural 2: Karmaşıklık (Git-Gel) Filtresi. 
-        // Bir geometrik şeklin çizgisi, onu saran kutunun çevresine yakındır. 
-        // Eğer kalem içeride çok dolaştıysa (Yani uzunluk çevreyi 1.5 kat aşıyorsa) bu yazıdır!
-        const kutuCevresi = 2 * (w + h);
-        if (totalDistance > kutuCevresi * 1.5) return null; 
-        // ==========================================================
-
-        // --- ÖNCE ÜÇGEN VE YAMUK İÇİN GENİŞLİK ANALİZİ ---
+    if (tamKapaliMi) {
         let topMinX = Infinity, topMaxX = -Infinity;
         let bottomMinX = Infinity, bottomMaxX = -Infinity;
 
@@ -3454,7 +3455,7 @@ function akilliSekilTani(stroke) {
         };
 
         // A. ÜÇGEN
-        if (topW < bottomW * 0.45 || bottomW < topW * 0.45) {
+        if (topW < bottomW * 0.40 || bottomW < topW * 0.40) {
             const isUp = topW < bottomW;
             const p1 = { x: (topMinX + topMaxX) / 2, y: minY }; 
             const p2 = { x: minX, y: maxY }; 
@@ -3488,12 +3489,12 @@ function akilliSekilTani(stroke) {
         });
         const avgCornerDist = (distTL + distTR + distBL + distBR) / 4;
 
-        if (Math.abs(w - h) < (w * 0.4) && avgCornerDist > (w * 0.15)) {
+        if (Math.abs(w - h) < (w * 0.5) && avgCornerDist > (maxBoyut * 0.15)) {
             return { type: 'arc', cx: minX + w/2, cy: minY + h/2, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
         }
         
         // C. YAMUK / TRAPEZOİD
-        if ((topW < bottomW * 0.85 && topW >= bottomW * 0.45) || (bottomW < topW * 0.85 && bottomW >= topW * 0.45)) {
+        if ((topW < bottomW * 0.85 && topW >= bottomW * 0.40) || (bottomW < topW * 0.85 && bottomW >= topW * 0.40)) {
             const pTL = { x: topMinX, y: minY }; const pTR = { x: topMaxX, y: minY };
             const pBL = { x: minX, y: maxY }; const pBR = { x: maxX, y: maxY };
             const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
@@ -3508,5 +3509,6 @@ function akilliSekilTani(stroke) {
         // D. DİKDÖRTGEN / KARE 
         return { type: 'rectangle', x: minX, y: minY, width: w, height: h, rotation: 0, color: col, showEdgeLabels: false };
     }
+    
     return null; 
 }
