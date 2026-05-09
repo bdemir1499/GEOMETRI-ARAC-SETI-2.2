@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V6 (YARIÇAP SAPMALI KUSURSUZ ÜÇGEN/ÇEMBER AYRIMI) ---
+// --- AKILLI ŞEKİL TANIMA V7 (İNSANCIL ÇEMBER TOLERANSI) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3411,7 +3411,6 @@ function akilliSekilTani(stroke) {
     const h = maxY - minY;
     const maxBoyut = Math.max(w, h);
 
-    // Küçük harfleri ve karalamaları engelle
     if (maxBoyut < 40) return null;
     const kutuCevresi = 2 * (w + h);
     if (totalDistance > kutuCevresi * 1.25) return null; 
@@ -3421,7 +3420,7 @@ function akilliSekilTani(stroke) {
         return { type: 'straightLine', p1: start, p2: end, color: stroke.color, width: stroke.baseWidth || 3 };
     }
 
-    // 2. KAPALI ŞEKİLLER (Tam Kapanma Kontrolü)
+    // 2. KAPALI ŞEKİLLER
     const tamKapaliMi = directDistance < (maxBoyut * 0.25) && directDistance < 40;
 
     if (tamKapaliMi) {
@@ -3430,13 +3429,24 @@ function akilliSekilTani(stroke) {
         let leftMinY = Infinity, leftMaxY = -Infinity;
         let rightMinY = Infinity, rightMaxY = -Infinity;
 
+        // Köşe analizleri için (Çember vs Kare ayrımı)
+        let distTL = Infinity, distTR = Infinity, distBL = Infinity, distBR = Infinity;
+        let cx = minX + w / 2;
+        let cy = minY + h / 2;
+        let totalR = 0;
+
         pts.forEach(p => {
-            // Yukarı-Aşağı Analizi
             if (p.y < minY + h * 0.35) { if (p.x < topMinX) topMinX = p.x; if (p.x > topMaxX) topMaxX = p.x; }
             if (p.y > maxY - h * 0.35) { if (p.x < bottomMinX) bottomMinX = p.x; if (p.x > bottomMaxX) bottomMaxX = p.x; }
-            // Sağa-Sola Analizi (YENİ)
             if (p.x < minX + w * 0.35) { if (p.y < leftMinY) leftMinY = p.y; if (p.y > leftMaxY) leftMaxY = p.y; }
             if (p.x > maxX - w * 0.35) { if (p.y < rightMinY) rightMinY = p.y; if (p.y > rightMaxY) rightMaxY = p.y; }
+
+            totalR += Math.hypot(p.x - cx, p.y - cy);
+            
+            const dTL = Math.hypot(p.x - minX, p.y - minY); if (dTL < distTL) distTL = dTL;
+            const dTR = Math.hypot(p.x - maxX, p.y - minY); if (dTR < distTR) distTR = dTR;
+            const dBL = Math.hypot(p.x - minX, p.y - maxY); if (dBL < distBL) distBL = dBL;
+            const dBR = Math.hypot(p.x - maxX, p.y - maxY); if (dBR < distBR) distBR = dBR;
         });
 
         let topW = Math.max(1, topMaxX - topMinX);
@@ -3464,36 +3474,27 @@ function akilliSekilTani(stroke) {
             ];
         };
 
-        // A. ÜÇGEN TESPİTİ (Artık 4 Yöne Bakan Üçgenleri Tanır)
-        // A.1: Yukarı veya Aşağı Bakan
+        // A. ÜÇGEN
         if (topW < bottomW * 0.45 || bottomW < topW * 0.45) {
-            const isUp = topW < bottomW;
-            if (isUp) return createTriangle({ x: (topMinX + topMaxX) / 2, y: minY }, { x: minX, y: maxY }, { x: maxX, y: maxY });
+            if (topW < bottomW) return createTriangle({ x: (topMinX + topMaxX) / 2, y: minY }, { x: minX, y: maxY }, { x: maxX, y: maxY });
             else return createTriangle({ x: minX, y: minY }, { x: maxX, y: minY }, { x: (bottomMinX + bottomMaxX) / 2, y: maxY });
         }
-        // A.2: Sola veya Sağa Bakan (YENİ)
         if (leftH < rightH * 0.45 || rightH < leftH * 0.45) {
-            const isLeft = leftH < rightH;
-            if (isLeft) return createTriangle({ x: minX, y: (leftMinY + leftMaxY) / 2 }, { x: maxX, y: minY }, { x: maxX, y: maxY });
+            if (leftH < rightH) return createTriangle({ x: minX, y: (leftMinY + leftMaxY) / 2 }, { x: maxX, y: minY }, { x: maxX, y: maxY });
             else return createTriangle({ x: maxX, y: (rightMinY + rightMaxY) / 2 }, { x: minX, y: minY }, { x: minX, y: maxY });
         }
 
         // ==========================================================
-        // B. ÇEMBER / ELİPS (Yarıçap Sapması ile Kusursuz Tespit)
+        // B. ÇEMBER / ELİPS (Çift Doğrulamalı ve Toleranslı)
         // ==========================================================
-        let cx = minX + w / 2;
-        let cy = minY + h / 2;
-        let totalR = 0;
-        pts.forEach(p => { totalR += Math.hypot(p.x - cx, p.y - cy); });
         let avgR = totalR / pts.length;
-        
         let sapma = 0;
         pts.forEach(p => { sapma += Math.abs(Math.hypot(p.x - cx, p.y - cy) - avgR); });
         let sapmaOrani = sapma / (pts.length * avgR); 
+        const avgCornerDist = (distTL + distTR + distBL + distBR) / 4;
 
-        // Kusursuz çemberde bu sapma < 0.10'dur. Üçgen veya karede çok daha yüksektir (0.25+)
-        // Bu sayede çember, asla bir üçgeni çalmaz!
-        if (Math.abs(w - h) < (maxBoyut * 0.4) && sapmaOrani < 0.12) {
+        // Toleransı Artırdık: Artık köşeler %10 boşsa ve sapma %22'nin altındaysa (el titremesini affeder)
+        if (Math.abs(w - h) < (maxBoyut * 0.5) && avgCornerDist > (maxBoyut * 0.10) && sapmaOrani < 0.22) {
             return { type: 'arc', cx: cx, cy: cy, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
         }
         
