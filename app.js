@@ -797,10 +797,33 @@ function processLassoCut() {
     const height = maxY - minY;
     if (width < 5 || height < 5) return; 
 
-    // --- KOPYALANACAK PARÇAYI HAZIRLA ---
+    // =======================================================
+    // 1. X-RAY (RÖNTGEN) SENSÖRÜ: Tüm katmanları birleştirip gerçek rengi okur
+    // =======================================================
+    function getRealColor(x, y) {
+        const tCan = document.createElement('canvas');
+        tCan.width = 1; tCan.height = 1;
+        const tCtx = tCan.getContext('2d');
+        
+        // Alttaki PDF katmanını oku
+        const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
+        if (bgLayer) {
+            const sX = bgLayer.width / bgLayer.offsetWidth;
+            const sY = bgLayer.height / bgLayer.offsetHeight;
+            tCtx.drawImage(bgLayer, x * sX, y * sY, 1 * sX, 1 * sY, 0, 0, 1, 1);
+        } else {
+            tCtx.fillStyle = "white"; tCtx.fillRect(0,0,1,1);
+        }
+        // Üstteki çizim katmanını ekle
+        tCtx.drawImage(canvas, x, y, 1, 1, 0, 0, 1, 1);
+        return tCtx.getImageData(0, 0, 1, 1).data;
+    }
+
+    // =======================================================
+    // 2. KESTİĞİMİZ PARÇAYI (KOPYAYI) OLUŞTUR (X-Ray kullanarak keser)
+    // =======================================================
     const offCanvas = document.createElement('canvas');
-    offCanvas.width = width;
-    offCanvas.height = height;
+    offCanvas.width = width; offCanvas.height = height;
     const offCtx = offCanvas.getContext('2d');
 
     offCtx.beginPath();
@@ -810,15 +833,24 @@ function processLassoCut() {
     }
     offCtx.closePath();
     offCtx.clip();
+    
+    const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
+    if (bgLayer) {
+        const sX = bgLayer.width / bgLayer.offsetWidth;
+        const sY = bgLayer.height / bgLayer.offsetHeight;
+        offCtx.drawImage(bgLayer, minX * sX, minY * sY, width * sX, height * sY, 0, 0, width, height);
+    }
     offCtx.drawImage(canvas, minX, minY, width, height, 0, 0, width, height);
     const imgSrc = offCanvas.toDataURL('image/png');
 
-    // --- AKILLI ZEMİN TARAYICI (RENGİ BUL) ---
+    // =======================================================
+    // 3. AKILLI RENK BULUCU
+    // =======================================================
     let smartColor = "white"; 
     try {
         const cX = minX + width / 2;
         const cY = minY + height / 2;
-        const centerPixel = ctx.getImageData(cX, cY, 1, 1).data;
+        const centerPixel = getRealColor(cX, cY);
 
         const margin = 15;
         const scanPoints = [
@@ -829,99 +861,56 @@ function processLassoCut() {
         ];
 
         for (let p of scanPoints) {
-            if (p.x >= 0 && p.y >= 0 && p.x < canvas.width && p.y < canvas.height) {
-                const px = ctx.getImageData(p.x, p.y, 1, 1).data;
-                if (px[3] > 0) { 
-                    const diff = Math.abs(px[0] - centerPixel[0]) + Math.abs(px[1] - centerPixel[1]) + Math.abs(px[2] - centerPixel[2]);
-                    if (diff > 50) { 
-                        smartColor = `rgb(${px[0]}, ${px[1]}, ${px[2]})`;
-                        break; 
-                    }
-                }
+            const px = getRealColor(p.x, p.y);
+            // Renk farkını hesapla
+            const diff = Math.abs(px[0] - centerPixel[0]) + Math.abs(px[1] - centerPixel[1]) + Math.abs(px[2] - centerPixel[2]);
+            if (diff > 50) { 
+                smartColor = `rgb(${px[0]}, ${px[1]}, ${px[2]})`;
+                break; 
             }
         }
     } catch (e) {
-        console.warn("Akıllı tarayıcı hatası.", e);
+        console.warn("Renk okuma hatası", e);
     }
 
-    // =========================================================
-    // YENİ: ZEMİNE KALICI YAMA (ZOOM VE SAYFA GEÇİŞİ İÇİN KESİN ÇÖZÜM)
-    // Yamayı havada bırakmıyoruz, direkt PDF resminin üzerine işliyoruz!
-    // =========================================================
-    const bgStroke = drawnStrokes.find(s => s.isBackground === true);
-    let maskBaked = false; // Başarı durumunu takip eder
-
-    if (bgStroke) {
-        let imgSource = bgStroke.img;
-        if (!imgSource || !(imgSource instanceof HTMLImageElement)) {
-            imgSource = bgStroke.imgObj;
-        }
-        
-        if (imgSource) {
-            try {
-                const patchCanvas = document.createElement('canvas');
-                // Arka planın orijinal (kaliteli) çözünürlüğünü bul
-                const nW = imgSource.naturalWidth || imgSource.width || bgStroke.width;
-                const nH = imgSource.naturalHeight || imgSource.height || bgStroke.height;
-                
-                patchCanvas.width = nW;
-                patchCanvas.height = nH;
-                const pCtx = patchCanvas.getContext('2d');
-                
-                // 1. Zemin resmini (PDF'i) gizli tuvale çiz
-                pCtx.drawImage(imgSource, 0, 0, nW, nH);
-                
-                // 2. Kestiğimiz deliği, PDF'in orijinal çözünürlüğüne oranlayarak hesapla
-                pCtx.fillStyle = smartColor;
-                pCtx.beginPath();
-                
-                for (let i = 0; i < lassoPoints.length; i++) {
-                    const localX = ((lassoPoints[i].x - bgStroke.x) / bgStroke.width) * nW;
-                    const localY = ((lassoPoints[i].y - bgStroke.y) / bgStroke.height) * nH;
-                    
-                    if (i === 0) pCtx.moveTo(localX, localY);
-                    else pCtx.lineTo(localX, localY);
-                }
-                pCtx.closePath();
-                pCtx.fill(); // Deliği yama rengiyle doldur!
-                
-                // 3. Modifiye edilmiş (yamalanmış) resmi arka planın içine geri yükle
-                const patchedData = patchCanvas.toDataURL('image/png');
-                bgStroke.imgData = patchedData; 
-                
-                const updatedImg = new Image();
-                updatedImg.src = patchedData;
-                updatedImg.onload = () => {
-                    bgStroke.imgObj = updatedImg;
-                    bgStroke.img = updatedImg; // Yedek güncelleme
-                    if (window.redrawAllStrokes) window.redrawAllStrokes();
-                };
-                
-                maskBaked = true; // Yama kalıcı olarak zemine işlendi!
-            } catch (err) {
-                console.warn("Zemine yama yapılamadı, normal maske kullanılacak.", err);
-            }
-        }
+    // =======================================================
+    // 4. ZOOM UYUMLU, KALICI YAMA OLUŞTURUCU
+    // =======================================================
+    const patchCanvas = document.createElement('canvas');
+    patchCanvas.width = width; patchCanvas.height = height;
+    const pCtx = patchCanvas.getContext('2d');
+    pCtx.fillStyle = smartColor;
+    pCtx.beginPath();
+    pCtx.moveTo(lassoPoints[0].x - minX, lassoPoints[0].y - minY);
+    for (let i = 1; i < lassoPoints.length; i++) {
+        pCtx.lineTo(lassoPoints[i].x - minX, lassoPoints[i].y - minY);
     }
-
-    // EĞER ARKADA HİÇBİR ZEMİN/PDF YOKSA (Bembeyaz Kağıtsa) ESKİ YÖNTEMLE MASKE EKLE
-    if (!maskBaked) {
-        drawnStrokes.push({
-            type: 'lasso-mask',
-            points: lassoPoints.map(p => ({ x: p.x, y: p.y })),
-            fillColor: smartColor 
+    pCtx.closePath();
+    pCtx.fill(); // Rengi boya
+    
+    const patchImg = new Image();
+    patchImg.src = patchCanvas.toDataURL('image/png');
+    patchImg.onload = () => {
+        drawnStrokes.unshift({ // Yama her şeyin EN ALTINDA kalacak şekilde başa eklenir
+            type: 'image',
+            imgObj: patchImg,
+            x: minX, y: minY,
+            width: width, height: height,
+            rotation: 0,
+            isBackground: true, // ZOOM YAPILDIĞINDA PDF İLE BÜYÜMESİ İÇİN
+            isPatch: true       // SAYFA DEĞİŞİNCE SİLİNMESİ İÇİN ÖZEL ETİKET
         });
-    }
-    // =========================================================
+        if (window.redrawAllStrokes) window.redrawAllStrokes();
+    };
 
-    // KESTİĞİN PARÇAYI (KOPYAYI) EKRANA GETİR
+    // =======================================================
+    // 5. KESTİĞİNİZ KOPYAYI EKRANA GETİR
+    // =======================================================
     const newImgStroke = {
         type: 'image',
         imgData: imgSrc,
-        x: minX,
-        y: minY,
-        width: width,
-        height: height,
+        x: minX, y: minY,
+        width: width, height: height,
         rotation: 0,
         isBackground: false,
         imgObj: null 
@@ -941,6 +930,7 @@ function processLassoCut() {
     
     if (window.redrawAllStrokes) window.redrawAllStrokes();
 }
+
 
 function undoLastStroke() {
     if (drawnStrokes.length > 0) {
@@ -2090,11 +2080,60 @@ canvas.addEventListener('pointermove', (e) => {
             selectedItem[selectedPointKey].x = rotationPivot.x + Math.cos(currentAngle) * selectedItem.startRadius;
             selectedItem[selectedPointKey].y = rotationPivot.y + Math.sin(currentAngle) * selectedItem.startRadius;
         } 
+
         // F. Genel Yer Değiştirme (Sürükleme)
         else {
             if (selectedPointKey === 'self') { 
-                selectedItem.x = originalStartPos.x + dx;
-                selectedItem.y = originalStartPos.y + dy;
+                let yeniX = originalStartPos.x + dx;
+                let yeniY = originalStartPos.y + dy;
+
+               // =============================================================
+                // --- YENİ: KOPYALAR İÇİN KURŞUN GEÇİRMEZ MIKNATIS VE EŞİTLEME ---
+                if (selectedItem.type === 'image' && selectedItem.isBackground === false) {
+                    // Zemini bul (PDF varsa onu, yoksa ana ekranı baz al)
+                    const bg = drawnStrokes.find(s => s.isBackground === true);
+                    
+                    // Güvenlik: bg.x tanımsızsa 0 kabul et, bg.width tanımsızsa ekran genişliğini al
+                    const zX = (bg && bg.x !== undefined) ? bg.x : 0;
+                    const zY = (bg && bg.y !== undefined) ? bg.y : 0;
+                    const zW = (bg && bg.width !== undefined) ? bg.width : canvas.width;
+                    const zH = (bg && bg.height !== undefined) ? bg.height : canvas.height;
+
+                    const snapPiksel = 50; // Mıknatıs çekim alanı (50 piksel)
+                    
+                    const sagFark = Math.abs((yeniX + selectedItem.width) - (zX + zW));
+                    const solFark = Math.abs(yeniX - zX);
+
+                    let kenaraYapisti = false;
+
+                    // 1. SOLA VEYA SAĞA YAPIŞTIRMA (JİLET GİBİ SIFIRLAMA)
+                    if (solFark < snapPiksel) {
+                        yeniX = zX; // Sola sıfırla
+                        kenaraYapisti = true;
+                    } else if (sagFark < snapPiksel) {
+                        yeniX = (zX + zW) - selectedItem.width; // Sağa sıfırla
+                        kenaraYapisti = true;
+                    }
+
+                    // 2. KISA KESİMLERİ OTOMATİK EŞİTLEME 
+                    // (Sadece sağ/sol kenara yapıştıysa ve boyu PDF'e yakınsa çalışır)
+                    if (kenaraYapisti && Math.abs(selectedItem.height - zH) < 200) {
+                        yeniY = zY; 
+                        selectedItem.height = zH; // Boyu tam sayfa boyu yap
+                    } else {
+                        // Eğer boy eşitleme çalışmadıysa, alt/üst kenarlara normal mıknatıs yap
+                        if (Math.abs(yeniY - zY) < snapPiksel) {
+                            yeniY = zY; // Üste yapış
+                        } else if (Math.abs((yeniY + selectedItem.height) - (zY + zH)) < snapPiksel) {
+                            yeniY = (zY + zH) - selectedItem.height; // Alta yapış
+                        }
+                    }
+                }
+                // =============================================================
+
+                selectedItem.x = yeniX;
+                selectedItem.y = yeniY;
+                
             } else if (selectedPointKey === 'p1') {
                 selectedItem.p1.x = originalStartPos.x + dx;
                 selectedItem.p1.y = originalStartPos.y + dy;
@@ -2758,13 +2797,13 @@ if (isPDF && typeof pdfImageStroke !== 'undefined' && pdfImageStroke !== null) {
         // 1. Eski PDF sayfasını (arka planı) temizle
         if (stroke === pdfImageStroke) return false;
         
-        // 2. Havada asılı duran KESİLMİŞ PARÇALARI ve KOPYALARI temizle
+        // 2. Havada asılı duran KESİLMİŞ PARÇALARI temizle
         if (stroke.type === 'image' && stroke.isBackground === false) return false;
 
-        // 3. (Eğer kaldıysa) eski sayfanın maske deliklerini temizle
-        if (stroke.type === 'lasso-mask') return false;
+        // 3. ARKADA KALAN YAMALARI (Boyaları) temizle
+        if (stroke.isPatch === true) return false;
 
-        // Diğer her şeyi (kalem çizimleri, yazılar vs.) koru
+        // Diğer her şeyi (kalem çizimleri vs.) koru
         return true;
     }); 
     window.drawnStrokes = drawnStrokes; 
