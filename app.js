@@ -2595,16 +2595,32 @@ if (isDrawingRectangle && rectStartPoint && finalPos) {
     }
 }
 
-// --- AKILLI TAHTA NOKTA KOYMA YAMASI ---
-    if (currentTool === 'pen' && isDrawing) {
-        const lastStroke = drawnStrokes[drawnStrokes.length - 1];
-        // Eğer kalemle sadece tek bir noktaya dokunulup çekildiyse (hareket yoksa)
-        if (lastStroke && lastStroke.type === 'pen' && lastStroke.path.length === 1) {
-            // Görünür olması için yanına hayali bir nokta daha ekle
-            const p = lastStroke.path[0];
-            lastStroke.path.push({ x: p.x + 0.1, y: p.y + 0.1 });
+// --- AKILLI TAHTA NOKTA KOYMA YAMASI VE AKILLI ŞEKİL TANIMA ---
+if (currentTool === 'pen' && isDrawing) {
+    const lastStroke = drawnStrokes[drawnStrokes.length - 1];
+    
+    // Sadece tek nokta konduysa
+    if (lastStroke && lastStroke.type === 'pen' && lastStroke.path.length <= 3) {
+        const p = lastStroke.path[0];
+        lastStroke.path.push({ x: p.x + 0.1, y: p.y + 0.1 });
+    } 
+    // YENİ: Uzun bir çizim yapıldıysa şekli tahmin etmeye çalış
+    else if (lastStroke && lastStroke.type === 'pen') {
+        const correctedShape = akilliSekilTani(lastStroke);
+        
+        if (correctedShape) {
+            drawnStrokes.pop(); // Eğri büğrü çizimi listeden sil!
+            
+            // Eğer dönen şekil Üçgen veya Yamuk ise (Yani çoklu çizgi dizisiyse)
+            if (Array.isArray(correctedShape)) {
+                drawnStrokes.push(...correctedShape); // Çizgileri sisteme tek tek yerleştir
+            } else {
+                // Çember veya Dikdörtgense (Tekil obje ise)
+                drawnStrokes.push(correctedShape); 
+            }
         }
     }
+}
 
     // --- GENEL SIFIRLAMA ---
     isDrawing = false;
@@ -3369,3 +3385,116 @@ function olusturYuzenKopya(imgSrc, startX, startY, width, height) {
 window.addEventListener('load', () => {
     setTimeout(setupCanvasResolution, 500);
 });
+
+
+// ===================================================================
+// --- AKILLI ŞEKİL TANIMA V3 (ÜÇGEN ÖNCELİKLİ KUSURSUZ ALGORİTMA) ---
+// ===================================================================
+function akilliSekilTani(stroke) {
+    if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
+
+    const pts = stroke.path;
+    const start = pts[0];
+    const end = pts[pts.length - 1];
+    const directDistance = Math.hypot(end.x - start.x, end.y - start.y);
+    
+    let totalDistance = 0;
+    for (let i = 1; i < pts.length; i++) totalDistance += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+
+    // 1. DÜZ ÇİZGİ
+    if (directDistance > 40 && (totalDistance / directDistance) < 1.15) {
+        return { type: 'straightLine', p1: start, p2: end, color: stroke.color, width: stroke.baseWidth || 3 };
+    }
+
+    // 2. KAPALI ŞEKİLLER
+    if (directDistance < 50) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        pts.forEach(p => {
+            if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+            if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+        });
+        
+        const w = maxX - minX; const h = maxY - minY;
+        if (w < 20 || h < 20) return null;
+
+        // --- ÖNCE ÜÇGEN VE YAMUK İÇİN GENİŞLİK ANALİZİ ---
+        let topMinX = Infinity, topMaxX = -Infinity;
+        let bottomMinX = Infinity, bottomMaxX = -Infinity;
+
+        // Üst %35 ve Alt %35'i tara (Üçgeni daha net yakalamak için)
+        pts.forEach(p => {
+            if (p.y < minY + h * 0.35) { if (p.x < topMinX) topMinX = p.x; if (p.x > topMaxX) topMaxX = p.x; }
+            if (p.y > maxY - h * 0.35) { if (p.x < bottomMinX) bottomMinX = p.x; if (p.x > bottomMaxX) bottomMaxX = p.x; }
+        });
+
+        let topW = Math.max(1, topMaxX - topMinX);
+        let bottomW = Math.max(1, bottomMaxX - bottomMinX);
+        
+        const col = stroke.color;
+        const wid = stroke.baseWidth || 3;
+
+        const getChar = () => {
+            let c = window.nextPointChar || 'A';
+            let nextCode = c.charCodeAt(0) + 1;
+            if (nextCode > 90) nextCode = 65; 
+            window.nextPointChar = String.fromCharCode(nextCode);
+            return c;
+        };
+
+        // A. ÜÇGEN (Üst taraf veya alt taraf çok darsa - İLK BUNA BAK)
+        if (topW < bottomW * 0.45 || bottomW < topW * 0.45) {
+            const isUp = topW < bottomW;
+            const p1 = { x: (topMinX + topMaxX) / 2, y: minY }; // Tepe noktası
+            const p2 = { x: minX, y: maxY }; // Sol alt
+            const p3 = { x: maxX, y: maxY }; // Sağ alt
+
+            const l1 = getChar(), l2 = getChar(), l3 = getChar();
+            
+            if (isUp) {
+                return [
+                    { type: 'segment', p1: p1, p2: p2, color: col, width: wid, label1: l1, label2: l2 },
+                    { type: 'segment', p1: p2, p2: p3, color: col, width: wid, label1: l2, label2: l3 },
+                    { type: 'segment', p1: p3, p2: p1, color: col, width: wid, label1: l3, label2: l1 }
+                ];
+            } else {
+                const dp1 = { x: minX, y: minY }, dp2 = { x: maxX, y: minY }, dp3 = { x: (bottomMinX + bottomMaxX) / 2, y: maxY };
+                return [
+                    { type: 'segment', p1: dp1, p2: dp2, color: col, width: wid, label1: l1, label2: l2 },
+                    { type: 'segment', p1: dp2, p2: dp3, color: col, width: wid, label1: l2, label2: l3 },
+                    { type: 'segment', p1: dp3, p2: dp1, color: col, width: wid, label1: l3, label2: l1 }
+                ];
+            }
+        }
+
+        // B. ÇEMBER / ELİPS (Eğer üçgen DEĞİLSE ve köşeler boşsa)
+        let distTL = Infinity, distTR = Infinity, distBL = Infinity, distBR = Infinity;
+        pts.forEach(p => {
+            const dTL = Math.hypot(p.x - minX, p.y - minY); if (dTL < distTL) distTL = dTL;
+            const dTR = Math.hypot(p.x - maxX, p.y - minY); if (dTR < distTR) distTR = dTR;
+            const dBL = Math.hypot(p.x - minX, p.y - maxY); if (dBL < distBL) distBL = dBL;
+            const dBR = Math.hypot(p.x - maxX, p.y - maxY); if (dBR < distBR) distBR = dBR;
+        });
+        const avgCornerDist = (distTL + distTR + distBL + distBR) / 4;
+
+        if (Math.abs(w - h) < (w * 0.4) && avgCornerDist > (w * 0.15)) {
+            return { type: 'arc', cx: minX + w/2, cy: minY + h/2, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
+        }
+        
+        // C. YAMUK / TRAPEZOİD
+        if ((topW < bottomW * 0.85 && topW >= bottomW * 0.45) || (bottomW < topW * 0.85 && bottomW >= topW * 0.45)) {
+            const pTL = { x: topMinX, y: minY }; const pTR = { x: topMaxX, y: minY };
+            const pBL = { x: minX, y: maxY }; const pBR = { x: maxX, y: maxY };
+            const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
+            return [
+                { type: 'segment', p1: pTL, p2: pTR, color: col, width: wid, label1: l1, label2: l2 },
+                { type: 'segment', p1: pTR, p2: pBR, color: col, width: wid, label1: l2, label2: l3 },
+                { type: 'segment', p1: pBR, p2: pBL, color: col, width: wid, label1: l3, label2: l4 },
+                { type: 'segment', p1: pBL, p2: pTL, color: col, width: wid, label1: l4, label2: l1 }
+            ];
+        }
+
+        // D. DİKDÖRTGEN / KARE 
+        return { type: 'rectangle', x: minX, y: minY, width: w, height: h, rotation: 0, color: col, showEdgeLabels: false };
+    }
+    return null; 
+}
