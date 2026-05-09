@@ -2771,6 +2771,7 @@ if (isPDF && typeof pdfImageStroke !== 'undefined' && pdfImageStroke !== null) {
 }
     // --------------------------------------------
 
+
     drawnStrokes.push(newStroke);
     
     if (isPDF) {
