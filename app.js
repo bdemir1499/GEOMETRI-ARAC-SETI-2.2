@@ -437,10 +437,10 @@ for (const stroke of drawnStrokes) {
         }
 
        // --- RESİM / PDF VE CANLANDIR (SNAPSHOT) KOPYASI ---
-        else if (stroke.type === 'image') {
+       else if (stroke.type === 'image') {
 
-// YENİ ŞART: Kestiğimiz kopya değilse, kesinlikle ana zemindir. Sona sakla!
-if (stroke.isBackground !== false) continue;
+            // YENİ ŞART: Kestiğimiz kopya değilse, kesinlikle ana zemindir. Sona sakla!
+            if (stroke.isBackground !== false) continue;
             let imgToDraw = null;
 
             // 1. KAYNAK KONTROLÜ (Kayıp olan Canlandır kodunu geri ekledik)
@@ -456,7 +456,7 @@ if (stroke.isBackground !== false) continue;
                 imgToDraw = stroke.imgObj; // Canlandır kopyası
             }
 
-            // 2. ÇİZİM MANTIĞI
+            // 2. ÇİZİM MANTIĞI VE BUTONLARIN EKLENDİĞİ YER
             if (imgToDraw && (imgToDraw.complete || imgToDraw.readyState >= 2)) {
                 ctx.save();
                 const centerX = stroke.x + (stroke.width / 2);
@@ -466,10 +466,37 @@ if (stroke.isBackground !== false) continue;
                 
                 ctx.drawImage(imgToDraw, -stroke.width / 2, -stroke.height / 2, stroke.width, stroke.height);
                 
+                // PARÇA SEÇİLİYSE ÇERÇEVE VE BUTONLARI ÇİZ
                 if (typeof currentTool !== 'undefined' && currentTool === 'move' && selectedItem === stroke) {
                     ctx.strokeStyle = '#00FFCC'; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
                     ctx.strokeRect(-stroke.width / 2, -stroke.height / 2, stroke.width, stroke.height);
                     ctx.setLineDash([]);
+
+                    // 1. Döndürme Butonu (Üst Orta - Yeşil)
+                    const rotX = 0;
+                    const rotY = -stroke.height / 2 - 25;
+                    ctx.beginPath();
+                    ctx.arc(rotX, rotY, 12, 0, 2 * Math.PI); // Simge sığsın diye 12px yapıldı
+                    ctx.fillStyle = '#0F0'; ctx.fill();
+                    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+                    
+                    // İçine Döndürme Simgesi (↻) Ekle
+                    ctx.font = "bold 16px Arial"; 
+                    ctx.fillStyle = "#000"; 
+                    ctx.textAlign = "center"; 
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("↻", rotX, rotY - 1); // Görsel ortalama için Y ekseninde 1px yukarı kaydırıldı
+
+                    // 2. Boyutlandırma Butonu (Sağ Alt - Pembe)
+                    const resX = stroke.width / 2;
+                    const resY = stroke.height / 2;
+                    ctx.beginPath();
+                    ctx.arc(resX, resY, 12, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#F0F'; ctx.fill();
+                    ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
+                    
+                    // İçine Boyutlandırma Simgesi (⤢) Ekle
+                    ctx.fillText("⤢", resX, resY);
                 }
                 ctx.restore();
             }
@@ -1859,6 +1886,39 @@ canvas.addEventListener('pointermove', (e) => {
     const pos = getPointerPos(e); 
     currentMousePos = pos;
 
+// ========================================================
+    // --- KESİLEN PARÇA İÇİN DÖNDÜRME VE BOYUTLANDIRMA ---
+    // Eğer Döndürme butonunu tutarak sürüklüyorsak:
+    if (window.isImageRotating && selectedItem) {
+        const cX = selectedItem.x + selectedItem.width / 2;
+        const cY = selectedItem.y + selectedItem.height / 2;
+        const angle = Math.atan2(pos.y - cY, pos.x - cX); // Senin sistemine göre pos.x ve pos.y yapıldı
+        selectedItem.rotation = (angle * 180 / Math.PI) + 90;
+        if (window.redrawAllStrokes) window.redrawAllStrokes();
+        return;
+    }
+
+    // Eğer Boyutlandırma butonunu tutarak sürüklüyorsak:
+    if (window.isImageResizing && selectedItem) {
+        const cX = selectedItem.x + selectedItem.width / 2;
+        const cY = selectedItem.y + selectedItem.height / 2;
+        const currentDistance = Math.hypot(pos.x - cX, pos.y - cY); // Senin sistemine göre uyarlandı
+        
+        const ratio = currentDistance / window.startImageDistance;
+        const newWidth = window.startImageWidth * ratio;
+        const newHeight = window.startImageHeight * ratio;
+        
+        selectedItem.x = cX - newWidth / 2;
+        selectedItem.y = cY - newHeight / 2;
+        selectedItem.width = newWidth;
+        selectedItem.height = newHeight;
+        
+        if (window.redrawAllStrokes) window.redrawAllStrokes();
+        return;
+    }
+    // ========================================================
+
+
     // --- ÇOKGEN KESME ÖNİZLEMESİ ---
     if (currentTool === 'lasso' && isDrawingLasso) {
         const pos = getPointerPos(e);
@@ -2211,16 +2271,24 @@ canvas.addEventListener('pointermove', (e) => {
                     }
                 }
             }
+
+
             // 5. Canlandır Kopyaları (PDF ARKA PLANI HARİÇ)
             else if (stroke.type === 'image' && !stroke.isBackground) {
-                // Döndürülmüş olsa bile kopyanın sınırlarını hesaplar ve siler
-                const dx = pos.x - stroke.x;
-                const dy = pos.y - stroke.y;
+                // HATA BURADAYDI: stroke.x yerine resmin tam merkez noktasını (centerX, centerY) bulmamız şart
+                const centerX = stroke.x + (stroke.width / 2);
+                const centerY = stroke.y + (stroke.height / 2);
+                
+                const dx = pos.x - centerX; 
+                const dy = pos.y - centerY; 
+                
                 const angleRad = (stroke.rotation || 0) * (Math.PI / 180);
                 const localX = dx * Math.cos(-angleRad) - dy * Math.sin(-angleRad);
                 const localY = dx * Math.sin(-angleRad) + dy * Math.cos(-angleRad);
+                
                 const halfW = stroke.width / 2;
                 const halfH = stroke.height / 2;
+                
                 if (localX > -halfW && localX < halfW && localY > -halfH && localY < halfH) {
                     touched = true;
                 }
@@ -2445,10 +2513,16 @@ if (isDrawingRectangle && rectStartPoint && finalPos) {
     // --- GENEL SIFIRLAMA ---
     isDrawing = false;
     isDrawingLine = isDrawingInfinityLine = isDrawingSegment = isDrawingRay = false;
-    isDrawingRectangle = false; // Takılı kalmayı kökten çözen kilit!
+    isDrawingRectangle = false; 
     lineStartPoint = null;
-    rectStartPoint = null;      // Hafızayı temizle
+    rectStartPoint = null;      
     snapTarget = null;
+    
+    // ==========================================
+    // YENİ: Kestiğimiz parça butonları iptal ediliyor
+    window.isImageRotating = false;
+    window.isImageResizing = false;
+    // ==========================================
     
     if (typeof snapIndicator !== 'undefined' && snapIndicator) snapIndicator.style.display = 'none';
 
@@ -2479,6 +2553,8 @@ canvas.addEventListener('wheel', (e) => {
         }
     }
 }, { passive: false });
+
+
 // --- POINTERCANCEL (KESİNTİ DURUMUNDA SIFIRLAMA) ---
 canvas.addEventListener('pointercancel', (e) => {
 // --- BUNLARI EKLE ---
@@ -2635,14 +2711,24 @@ function addNewImageToCanvas(img, isPDF = false) {
     }
     
     // --- 2. KRİTİK DÜZELTME: BUTONU DOĞRU ZAMANDA GÖSTER ---
-    // Resim veya PDF ekrana "gerçekten" çizildiği an bu buton görünür olacak
-    const closeBtn = document.getElementById('btn-close-pdf');
-    if(closeBtn) {
-        closeBtn.classList.remove('hidden');
-        closeBtn.style.display = 'flex';
-    }
-    
-    redrawAllStrokes();
+// Resim veya PDF ekrana "gerçekten" çizildiği an bu buton görünür olacak
+
+// 1. Sağ paneldeki İleri/Geri tuşlarını (pdf-controls) geri getir
+const pdfControls = document.getElementById('pdf-controls');
+if (pdfControls) {
+    pdfControls.classList.remove('hidden');
+    pdfControls.style.display = 'flex'; 
+}
+
+// 2. Kırmızı Kapatma Butonunu geri getir
+const closeBtn = document.getElementById('btn-close-pdf');
+if (closeBtn) {
+    closeBtn.classList.remove('hidden');
+    closeBtn.style.display = 'flex';
+}
+
+redrawAllStrokes();
+
 }
 
 // --- ARAÇ RENGİ DEĞİŞTİRME MANTIĞI (SİYAH / NEON / TOK MAVİ) ---
