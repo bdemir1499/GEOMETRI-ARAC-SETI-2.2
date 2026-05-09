@@ -476,16 +476,16 @@ for (const stroke of drawnStrokes) {
                     const rotX = 0;
                     const rotY = -stroke.height / 2 - 25;
                     ctx.beginPath();
-                    ctx.arc(rotX, rotY, 12, 0, 2 * Math.PI); // Simge sığsın diye 12px yapıldı
+                    ctx.arc(rotX, rotY, 12, 0, 2 * Math.PI); 
                     ctx.fillStyle = '#0F0'; ctx.fill();
                     ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
                     
-                    // İçine Döndürme Simgesi (↻) Ekle
+                    // İçine Döndürme Simgesi (↻) Ekle - BEYAZ
                     ctx.font = "bold 16px Arial"; 
-                    ctx.fillStyle = "#000"; 
+                    ctx.fillStyle = "#FFF"; // Siyah yerine BEYAZ yapıldı
                     ctx.textAlign = "center"; 
                     ctx.textBaseline = "middle";
-                    ctx.fillText("↻", rotX, rotY - 1); // Görsel ortalama için Y ekseninde 1px yukarı kaydırıldı
+                    ctx.fillText("↻", rotX, rotY - 1); 
 
                     // 2. Boyutlandırma Butonu (Sağ Alt - Pembe)
                     const resX = stroke.width / 2;
@@ -495,7 +495,8 @@ for (const stroke of drawnStrokes) {
                     ctx.fillStyle = '#F0F'; ctx.fill();
                     ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.stroke();
                     
-                    // İçine Boyutlandırma Simgesi (⤢) Ekle
+                    // İçine Boyutlandırma Simgesi (⤢) Ekle - BEYAZ
+                    ctx.fillStyle = "#FFF"; // Pembe butonun simgesi için de rengi BEYAZ yaptık
                     ctx.fillText("⤢", resX, resY);
                 }
                 ctx.restore();
@@ -796,6 +797,7 @@ function processLassoCut() {
     const height = maxY - minY;
     if (width < 5 || height < 5) return; 
 
+    // --- KOPYALANACAK PARÇAYI HAZIRLA ---
     const offCanvas = document.createElement('canvas');
     offCanvas.width = width;
     offCanvas.height = height;
@@ -811,52 +813,108 @@ function processLassoCut() {
     offCtx.drawImage(canvas, minX, minY, width, height, 0, 0, width, height);
     const imgSrc = offCanvas.toDataURL('image/png');
 
-    // =========================================================
-    // --- 10 MİLYON DOLARLIK AKILLI ZEMİN TARAYICI ---
-    // =========================================================
-    let smartColor = "white"; // Eğer hiçbir şey bulamazsa sayfa rengi beyaz olur
+    // --- AKILLI ZEMİN TARAYICI (RENGİ BUL) ---
+    let smartColor = "white"; 
     try {
         const cX = minX + width / 2;
         const cY = minY + height / 2;
-        // Kestiğin şeklin kendi rengini oku (Örn: Pembe)
         const centerPixel = ctx.getImageData(cX, cY, 1, 1).data;
 
-        // Dışarıya 15 piksel taşan 4 adet sensör noktası belirliyoruz
         const margin = 15;
         const scanPoints = [
-            { x: minX - margin, y: cY }, // Sol dış
-            { x: maxX + margin, y: cY }, // Sağ dış
-            { x: cX, y: minY - margin }, // Üst dış
-            { x: cX, y: maxY + margin }  // Alt dış
+            { x: minX - margin, y: cY }, 
+            { x: maxX + margin, y: cY }, 
+            { x: cX, y: minY - margin }, 
+            { x: cX, y: maxY + margin }  
         ];
 
         for (let p of scanPoints) {
             if (p.x >= 0 && p.y >= 0 && p.x < canvas.width && p.y < canvas.height) {
                 const px = ctx.getImageData(p.x, p.y, 1, 1).data;
-                if (px[3] > 0) { // Şeffaf değilse
-                    // Dış piksel, kestiğimiz parçanın renginden FARKLI mı diye bak:
+                if (px[3] > 0) { 
                     const diff = Math.abs(px[0] - centerPixel[0]) + Math.abs(px[1] - centerPixel[1]) + Math.abs(px[2] - centerPixel[2]);
                     if (diff > 50) { 
-                        // Renk pembeye benzemiyorsa zemin rengi budur (Sarıyı buldu!)
                         smartColor = `rgb(${px[0]}, ${px[1]}, ${px[2]})`;
-                        break; // Zemin rengini bulunca taramayı durdur
+                        break; 
                     }
                 }
             }
         }
     } catch (e) {
-        console.warn("Akıllı tarayıcı CORS engeline takıldı veya okuyamadı.", e);
+        console.warn("Akıllı tarayıcı hatası.", e);
+    }
+
+    // =========================================================
+    // YENİ: ZEMİNE KALICI YAMA (ZOOM VE SAYFA GEÇİŞİ İÇİN KESİN ÇÖZÜM)
+    // Yamayı havada bırakmıyoruz, direkt PDF resminin üzerine işliyoruz!
+    // =========================================================
+    const bgStroke = drawnStrokes.find(s => s.isBackground === true);
+    let maskBaked = false; // Başarı durumunu takip eder
+
+    if (bgStroke) {
+        let imgSource = bgStroke.img;
+        if (!imgSource || !(imgSource instanceof HTMLImageElement)) {
+            imgSource = bgStroke.imgObj;
+        }
+        
+        if (imgSource) {
+            try {
+                const patchCanvas = document.createElement('canvas');
+                // Arka planın orijinal (kaliteli) çözünürlüğünü bul
+                const nW = imgSource.naturalWidth || imgSource.width || bgStroke.width;
+                const nH = imgSource.naturalHeight || imgSource.height || bgStroke.height;
+                
+                patchCanvas.width = nW;
+                patchCanvas.height = nH;
+                const pCtx = patchCanvas.getContext('2d');
+                
+                // 1. Zemin resmini (PDF'i) gizli tuvale çiz
+                pCtx.drawImage(imgSource, 0, 0, nW, nH);
+                
+                // 2. Kestiğimiz deliği, PDF'in orijinal çözünürlüğüne oranlayarak hesapla
+                pCtx.fillStyle = smartColor;
+                pCtx.beginPath();
+                
+                for (let i = 0; i < lassoPoints.length; i++) {
+                    const localX = ((lassoPoints[i].x - bgStroke.x) / bgStroke.width) * nW;
+                    const localY = ((lassoPoints[i].y - bgStroke.y) / bgStroke.height) * nH;
+                    
+                    if (i === 0) pCtx.moveTo(localX, localY);
+                    else pCtx.lineTo(localX, localY);
+                }
+                pCtx.closePath();
+                pCtx.fill(); // Deliği yama rengiyle doldur!
+                
+                // 3. Modifiye edilmiş (yamalanmış) resmi arka planın içine geri yükle
+                const patchedData = patchCanvas.toDataURL('image/png');
+                bgStroke.imgData = patchedData; 
+                
+                const updatedImg = new Image();
+                updatedImg.src = patchedData;
+                updatedImg.onload = () => {
+                    bgStroke.imgObj = updatedImg;
+                    bgStroke.img = updatedImg; // Yedek güncelleme
+                    if (window.redrawAllStrokes) window.redrawAllStrokes();
+                };
+                
+                maskBaked = true; // Yama kalıcı olarak zemine işlendi!
+            } catch (err) {
+                console.warn("Zemine yama yapılamadı, normal maske kullanılacak.", err);
+            }
+        }
+    }
+
+    // EĞER ARKADA HİÇBİR ZEMİN/PDF YOKSA (Bembeyaz Kağıtsa) ESKİ YÖNTEMLE MASKE EKLE
+    if (!maskBaked) {
+        drawnStrokes.push({
+            type: 'lasso-mask',
+            points: lassoPoints.map(p => ({ x: p.x, y: p.y })),
+            fillColor: smartColor 
+        });
     }
     // =========================================================
 
-    // 1. ZEMİN RENGİYLE YAMA YAPAN MASKE EKLENİYOR
-    drawnStrokes.push({
-        type: 'lasso-mask',
-        points: lassoPoints.map(p => ({ x: p.x, y: p.y })),
-        fillColor: smartColor // Bulduğumuz sarı rengi maskenin içine hapsettik!
-    });
-
-    // 2. KESTİĞİN PARÇAYI (KOPYAYI) LİSTEYE EKLE
+    // KESTİĞİN PARÇAYI (KOPYAYI) EKRANA GETİR
     const newImgStroke = {
         type: 'image',
         imgData: imgSrc,
@@ -883,7 +941,6 @@ function processLassoCut() {
     
     if (window.redrawAllStrokes) window.redrawAllStrokes();
 }
-
 
 function undoLastStroke() {
     if (drawnStrokes.length > 0) {
@@ -2695,13 +2752,23 @@ function addNewImageToCanvas(img, isPDF = false) {
         isBackground: true 
     };
     
-    // --- KRİTİK EKLENTİ: ESKİ SAYFAYI TEMİZLE ---
-    // Eğer eklenen şey bir PDF sayfasıysa ve daha önce eklenmiş bir sayfa varsa,
-    // eskisini hafızadan tamamen sil (Böylece üst üste binmezler)
-    if (isPDF && typeof pdfImageStroke !== 'undefined' && pdfImageStroke !== null) {
-        drawnStrokes = drawnStrokes.filter(stroke => stroke !== pdfImageStroke);
-        window.drawnStrokes = drawnStrokes;
-    }
+    // (Böylece üst üste binmezler)
+if (isPDF && typeof pdfImageStroke !== 'undefined' && pdfImageStroke !== null) { 
+    drawnStrokes = drawnStrokes.filter(stroke => {
+        // 1. Eski PDF sayfasını (arka planı) temizle
+        if (stroke === pdfImageStroke) return false;
+        
+        // 2. Havada asılı duran KESİLMİŞ PARÇALARI ve KOPYALARI temizle
+        if (stroke.type === 'image' && stroke.isBackground === false) return false;
+
+        // 3. (Eğer kaldıysa) eski sayfanın maske deliklerini temizle
+        if (stroke.type === 'lasso-mask') return false;
+
+        // Diğer her şeyi (kalem çizimleri, yazılar vs.) koru
+        return true;
+    }); 
+    window.drawnStrokes = drawnStrokes; 
+}
     // --------------------------------------------
 
     drawnStrokes.push(newStroke);
