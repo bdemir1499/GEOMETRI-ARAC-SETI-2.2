@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V12 (PICASSO KOVULDU - KESİN KANIT SİSTEMİ) ---
+// --- AKILLI ŞEKİL TANIMA V12 (HATA GİDERİCİ DÜZELTME İLE) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3456,24 +3456,22 @@ function akilliSekilTani(stroke) {
     let sapmaOrani = sapma / (pts.length * avgR); 
 
     // ==========================================
-    // 1. YILDIZ KONTROLÜ (İmkansız Çalınma Şartı)
+    // 1. YILDIZ KONTROLÜ 
     // ==========================================
     let isStar = false;
     if (Math.abs(w - h) < maxBoyut * 0.6 && totalDistance > (w + h) * 1.5) {
-        // Yıldızın altında iki bacak ve ortasında KESİN boşluk olmak zorundadır!
         let altKisim = pts.filter(p => p.y > cy + h * 0.2);
         let solBacak = altKisim.filter(p => p.x < cx - w * 0.1);
         let sagBacak = altKisim.filter(p => p.x > cx + w * 0.1);
         let ortaBosluk = altKisim.filter(p => Math.abs(p.x - cx) <= w * 0.1);
         
-        // Tepe darsa, bacaklar varsa ve bacakların arası gerçekten boşsa bu bir yıldızdır!
         if (topW < w * 0.4 && solBacak.length > 0 && sagBacak.length > 0 && ortaBosluk.length < altKisim.length * 0.15) {
             isStar = true;
         }
     }
 
     // ==========================================
-    // 2. KALP KONTROLÜ (İmkansız Çalınma Şartı)
+    // 2. KALP KONTROLÜ 
     // ==========================================
     let isHeart = false;
     if (!isStar && Math.abs(w - h) < maxBoyut * 0.5) {
@@ -3487,7 +3485,6 @@ function akilliSekilTani(stroke) {
             let sagMaxY = Math.min(...sagTepe.map(p => p.y));
             let ortaMinY = Math.max(...ortaCukur.map(p => p.y));
             
-            // Orta çukur zirvelerden derindeyse VE alt taraf ucu sivri olacak kadar darsa
             if (ortaMinY > solMaxY + h * 0.08 && ortaMinY > sagMaxY + h * 0.08 && bottomW < w * 0.45) {
                 isHeart = true;
             }
@@ -3509,12 +3506,14 @@ function akilliSekilTani(stroke) {
         return c;
     };
     
-    const createTriangle = (p1, p2, p3) => {
+    // İŞTE HATAYA SEBEP OLAN VE DÜZELTİLEN KISIM!
+    // Artık program tüm çizgilerde p1 ve p2 olduğunu kesin olarak biliyor.
+    const createTriangle = (pA, pB, pC) => {
         const l1 = getChar(), l2 = getChar(), l3 = getChar();
         return [
-            { type: 'segment', p1, p2, color: col, width: wid, label1: l1, label2: l2 },
-            { type: 'segment', p2, p3: p3, color: col, width: wid, label1: l2, label2: l3 },
-            { type: 'segment', p3, p1, color: col, width: wid, label1: l3, label2: l1 }
+            { type: 'segment', p1: pA, p2: pB, color: col, width: wid, label1: l1, label2: l2 },
+            { type: 'segment', p1: pB, p2: pC, color: col, width: wid, label1: l2, label2: l3 },
+            { type: 'segment', p1: pC, p2: pA, color: col, width: wid, label1: l3, label2: l1 }
         ];
     };
 
