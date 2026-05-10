@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V9 (KUSURSUZ KALP VE YILDIZ ALGORİTMASI) ---
+// --- AKILLI ŞEKİL TANIMA V10 (ZİG-ZAG MATEMATİĞİ İLE KUSURSUZ YILDIZ) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3413,7 +3413,7 @@ function akilliSekilTani(stroke) {
     let cx = minX + w / 2;
     let cy = minY + h / 2;
 
-    if (maxBoyut < 40) return null; // Ufak karalamaları ele
+    if (maxBoyut < 40) return null; 
     
     const col = stroke.color;
     const wid = stroke.baseWidth || 3;
@@ -3429,12 +3429,32 @@ function akilliSekilTani(stroke) {
     if (tamKapaliMi) {
         
         // ==========================================================
-        // YENİ YILDIZ TESPİTİ (Kesin Çözüm: Çizgi Yoğunluğu)
+        // YENİ YILDIZ TESPİTİ (Kesin Çözüm: Zig-Zag / Git-Gel Sayacı)
         // ==========================================================
-        // Yıldız çizerken çizgiler iç içe geçer. Toplam çizilen yol, dış çerçevenin 4.2 katından fazlaysa bu KESİN YILDIZDIR!
-        if (Math.abs(w - h) < maxBoyut * 0.5 && totalDistance > maxBoyut * 4.2) {
+        let xGitGel = 0, yGitGel = 0;
+        let sonYonX = 0, sonYonY = 0;
+        
+        // Çizerken oluşan ufak titremeleri yoksaymak için 5 noktada bir yön kontrolü yap
+        for (let i = 5; i < pts.length; i += 5) {
+            let dx = pts[i].x - pts[i-5].x;
+            let dy = pts[i].y - pts[i-5].y;
+            
+            if (Math.abs(dx) > 3) {
+                let yonX = Math.sign(dx);
+                if (sonYonX !== 0 && yonX !== sonYonX) xGitGel++;
+                sonYonX = yonX;
+            }
+            if (Math.abs(dy) > 3) {
+                let yonY = Math.sign(dy);
+                if (sonYonY !== 0 && yonY !== sonYonY) yGitGel++;
+                sonYonY = yonY;
+            }
+        }
+
+        // Yıldız çizerken X ve Y ekseninde toplam en az 6-7 kere yön değiştirirsin. Üçgende bu sayı 2 veya 3'tür!
+        if (Math.abs(w - h) < maxBoyut * 0.6 && (xGitGel >= 4 || yGitGel >= 4 || (xGitGel + yGitGel) >= 6)) {
             const starPath = [];
-            for (let i = 0; i <= 10; i++) { // 5 Köşeli yıldız için 10 nokta + 1 kapanış
+            for (let i = 0; i <= 10; i++) {
                 let r = i % 2 === 0 ? maxBoyut/2 : maxBoyut/4.5;
                 let ang = (Math.PI * 2 * i / 10) - Math.PI / 2;
                 starPath.push({ x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r });
@@ -3444,32 +3464,31 @@ function akilliSekilTani(stroke) {
 
         // Normal şekiller için karmaşıklık filtresi (Yıldız değilse karmaşık karalamaları ele)
         const kutuCevresi = 2 * (w + h);
-        if (totalDistance > kutuCevresi * 1.3) return null; 
+        if (totalDistance > kutuCevresi * 1.5) return null; 
 
         // ==========================================================
-        // YENİ KALP TESPİTİ (Kesin Çözüm: Tepe ve Çukur Analizi)
+        // YENİ KALP TESPİTİ 
         // ==========================================================
         if (Math.abs(w - h) < maxBoyut * 0.4) {
             let minYLeft = Infinity, minYRight = Infinity, minYCenter = Infinity; 
             pts.forEach(p => {
-                if (p.y < cy) { // Sadece şeklin üst yarısındaki noktalara bakıyoruz
+                if (p.y < cy) { 
                     if (p.x < minX + w * 0.35) { if (p.y < minYLeft) minYLeft = p.y; }
                     else if (p.x > maxX - w * 0.35) { if (p.y < minYRight) minYRight = p.y; }
                     else { if (p.y < minYCenter) minYCenter = p.y; }
                 }
             });
 
-            // Eğer ortadaki en üst nokta, sağ ve sol tepelerden daha AŞAĞIDAYSA (y değeri daha büyükse) bu kalptir!
+            // Ortadaki üst nokta, sağ ve sol tepelerden daha AŞAĞIDAYSA bu kalptir!
             if (minYCenter > minYLeft + h * 0.08 && minYCenter > minYRight + h * 0.08) {
                 const heartPath = [];
                 for (let t = 0; t <= Math.PI * 2; t += 0.1) {
                     heartPath.push({
                         x: cx + (w/2) * (16 * Math.pow(Math.sin(t), 3)) / 16,
-                        // Kalbi orijinal yerine ve boyutuna tam oturtuyoruz
                         y: cy - (h/2) * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 16 - (h*0.05)
                     });
                 }
-                heartPath.push(heartPath[0]); // Çizgiyi kapat
+                heartPath.push(heartPath[0]); 
                 return { type: 'pen', path: heartPath, color: col, baseWidth: wid, width: wid };
             }
         }
