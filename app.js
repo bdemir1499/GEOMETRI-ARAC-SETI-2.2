@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V13 (DİKDÖRTGENİ ÖZGÜRLÜĞÜNE KAVUŞTURAN SÜRÜM) ---
+// --- AKILLI ŞEKİL TANIMA V15 (KUSURSUZ YILDIZ VE ÜÇGEN AYRIMI) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3428,7 +3428,7 @@ function akilliSekilTani(stroke) {
     if (!tamKapaliMi) return null;
 
     // AŞIRI KARMAŞIK KARALAMA KORUMASI 
-    if (totalDistance > (w + h) * 3) return null;
+    if (totalDistance > (w + h) * 4) return null;
 
     // --- BÖLGESEL FİZİKSEL KANITLAR ---
     let topMinX = Infinity, topMaxX = -Infinity;
@@ -3445,7 +3445,6 @@ function akilliSekilTani(stroke) {
         if (p.x > maxX - w * 0.35) { if (p.y < rightMinY) rightMinY = p.y; if (p.y > rightMaxY) rightMaxY = p.y; }
         totalR += Math.hypot(p.x - cx, p.y - cy);
 
-        // Köşe analizleri (Kare ile Çemberi ayırmak için hayati önem taşır)
         const dTL = Math.hypot(p.x - minX, p.y - minY); if (dTL < distTL) distTL = dTL;
         const dTR = Math.hypot(p.x - maxX, p.y - minY); if (dTR < distTR) distTR = dTR;
         const dBL = Math.hypot(p.x - minX, p.y - maxY); if (dBL < distBL) distBL = dBL;
@@ -3464,16 +3463,27 @@ function akilliSekilTani(stroke) {
     let sapmaOrani = sapma / (pts.length * avgR); 
 
     // ==========================================
-    // 1. YILDIZ KONTROLÜ 
+    // 1. YILDIZ KONTROLÜ (Nokta Sayma İptal, Derinlik Ölçümü Geldi)
     // ==========================================
     let isStar = false;
-    if (Math.abs(w - h) < maxBoyut * 0.6 && totalDistance > (w + h) * 1.5) {
-        let altKisim = pts.filter(p => p.y > cy + h * 0.2);
-        let solBacak = altKisim.filter(p => p.x < cx - w * 0.1);
-        let sagBacak = altKisim.filter(p => p.x > cx + w * 0.1);
-        let ortaBosluk = altKisim.filter(p => Math.abs(p.x - cx) <= w * 0.1);
-        
-        if (topW < w * 0.4 && solBacak.length > 0 && sagBacak.length > 0 && ortaBosluk.length < altKisim.length * 0.15) {
+    if (Math.abs(w - h) < maxBoyut * 0.6) {
+        let altSolMaxY = -Infinity;
+        let altSagMaxY = -Infinity;
+        let altOrtaMaxY = -Infinity;
+
+        pts.forEach(p => {
+            // Şeklin sağ, sol ve orta alt kısımlarının "En derin" (MaxY) noktalarını buluyoruz
+            if (p.x < cx - w * 0.15) { if (p.y > altSolMaxY) altSolMaxY = p.y; }
+            else if (p.x > cx + w * 0.15) { if (p.y > altSagMaxY) altSagMaxY = p.y; }
+            else { if (p.y > altOrtaMaxY) altOrtaMaxY = p.y; }
+        });
+
+        // Üçgende alt çizgi düzdür, altOrtaMaxY diğerlerine eşittir.
+        // Yıldızda ise ortada boşluk olduğu için altOrtaMaxY belirgin şekilde DAHA YUKARIDADIR.
+        if (topW < w * 0.5 && 
+            altSolMaxY > cy + h * 0.10 && 
+            altSagMaxY > cy + h * 0.10 && 
+            altOrtaMaxY < Math.min(altSolMaxY, altSagMaxY) - h * 0.10) {
             isStar = true;
         }
     }
@@ -3500,12 +3510,11 @@ function akilliSekilTani(stroke) {
     }
 
     // ==========================================
-    // 3. ÇEMBER KONTROLÜ (Köşe boşlukları karesel şekilleri reddeder)
+    // 3. ÇEMBER KONTROLÜ
     // ==========================================
-    let isCircle = (!isStar && !isHeart && sapmaOrani < 0.20 && Math.abs(w - h) < maxBoyut * 0.5 && avgCornerDist > maxBoyut * 0.10);
+    let isCircle = (!isStar && !isHeart && sapmaOrani < 0.20 && Math.abs(w - h) < maxBoyut * 0.5 && avgCornerDist > maxBoyut * 0.14);
 
     // --- SONUÇ DÖNDÜRME ---
-    
     const getChar = () => {
         let c = window.nextPointChar || 'A';
         let nextCode = c.charCodeAt(0) + 1;
@@ -3525,6 +3534,7 @@ function akilliSekilTani(stroke) {
 
     if (isStar) {
         const starPath = [];
+        // Bu döngü, senin istediğin "Dış Hatları Olan Kesişmeyen Yıldızı" çizen 10 noktalı sihirli kısımdır!
         for (let i = 0; i <= 10; i++) {
             let r = i % 2 === 0 ? maxBoyut/2 : maxBoyut/4.5;
             let ang = (Math.PI * 2 * i / 10) - Math.PI / 2;
@@ -3570,7 +3580,7 @@ function akilliSekilTani(stroke) {
         ];
     }
 
-    // 6. DİKDÖRTGEN / KARE (ARTIK KESİN ORANLI VE 4 SEGMENTLİ)
+    // 6. DİKDÖRTGEN / KARE 
     const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
     return [
         { type: 'segment', p1: { x: minX, y: minY }, p2: { x: maxX, y: minY }, color: col, width: wid, label1: l1, label2: l2 },
