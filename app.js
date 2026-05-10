@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V10 (ZİG-ZAG MATEMATİĞİ İLE KUSURSUZ YILDIZ) ---
+// --- AKILLI ŞEKİL TANIMA V11 (DETERMİNİSTİK / KESİN ÇÖZÜM) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3410,8 +3410,8 @@ function akilliSekilTani(stroke) {
     const w = maxX - minX; 
     const h = maxY - minY;
     const maxBoyut = Math.max(w, h);
-    let cx = minX + w / 2;
-    let cy = minY + h / 2;
+    const cx = minX + w / 2;
+    const cy = minY + h / 2;
 
     if (maxBoyut < 40) return null; 
     
@@ -3419,161 +3419,151 @@ function akilliSekilTani(stroke) {
     const wid = stroke.baseWidth || 3;
 
     // 1. DÜZ ÇİZGİ
-    if (directDistance > 60 && (totalDistance / directDistance) < 1.10) {
+    if (directDistance > 60 && (totalDistance / directDistance) < 1.15) {
         return { type: 'straightLine', p1: start, p2: end, color: col, width: wid };
     }
 
-    // 2. KAPALI ŞEKİLLER
-    const tamKapaliMi = directDistance < (maxBoyut * 0.25) && directDistance < 40;
+    // 2. KAPALI ŞEKİLLER (Tam Kapanma Kontrolü)
+    const tamKapaliMi = directDistance < (maxBoyut * 0.3) && directDistance < 50;
+    if (!tamKapaliMi) return null;
 
-    if (tamKapaliMi) {
-        
-        // ==========================================================
-        // YENİ YILDIZ TESPİTİ (Kesin Çözüm: Zig-Zag / Git-Gel Sayacı)
-        // ==========================================================
-        let xGitGel = 0, yGitGel = 0;
-        let sonYonX = 0, sonYonY = 0;
-        
-        // Çizerken oluşan ufak titremeleri yoksaymak için 5 noktada bir yön kontrolü yap
-        for (let i = 5; i < pts.length; i += 5) {
-            let dx = pts[i].x - pts[i-5].x;
-            let dy = pts[i].y - pts[i-5].y;
+    // --- BÖLGESEL GENİŞLİK VE ANALİZLER ---
+    let topMinX = Infinity, topMaxX = -Infinity;
+    let bottomMinX = Infinity, bottomMaxX = -Infinity;
+    let leftMinY = Infinity, leftMaxY = -Infinity;
+    let rightMinY = Infinity, rightMaxY = -Infinity;
+    let totalR = 0;
+
+    pts.forEach(p => {
+        if (p.y < minY + h * 0.35) { if (p.x < topMinX) topMinX = p.x; if (p.x > topMaxX) topMaxX = p.x; }
+        if (p.y > maxY - h * 0.35) { if (p.x < bottomMinX) bottomMinX = p.x; if (p.x > bottomMaxX) bottomMaxX = p.x; }
+        if (p.x < minX + w * 0.35) { if (p.y < leftMinY) leftMinY = p.y; if (p.y > leftMaxY) leftMaxY = p.y; }
+        if (p.x > maxX - w * 0.35) { if (p.y < rightMinY) rightMinY = p.y; if (p.y > rightMaxY) rightMaxY = p.y; }
+        totalR += Math.hypot(p.x - cx, p.y - cy);
+    });
+
+    let topW = Math.max(1, topMaxX - topMinX);
+    let bottomW = Math.max(1, bottomMaxX - bottomMinX);
+    let leftH = Math.max(1, leftMaxY - leftMinY);
+    let rightH = Math.max(1, rightMaxY - rightMinY);
+
+    let avgR = totalR / pts.length;
+    let sapma = 0;
+    pts.forEach(p => { sapma += Math.abs(Math.hypot(p.x - cx, p.y - cy) - avgR); });
+    let sapmaOrani = sapma / (pts.length * avgR); 
+
+    // --- KİMLİK TESPİTLERİ (DETERMİNİSTİK) ---
+
+    // A. ÇEMBER Mİ?
+    let isCircle = (sapmaOrani < 0.18 && Math.abs(w - h) < maxBoyut * 0.5);
+
+    // B. KALP Mİ? (Tepe geniş, ortada derin çukur var)
+    let isHeart = false;
+    if (Math.abs(w - h) < maxBoyut * 0.5 && topW > w * 0.6) {
+        let ustCeyrek = pts.filter(p => p.y < cy);
+        let solTepeler = ustCeyrek.filter(p => p.x < cx - w*0.1);
+        let sagTepeler = ustCeyrek.filter(p => p.x > cx + w*0.1);
+        let ortaCukurlar = ustCeyrek.filter(p => Math.abs(p.x - cx) < w*0.15);
+
+        if (solTepeler.length > 0 && sagTepeler.length > 0 && ortaCukurlar.length > 0) {
+            let solZirve = Math.min(...solTepeler.map(p => p.y));
+            let sagZirve = Math.min(...sagTepeler.map(p => p.y));
+            let ortaEnAlt = Math.max(...ortaCukurlar.map(p => p.y)); 
             
-            if (Math.abs(dx) > 3) {
-                let yonX = Math.sign(dx);
-                if (sonYonX !== 0 && yonX !== sonYonX) xGitGel++;
-                sonYonX = yonX;
-            }
-            if (Math.abs(dy) > 3) {
-                let yonY = Math.sign(dy);
-                if (sonYonY !== 0 && yonY !== sonYonY) yGitGel++;
-                sonYonY = yonY;
+            // Çukur noktası, zirvelerden belirgin şekilde daha aşağıdaysa bu KESİN kalptir!
+            if (ortaEnAlt > solZirve + h*0.10 && ortaEnAlt > sagZirve + h*0.10) {
+                isHeart = true;
             }
         }
+    }
 
-        // Yıldız çizerken X ve Y ekseninde toplam en az 6-7 kere yön değiştirirsin. Üçgende bu sayı 2 veya 3'tür!
-        if (Math.abs(w - h) < maxBoyut * 0.6 && (xGitGel >= 4 || yGitGel >= 4 || (xGitGel + yGitGel) >= 6)) {
-            const starPath = [];
-            for (let i = 0; i <= 10; i++) {
-                let r = i % 2 === 0 ? maxBoyut/2 : maxBoyut/4.5;
-                let ang = (Math.PI * 2 * i / 10) - Math.PI / 2;
-                starPath.push({ x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r });
+    // C. YILDIZ MI? 
+    let isStar = false;
+    const bboxCevre = 2 * (w + h);
+    const mesafeOrani = totalDistance / bboxCevre; 
+    
+    if (Math.abs(w - h) < maxBoyut * 0.6) {
+        // C.1: Kesişen Yıldız (Çizgiler iç içe geçtiği için çok uzundur)
+        if (mesafeOrani > 1.22) {
+            isStar = true;
+        } 
+        // C.2: Kesişmeyen (Outline) Yıldız
+        else {
+            // Alt ortada boşluk var mı? (Yıldızın bacak arası)
+            let altOrtaNoktalar = pts.filter(p => p.y > maxY - h * 0.2 && Math.abs(p.x - cx) < w * 0.15);
+            let altBoslukVarMi = altOrtaNoktalar.length < pts.length * 0.03; // Neredeyse hiç nokta yoksa
+            
+            // Tepe sivri, alt taraf iki bacak nedeniyle geniş VE ortada boşluk var. Bu KESİN yıldızdır!
+            if (topW < w * 0.5 && bottomW > w * 0.6 && altBoslukVarMi) {
+                isStar = true;
             }
-            return { type: 'pen', path: starPath, color: col, baseWidth: wid, width: wid };
         }
+    }
 
-        // Normal şekiller için karmaşıklık filtresi (Yıldız değilse karmaşık karalamaları ele)
-        const kutuCevresi = 2 * (w + h);
-        if (totalDistance > kutuCevresi * 1.5) return null; 
+    // --- SONUÇ ÜRETİMİ (Kesin Öncelik Sırasıyla) ---
+    const getChar = () => {
+        let c = window.nextPointChar || 'A';
+        let nextCode = c.charCodeAt(0) + 1;
+        if (nextCode > 90) nextCode = 65; 
+        window.nextPointChar = String.fromCharCode(nextCode);
+        return c;
+    };
+    const createTriangle = (p1, p2, p3) => {
+        const l1 = getChar(), l2 = getChar(), l3 = getChar();
+        return [
+            { type: 'segment', p1, p2, color: col, width: wid, label1: l1, label2: l2 },
+            { type: 'segment', p2, p3: p3, color: col, width: wid, label1: l2, label2: l3 },
+            { type: 'segment', p3, p1, color: col, width: wid, label1: l3, label2: l1 }
+        ];
+    };
 
-        // ==========================================================
-        // YENİ KALP TESPİTİ 
-        // ==========================================================
-        if (Math.abs(w - h) < maxBoyut * 0.4) {
-            let minYLeft = Infinity, minYRight = Infinity, minYCenter = Infinity; 
-            pts.forEach(p => {
-                if (p.y < cy) { 
-                    if (p.x < minX + w * 0.35) { if (p.y < minYLeft) minYLeft = p.y; }
-                    else if (p.x > maxX - w * 0.35) { if (p.y < minYRight) minYRight = p.y; }
-                    else { if (p.y < minYCenter) minYCenter = p.y; }
-                }
+    if (isCircle && !isHeart) {
+        return { type: 'arc', cx: cx, cy: cy, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
+    }
+
+    if (isHeart) {
+        const heartPath = [];
+        for (let t = 0; t <= Math.PI * 2; t += 0.1) {
+            heartPath.push({
+                x: cx + (w/2) * (16 * Math.pow(Math.sin(t), 3)) / 16,
+                y: cy - (h/2) * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 16 - (h*0.05)
             });
-
-            // Ortadaki üst nokta, sağ ve sol tepelerden daha AŞAĞIDAYSA bu kalptir!
-            if (minYCenter > minYLeft + h * 0.08 && minYCenter > minYRight + h * 0.08) {
-                const heartPath = [];
-                for (let t = 0; t <= Math.PI * 2; t += 0.1) {
-                    heartPath.push({
-                        x: cx + (w/2) * (16 * Math.pow(Math.sin(t), 3)) / 16,
-                        y: cy - (h/2) * (13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) / 16 - (h*0.05)
-                    });
-                }
-                heartPath.push(heartPath[0]); 
-                return { type: 'pen', path: heartPath, color: col, baseWidth: wid, width: wid };
-            }
         }
+        heartPath.push(heartPath[0]); 
+        return { type: 'pen', path: heartPath, color: col, baseWidth: wid, width: wid };
+    }
 
-        // ==========================================================
-        // --- Diğer Şekillerin (Üçgen, Çember, Kare) Analizi ---
-        // ==========================================================
-        let topMinX = Infinity, topMaxX = -Infinity;
-        let bottomMinX = Infinity, bottomMaxX = -Infinity;
-        let leftMinY = Infinity, leftMaxY = -Infinity;
-        let rightMinY = Infinity, rightMaxY = -Infinity;
-        let distTL = Infinity, distTR = Infinity, distBL = Infinity, distBR = Infinity;
-        let totalR = 0;
-
-        pts.forEach(p => {
-            if (p.y < minY + h * 0.35) { if (p.x < topMinX) topMinX = p.x; if (p.x > topMaxX) topMaxX = p.x; }
-            if (p.y > maxY - h * 0.35) { if (p.x < bottomMinX) bottomMinX = p.x; if (p.x > bottomMaxX) bottomMaxX = p.x; }
-            if (p.x < minX + w * 0.35) { if (p.y < leftMinY) leftMinY = p.y; if (p.y > leftMaxY) leftMaxY = p.y; }
-            if (p.x > maxX - w * 0.35) { if (p.y < rightMinY) rightMinY = p.y; if (p.y > rightMaxY) rightMaxY = p.y; }
-
-            totalR += Math.hypot(p.x - cx, p.y - cy);
-            
-            const dTL = Math.hypot(p.x - minX, p.y - minY); if (dTL < distTL) distTL = dTL;
-            const dTR = Math.hypot(p.x - maxX, p.y - minY); if (dTR < distTR) distTR = dTR;
-            const dBL = Math.hypot(p.x - minX, p.y - maxY); if (dBL < distBL) distBL = dBL;
-            const dBR = Math.hypot(p.x - maxX, p.y - maxY); if (dBR < distBR) distBR = dBR;
-        });
-
-        let topW = Math.max(1, topMaxX - topMinX);
-        let bottomW = Math.max(1, bottomMaxX - bottomMinX);
-        let leftH = Math.max(1, leftMaxY - leftMinY);
-        let rightH = Math.max(1, rightMaxY - rightMinY);
-
-        const getChar = () => {
-            let c = window.nextPointChar || 'A';
-            let nextCode = c.charCodeAt(0) + 1;
-            if (nextCode > 90) nextCode = 65; 
-            window.nextPointChar = String.fromCharCode(nextCode);
-            return c;
-        };
-
-        const createTriangle = (p1, p2, p3) => {
-            const l1 = getChar(), l2 = getChar(), l3 = getChar();
-            return [
-                { type: 'segment', p1: p1, p2: p2, color: col, width: wid, label1: l1, label2: l2 },
-                { type: 'segment', p1: p2, p2: p3, color: col, width: wid, label1: l2, label2: l3 },
-                { type: 'segment', p1: p3, p2: p1, color: col, width: wid, label1: l3, label2: l1 }
-            ];
-        };
-
-        // A. ÜÇGEN
-        if (topW < bottomW * 0.45 || bottomW < topW * 0.45) {
-            if (topW < bottomW) return createTriangle({ x: (topMinX + topMaxX) / 2, y: minY }, { x: minX, y: maxY }, { x: maxX, y: maxY });
-            else return createTriangle({ x: minX, y: minY }, { x: maxX, y: minY }, { x: (bottomMinX + bottomMaxX) / 2, y: maxY });
+    if (isStar) {
+        const starPath = [];
+        for (let i = 0; i <= 10; i++) {
+            let r = i % 2 === 0 ? maxBoyut/2 : maxBoyut/4.5;
+            let ang = (Math.PI * 2 * i / 10) - Math.PI / 2;
+            starPath.push({ x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r });
         }
-        if (leftH < rightH * 0.45 || rightH < leftH * 0.45) {
-            if (leftH < rightH) return createTriangle({ x: minX, y: (leftMinY + leftMaxY) / 2 }, { x: maxX, y: minY }, { x: maxX, y: maxY });
-            else return createTriangle({ x: maxX, y: (rightMinY + rightMaxY) / 2 }, { x: minX, y: minY }, { x: minX, y: maxY });
-        }
+        return { type: 'pen', path: starPath, color: col, baseWidth: wid, width: wid };
+    }
 
-        // B. ÇEMBER / ELİPS 
-        let avgR = totalR / pts.length;
-        let sapma = 0;
-        pts.forEach(p => { sapma += Math.abs(Math.hypot(p.x - cx, p.y - cy) - avgR); });
-        let sapmaOrani = sapma / (pts.length * avgR); 
-        const avgCornerDist = (distTL + distTR + distBL + distBR) / 4;
-
-        if (Math.abs(w - h) < (maxBoyut * 0.5) && avgCornerDist > (maxBoyut * 0.10) && sapmaOrani < 0.22) {
-            return { type: 'arc', cx: cx, cy: cy, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
-        }
-        
-        // C. YAMUK / TRAPEZOİD
-        if ((topW < bottomW * 0.85 && topW >= bottomW * 0.45) || (bottomW < topW * 0.85 && bottomW >= topW * 0.45)) {
-            const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
-            return [
-                { type: 'segment', p1: { x: topMinX, y: minY }, p2: { x: topMaxX, y: minY }, color: col, width: wid, label1: l1, label2: l2 },
-                { type: 'segment', p1: { x: topMaxX, y: minY }, p2: { x: maxX, y: maxY }, color: col, width: wid, label1: l2, label2: l3 },
-                { type: 'segment', p1: { x: maxX, y: maxY }, p2: { x: minX, y: maxY }, color: col, width: wid, label1: l3, label2: l4 },
-                { type: 'segment', p1: { x: minX, y: maxY }, p2: { x: topMinX, y: minY }, color: col, width: wid, label1: l4, label2: l1 }
-            ];
-        }
-
-        // D. DİKDÖRTGEN / KARE 
-        return { type: 'rectangle', x: minX, y: minY, width: w, height: h, rotation: 0, color: col, showEdgeLabels: false };
+    // D. ÜÇGEN
+    if (topW < bottomW * 0.45 || bottomW < topW * 0.45) {
+        if (topW < bottomW) return createTriangle({ x: (topMinX + topMaxX) / 2, y: minY }, { x: minX, y: maxY }, { x: maxX, y: maxY });
+        else return createTriangle({ x: minX, y: minY }, { x: maxX, y: minY }, { x: (bottomMinX + bottomMaxX) / 2, y: maxY });
+    }
+    if (leftH < rightH * 0.45 || rightH < leftH * 0.45) {
+        if (leftH < rightH) return createTriangle({ x: minX, y: (leftMinY + leftMaxY) / 2 }, { x: maxX, y: minY }, { x: maxX, y: maxY });
+        else return createTriangle({ x: maxX, y: (rightMinY + rightMaxY) / 2 }, { x: minX, y: minY }, { x: minX, y: maxY });
     }
     
-    return null; 
+    // E. YAMUK
+    if ((topW < bottomW * 0.85 && topW >= bottomW * 0.45) || (bottomW < topW * 0.85 && bottomW >= topW * 0.45)) {
+        const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
+        return [
+            { type: 'segment', p1: { x: topMinX, y: minY }, p2: { x: topMaxX, y: minY }, color: col, width: wid, label1: l1, label2: l2 },
+            { type: 'segment', p1: { x: topMaxX, y: minY }, p2: { x: maxX, y: maxY }, color: col, width: wid, label1: l2, label2: l3 },
+            { type: 'segment', p1: { x: maxX, y: maxY }, p2: { x: minX, y: maxY }, color: col, width: wid, label1: l3, label2: l4 },
+            { type: 'segment', p1: { x: minX, y: maxY }, p2: { x: topMinX, y: minY }, color: col, width: wid, label1: l4, label2: l1 }
+        ];
+    }
+
+    // F. DİKDÖRTGEN / KARE 
+    return { type: 'rectangle', x: minX, y: minY, width: w, height: h, rotation: 0, color: col, showEdgeLabels: false };
 }
