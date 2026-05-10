@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V12 (HATA GİDERİCİ DÜZELTME İLE) ---
+// --- AKILLI ŞEKİL TANIMA V13 (DİKDÖRTGENİ ÖZGÜRLÜĞÜNE KAVUŞTURAN SÜRÜM) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3435,6 +3435,7 @@ function akilliSekilTani(stroke) {
     let bottomMinX = Infinity, bottomMaxX = -Infinity;
     let leftMinY = Infinity, leftMaxY = -Infinity;
     let rightMinY = Infinity, rightMaxY = -Infinity;
+    let distTL = Infinity, distTR = Infinity, distBL = Infinity, distBR = Infinity;
     let totalR = 0;
 
     pts.forEach(p => {
@@ -3443,12 +3444,19 @@ function akilliSekilTani(stroke) {
         if (p.x < minX + w * 0.35) { if (p.y < leftMinY) leftMinY = p.y; if (p.y > leftMaxY) leftMaxY = p.y; }
         if (p.x > maxX - w * 0.35) { if (p.y < rightMinY) rightMinY = p.y; if (p.y > rightMaxY) rightMaxY = p.y; }
         totalR += Math.hypot(p.x - cx, p.y - cy);
+
+        // Köşe analizleri (Kare ile Çemberi ayırmak için hayati önem taşır)
+        const dTL = Math.hypot(p.x - minX, p.y - minY); if (dTL < distTL) distTL = dTL;
+        const dTR = Math.hypot(p.x - maxX, p.y - minY); if (dTR < distTR) distTR = dTR;
+        const dBL = Math.hypot(p.x - minX, p.y - maxY); if (dBL < distBL) distBL = dBL;
+        const dBR = Math.hypot(p.x - maxX, p.y - maxY); if (dBR < distBR) distBR = dBR;
     });
 
     let topW = Math.max(1, topMaxX - topMinX);
     let bottomW = Math.max(1, bottomMaxX - bottomMinX);
     let leftH = Math.max(1, leftMaxY - leftMinY);
     let rightH = Math.max(1, rightMaxY - rightMinY);
+    let avgCornerDist = (distTL + distTR + distBL + distBR) / 4;
 
     let avgR = totalR / pts.length;
     let sapma = 0;
@@ -3492,9 +3500,9 @@ function akilliSekilTani(stroke) {
     }
 
     // ==========================================
-    // 3. ÇEMBER KONTROLÜ
+    // 3. ÇEMBER KONTROLÜ (Köşe boşlukları karesel şekilleri reddeder)
     // ==========================================
-    let isCircle = (!isStar && !isHeart && sapmaOrani < 0.20 && Math.abs(w - h) < maxBoyut * 0.5);
+    let isCircle = (!isStar && !isHeart && sapmaOrani < 0.20 && Math.abs(w - h) < maxBoyut * 0.5 && avgCornerDist > maxBoyut * 0.10);
 
     // --- SONUÇ DÖNDÜRME ---
     
@@ -3506,8 +3514,6 @@ function akilliSekilTani(stroke) {
         return c;
     };
     
-    // İŞTE HATAYA SEBEP OLAN VE DÜZELTİLEN KISIM!
-    // Artık program tüm çizgilerde p1 ve p2 olduğunu kesin olarak biliyor.
     const createTriangle = (pA, pB, pC) => {
         const l1 = getChar(), l2 = getChar(), l3 = getChar();
         return [
@@ -3564,6 +3570,12 @@ function akilliSekilTani(stroke) {
         ];
     }
 
-    // 6. DİKDÖRTGEN / KARE 
-    return { type: 'rectangle', x: minX, y: minY, width: w, height: h, rotation: 0, color: col, showEdgeLabels: false };
+    // 6. DİKDÖRTGEN / KARE (ARTIK KESİN ORANLI VE 4 SEGMENTLİ)
+    const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
+    return [
+        { type: 'segment', p1: { x: minX, y: minY }, p2: { x: maxX, y: minY }, color: col, width: wid, label1: l1, label2: l2 },
+        { type: 'segment', p1: { x: maxX, y: minY }, p2: { x: maxX, y: maxY }, color: col, width: wid, label1: l2, label2: l3 },
+        { type: 'segment', p1: { x: maxX, y: maxY }, p2: { x: minX, y: maxY }, color: col, width: wid, label1: l3, label2: l4 },
+        { type: 'segment', p1: { x: minX, y: maxY }, p2: { x: minX, y: minY }, color: col, width: wid, label1: l4, label2: l1 }
+    ];
 }
