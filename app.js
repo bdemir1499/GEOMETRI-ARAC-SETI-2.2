@@ -3388,7 +3388,7 @@ window.addEventListener('load', () => {
 
 
 // ===================================================================
-// --- AKILLI ŞEKİL TANIMA V11 (DETERMİNİSTİK / KESİN ÇÖZÜM) ---
+// --- AKILLI ŞEKİL TANIMA V12 (PICASSO KOVULDU - KESİN KANIT SİSTEMİ) ---
 // ===================================================================
 function akilliSekilTani(stroke) {
     if (!stroke || stroke.type !== 'pen' || stroke.path.length < 15) return null;
@@ -3413,21 +3413,24 @@ function akilliSekilTani(stroke) {
     const cx = minX + w / 2;
     const cy = minY + h / 2;
 
-    if (maxBoyut < 40) return null; 
+    if (maxBoyut < 30) return null; 
     
     const col = stroke.color;
     const wid = stroke.baseWidth || 3;
 
     // 1. DÜZ ÇİZGİ
-    if (directDistance > 60 && (totalDistance / directDistance) < 1.15) {
+    if (directDistance > 50 && (totalDistance / directDistance) < 1.15) {
         return { type: 'straightLine', p1: start, p2: end, color: col, width: wid };
     }
 
-    // 2. KAPALI ŞEKİLLER (Tam Kapanma Kontrolü)
+    // 2. KAPALI ŞEKİLLER (Kapanma Toleransı)
     const tamKapaliMi = directDistance < (maxBoyut * 0.3) && directDistance < 50;
     if (!tamKapaliMi) return null;
 
-    // --- BÖLGESEL GENİŞLİK VE ANALİZLER ---
+    // AŞIRI KARMAŞIK KARALAMA KORUMASI 
+    if (totalDistance > (w + h) * 3) return null;
+
+    // --- BÖLGESEL FİZİKSEL KANITLAR ---
     let topMinX = Infinity, topMaxX = -Infinity;
     let bottomMinX = Infinity, bottomMaxX = -Infinity;
     let leftMinY = Infinity, leftMaxY = -Infinity;
@@ -3452,55 +3455,52 @@ function akilliSekilTani(stroke) {
     pts.forEach(p => { sapma += Math.abs(Math.hypot(p.x - cx, p.y - cy) - avgR); });
     let sapmaOrani = sapma / (pts.length * avgR); 
 
-    // --- KİMLİK TESPİTLERİ (DETERMİNİSTİK) ---
+    // ==========================================
+    // 1. YILDIZ KONTROLÜ (İmkansız Çalınma Şartı)
+    // ==========================================
+    let isStar = false;
+    if (Math.abs(w - h) < maxBoyut * 0.6 && totalDistance > (w + h) * 1.5) {
+        // Yıldızın altında iki bacak ve ortasında KESİN boşluk olmak zorundadır!
+        let altKisim = pts.filter(p => p.y > cy + h * 0.2);
+        let solBacak = altKisim.filter(p => p.x < cx - w * 0.1);
+        let sagBacak = altKisim.filter(p => p.x > cx + w * 0.1);
+        let ortaBosluk = altKisim.filter(p => Math.abs(p.x - cx) <= w * 0.1);
+        
+        // Tepe darsa, bacaklar varsa ve bacakların arası gerçekten boşsa bu bir yıldızdır!
+        if (topW < w * 0.4 && solBacak.length > 0 && sagBacak.length > 0 && ortaBosluk.length < altKisim.length * 0.15) {
+            isStar = true;
+        }
+    }
 
-    // A. ÇEMBER Mİ?
-    let isCircle = (sapmaOrani < 0.18 && Math.abs(w - h) < maxBoyut * 0.5);
-
-    // B. KALP Mİ? (Tepe geniş, ortada derin çukur var)
+    // ==========================================
+    // 2. KALP KONTROLÜ (İmkansız Çalınma Şartı)
+    // ==========================================
     let isHeart = false;
-    if (Math.abs(w - h) < maxBoyut * 0.5 && topW > w * 0.6) {
-        let ustCeyrek = pts.filter(p => p.y < cy);
-        let solTepeler = ustCeyrek.filter(p => p.x < cx - w*0.1);
-        let sagTepeler = ustCeyrek.filter(p => p.x > cx + w*0.1);
-        let ortaCukurlar = ustCeyrek.filter(p => Math.abs(p.x - cx) < w*0.15);
+    if (!isStar && Math.abs(w - h) < maxBoyut * 0.5) {
+        let ustKisim = pts.filter(p => p.y < cy);
+        let solTepe = ustKisim.filter(p => p.x < cx - w * 0.15);
+        let sagTepe = ustKisim.filter(p => p.x > cx + w * 0.15);
+        let ortaCukur = ustKisim.filter(p => Math.abs(p.x - cx) <= w * 0.15);
 
-        if (solTepeler.length > 0 && sagTepeler.length > 0 && ortaCukurlar.length > 0) {
-            let solZirve = Math.min(...solTepeler.map(p => p.y));
-            let sagZirve = Math.min(...sagTepeler.map(p => p.y));
-            let ortaEnAlt = Math.max(...ortaCukurlar.map(p => p.y)); 
+        if (solTepe.length > 0 && sagTepe.length > 0 && ortaCukur.length > 0) {
+            let solMaxY = Math.min(...solTepe.map(p => p.y));
+            let sagMaxY = Math.min(...sagTepe.map(p => p.y));
+            let ortaMinY = Math.max(...ortaCukur.map(p => p.y));
             
-            // Çukur noktası, zirvelerden belirgin şekilde daha aşağıdaysa bu KESİN kalptir!
-            if (ortaEnAlt > solZirve + h*0.10 && ortaEnAlt > sagZirve + h*0.10) {
+            // Orta çukur zirvelerden derindeyse VE alt taraf ucu sivri olacak kadar darsa
+            if (ortaMinY > solMaxY + h * 0.08 && ortaMinY > sagMaxY + h * 0.08 && bottomW < w * 0.45) {
                 isHeart = true;
             }
         }
     }
 
-    // C. YILDIZ MI? 
-    let isStar = false;
-    const bboxCevre = 2 * (w + h);
-    const mesafeOrani = totalDistance / bboxCevre; 
-    
-    if (Math.abs(w - h) < maxBoyut * 0.6) {
-        // C.1: Kesişen Yıldız (Çizgiler iç içe geçtiği için çok uzundur)
-        if (mesafeOrani > 1.22) {
-            isStar = true;
-        } 
-        // C.2: Kesişmeyen (Outline) Yıldız
-        else {
-            // Alt ortada boşluk var mı? (Yıldızın bacak arası)
-            let altOrtaNoktalar = pts.filter(p => p.y > maxY - h * 0.2 && Math.abs(p.x - cx) < w * 0.15);
-            let altBoslukVarMi = altOrtaNoktalar.length < pts.length * 0.03; // Neredeyse hiç nokta yoksa
-            
-            // Tepe sivri, alt taraf iki bacak nedeniyle geniş VE ortada boşluk var. Bu KESİN yıldızdır!
-            if (topW < w * 0.5 && bottomW > w * 0.6 && altBoslukVarMi) {
-                isStar = true;
-            }
-        }
-    }
+    // ==========================================
+    // 3. ÇEMBER KONTROLÜ
+    // ==========================================
+    let isCircle = (!isStar && !isHeart && sapmaOrani < 0.20 && Math.abs(w - h) < maxBoyut * 0.5);
 
-    // --- SONUÇ ÜRETİMİ (Kesin Öncelik Sırasıyla) ---
+    // --- SONUÇ DÖNDÜRME ---
+    
     const getChar = () => {
         let c = window.nextPointChar || 'A';
         let nextCode = c.charCodeAt(0) + 1;
@@ -3508,6 +3508,7 @@ function akilliSekilTani(stroke) {
         window.nextPointChar = String.fromCharCode(nextCode);
         return c;
     };
+    
     const createTriangle = (p1, p2, p3) => {
         const l1 = getChar(), l2 = getChar(), l3 = getChar();
         return [
@@ -3517,8 +3518,14 @@ function akilliSekilTani(stroke) {
         ];
     };
 
-    if (isCircle && !isHeart) {
-        return { type: 'arc', cx: cx, cy: cy, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
+    if (isStar) {
+        const starPath = [];
+        for (let i = 0; i <= 10; i++) {
+            let r = i % 2 === 0 ? maxBoyut/2 : maxBoyut/4.5;
+            let ang = (Math.PI * 2 * i / 10) - Math.PI / 2;
+            starPath.push({ x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r });
+        }
+        return { type: 'pen', path: starPath, color: col, baseWidth: wid, width: wid };
     }
 
     if (isHeart) {
@@ -3533,17 +3540,11 @@ function akilliSekilTani(stroke) {
         return { type: 'pen', path: heartPath, color: col, baseWidth: wid, width: wid };
     }
 
-    if (isStar) {
-        const starPath = [];
-        for (let i = 0; i <= 10; i++) {
-            let r = i % 2 === 0 ? maxBoyut/2 : maxBoyut/4.5;
-            let ang = (Math.PI * 2 * i / 10) - Math.PI / 2;
-            starPath.push({ x: cx + Math.cos(ang) * r, y: cy + Math.sin(ang) * r });
-        }
-        return { type: 'pen', path: starPath, color: col, baseWidth: wid, width: wid };
+    if (isCircle) {
+        return { type: 'arc', cx: cx, cy: cy, radius: (w+h)/4, startAngle: 0, endAngle: 360, color: col, width: wid, fillColor: 'transparent' };
     }
 
-    // D. ÜÇGEN
+    // 4. ÜÇGEN
     if (topW < bottomW * 0.45 || bottomW < topW * 0.45) {
         if (topW < bottomW) return createTriangle({ x: (topMinX + topMaxX) / 2, y: minY }, { x: minX, y: maxY }, { x: maxX, y: maxY });
         else return createTriangle({ x: minX, y: minY }, { x: maxX, y: minY }, { x: (bottomMinX + bottomMaxX) / 2, y: maxY });
@@ -3553,7 +3554,7 @@ function akilliSekilTani(stroke) {
         else return createTriangle({ x: maxX, y: (rightMinY + rightMaxY) / 2 }, { x: minX, y: minY }, { x: minX, y: maxY });
     }
     
-    // E. YAMUK
+    // 5. YAMUK
     if ((topW < bottomW * 0.85 && topW >= bottomW * 0.45) || (bottomW < topW * 0.85 && bottomW >= topW * 0.45)) {
         const l1 = getChar(), l2 = getChar(), l3 = getChar(), l4 = getChar();
         return [
@@ -3564,6 +3565,6 @@ function akilliSekilTani(stroke) {
         ];
     }
 
-    // F. DİKDÖRTGEN / KARE 
+    // 6. DİKDÖRTGEN / KARE 
     return { type: 'rectangle', x: minX, y: minY, width: w, height: h, rotation: 0, color: col, showEdgeLabels: false };
 }
