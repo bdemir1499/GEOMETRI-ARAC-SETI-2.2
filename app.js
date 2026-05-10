@@ -1,4 +1,8 @@
-
+let selectedStroke = null;
+let interactionMode = null; // 'move', 'rotate', 'resize', 'measure'
+let moveOffset = { x: 0, y: 0 };
+let initialRotation = 0;
+let initialScale = 1;
 let isDrawingLasso = false;
 let lassoPoints = [];
 let drawnStrokes = [];
@@ -154,7 +158,6 @@ const animateButton = document.getElementById('btn-animate');
 let currentTool = 'none'; 
 let isPinching = false;           // İki parmakla yakınlaştırma aktif mi?
 let initialDistance = 0;          // Başlangıç parmak mesafesi (zoom için)
-let initialScale = 0;             // Başlangıçta seçili nesnenin genişliği
 let initialCenter = { x: 0, y:  0 }; // İki parmağın merkez noktası (pan için)
 let currentPenColor = '#FFFFFF'; 
 let currentPenWidth = 3;
@@ -733,6 +736,12 @@ else if (stroke.type === 'rectangle') {
                 drawLabel(`(π = ${PI} alındı)`, {x: labelX, y: labelY}, '#AAAAAA'); 
             }
         }
+
+// --- KRİTİK EKLEME BURASI ---
+        // Her şekil çizildikten sonra, eğer o şekil seçiliyse üstüne çerçevesini basar
+        drawInteractionUI(ctx, stroke);
+
+
     } // <-- FOR DÖNGÜSÜ BURADA KAPANIYOR
 
     ctx.restore();
@@ -1614,6 +1623,95 @@ if (animateButton) {
 }
 
 
+function handleShapeSelection(x, y) {
+    // 1. Şekilleri tersten (en üsttekinden başlayarak) kontrol et
+    for (let i = drawnStrokes.length - 1; i >= 0; i--) {
+        const stroke = drawnStrokes[i];
+        
+        // --- KENAR TIKLAMA (Uzunluk Ölçümü) ---
+        if (stroke.type === 'segment') {
+            const dist = pointToSegmentDistance({x, y}, stroke.p1, stroke.p2);
+            if (dist < 10) { // 10 piksel tolerans
+                const len = Math.hypot(stroke.p2.x - stroke.p1.x, stroke.p2.y - stroke.p1.y).toFixed(1);
+                stroke.lengthLabel = `${len} br`;
+                stroke.lengthLabelPos = { x: (stroke.p1.x + stroke.p2.x) / 2, y: (stroke.p1.y + stroke.p2.y) / 2 };
+                if (window.redrawAllStrokes) window.redrawAllStrokes();
+                return;
+            }
+        }
+
+        // --- KÖŞE TIKLAMA (Açı Ölçümü) ---
+        // Not: Çokgenlerde aynı noktayı paylaşan iki segmenti bulup aradaki açıyı hesaplar.
+        
+        // --- MERKEZ TIKLAMA (Seçim ve Taşıma Modu) ---
+        const bounds = getStrokeBounds(stroke);
+        const centerX = (bounds.minX + bounds.maxX) / 2;
+        const centerY = (bounds.minY + bounds.maxY) / 2;
+
+        if (Math.hypot(x - centerX, y - centerY) < 20) {
+            selectedStroke = stroke;
+            interactionMode = 'move';
+            moveOffset = { x: x - centerX, y: y - centerY };
+            return;
+        }
+    }
+    selectedStroke = null; // Boşluğa tıklandıysa seçimi kaldır
+}
+
+// Kenara mı tıklandı yoksa merkeze mi? Hesaplayan yardımcılar
+function pointToSegmentDistance(p, p1, p2) {
+    const L2 = Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2);
+    if (L2 === 0) return Math.hypot(p.x - p1.x, p.y - p1.y);
+    let t = ((p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y)) / L2;
+    t = Math.max(0, Math.min(1, t));
+    return Math.hypot(p.x - (p1.x + t * (p2.x - p1.x)), p.y - (p1.y + t * (p2.y - p1.y)));
+}
+
+function getStrokeBounds(stroke) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    if (stroke.path) {
+        stroke.path.forEach(p => {
+            minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
+        });
+    } else if (stroke.p1 && stroke.p2) {
+        minX = Math.min(stroke.p1.x, stroke.p2.x); minY = Math.min(stroke.p1.y, stroke.p2.y);
+        maxX = Math.max(stroke.p1.x, stroke.p2.x); maxY = Math.max(stroke.p1.y, stroke.p2.y);
+    } else { // Diğer obje tipleri için (rectangle, circle vb. kendi x,y'si olanlar)
+        minX = stroke.x || stroke.cx - (stroke.radius || 0);
+        minY = stroke.y || stroke.cy - (stroke.radius || 0);
+        maxX = (stroke.x + stroke.width) || stroke.cx + (stroke.radius || 0);
+        maxY = (stroke.y + stroke.height) || stroke.cy + (stroke.radius || 0);
+    }
+    return { minX, minY, maxX, maxY };
+}
+
+function handleShapeSelection(pos) {
+    for (let i = drawnStrokes.length - 1; i >= 0; i--) {
+        const stroke = drawnStrokes[i];
+        
+        // --- Kenar Kontrolü (Segmentler veya çokgen kenarları için) ---
+        if (stroke.type === 'segment' || (Array.isArray(stroke) && stroke[0].type === 'segment')) {
+            const segments = Array.isArray(stroke) ? stroke : [stroke];
+            for (let seg of segments) {
+                if (pointToSegmentDistance(pos, seg.p1, seg.p2) < 15) {
+                    return { item: seg, pointKey: 'measure' }; 
+                }
+            }
+        }
+
+        // --- Merkez Kontrolü (Genel taşıma için) ---
+        const b = getStrokeBounds(stroke);
+        const cx = (b.minX + b.maxX) / 2;
+        const cy = (b.minY + b.maxY) / 2;
+        if (Math.hypot(pos.x - cx, pos.y - cy) < 30) {
+            return { item: stroke, pointKey: 'self' };
+        }
+    }
+    return null;
+}
+
+
 // --- MOUSE OLAYLARI ---
 
 canvas.addEventListener('pointerdown', (e) => {
@@ -2081,72 +2179,72 @@ canvas.addEventListener('pointermove', (e) => {
             selectedItem[selectedPointKey].y = rotationPivot.y + Math.sin(currentAngle) * selectedItem.startRadius;
         } 
 
-        // F. Genel Yer Değiştirme (Sürükleme)
+       // F. Genel Yer Değiştirme (Sürükleme)
         else {
-            if (selectedPointKey === 'self') { 
-                let yeniX = originalStartPos.x + dx;
-                let yeniY = originalStartPos.y + dy;
+            if (selectedPointKey === 'self' || selectedPointKey === 'measure') { 
+                const dx = pos.x - dragStartPos.x;
+                const dy = pos.y - dragStartPos.y;
 
-               // =============================================================
-                // --- YENİ: KOPYALAR İÇİN KURŞUN GEÇİRMEZ MIKNATIS VE EŞİTLEME ---
-                if (selectedItem.type === 'image' && selectedItem.isBackground === false) {
-                    // Zemini bul (PDF varsa onu, yoksa ana ekranı baz al)
-                    const bg = drawnStrokes.find(s => s.isBackground === true);
-                    
-                    // Güvenlik: bg.x tanımsızsa 0 kabul et, bg.width tanımsızsa ekran genişliğini al
-                    const zX = (bg && bg.x !== undefined) ? bg.x : 0;
-                    const zY = (bg && bg.y !== undefined) ? bg.y : 0;
-                    const zW = (bg && bg.width !== undefined) ? bg.width : canvas.width;
-                    const zH = (bg && bg.height !== undefined) ? bg.height : canvas.height;
+                // --- 1. GRUP TAŞIMA (Üçgen, Yıldız, Segmentler için) ---
+                if (Array.isArray(selectedItem) || selectedItem.path || selectedItem.type === 'segment' || selectedItem.p1) {
+                    if (Array.isArray(selectedItem)) {
+                        selectedItem.forEach(seg => {
+                            if (seg.p1) { seg.p1.x += dx; seg.p1.y += dy; }
+                            if (seg.p2) { seg.p2.x += dx; seg.p2.y += dy; }
+                            if (seg.lengthLabelPos) { seg.lengthLabelPos.x += dx; seg.lengthLabelPos.y += dy; }
+                        });
+                    } else if (selectedItem.path) {
+                        selectedItem.path.forEach(p => { p.x += dx; p.y += dy; });
+                    } else { // Tek segment
+                        selectedItem.p1.x += dx; selectedItem.p1.y += dy;
+                        selectedItem.p2.x += dx; selectedItem.p2.y += dy;
+                        if (selectedItem.lengthLabelPos) { selectedItem.lengthLabelPos.x += dx; selectedItem.lengthLabelPos.y += dy; }
+                    }
+                    dragStartPos = pos; // Delta takibi için güncelle
+                } 
+                // --- 2. STANDART TAŞIMA (Resim ve Çemberler için) ---
+                else {
+                    let yeniX = (originalStartPos.x || 0) + (pos.x - dragStartPos.x);
+                    let yeniY = (originalStartPos.y || 0) + (pos.y - dragStartPos.y);
 
-                    const snapPiksel = 50; // Mıknatıs çekim alanı (50 piksel)
-                    
-                    const sagFark = Math.abs((yeniX + selectedItem.width) - (zX + zW));
-                    const solFark = Math.abs(yeniX - zX);
+                    // --- MIKNATIS MANTIĞI (Sadece Resimler/Kopyalar İçin) ---
+                    if (selectedItem.type === 'image' && selectedItem.isBackground === false) {
+                        const bg = drawnStrokes.find(s => s.isBackground === true);
+                        const zX = (bg && bg.x !== undefined) ? bg.x : 0;
+                        const zY = (bg && bg.y !== undefined) ? bg.y : 0;
+                        const zW = (bg && bg.width !== undefined) ? bg.width : canvas.width;
+                        const zH = (bg && bg.height !== undefined) ? bg.height : canvas.height;
 
-                    let kenaraYapisti = false;
+                        const snapPiksel = 50;
+                        if (Math.abs(yeniX - zX) < snapPiksel) yeniX = zX;
+                        else if (Math.abs((yeniX + selectedItem.width) - (zX + zW)) < snapPiksel) yeniX = (zX + zW) - selectedItem.width;
 
-                    // 1. SOLA VEYA SAĞA YAPIŞTIRMA (JİLET GİBİ SIFIRLAMA)
-                    if (solFark < snapPiksel) {
-                        yeniX = zX; // Sola sıfırla
-                        kenaraYapisti = true;
-                    } else if (sagFark < snapPiksel) {
-                        yeniX = (zX + zW) - selectedItem.width; // Sağa sıfırla
-                        kenaraYapisti = true;
+                        if (Math.abs(yeniY - zY) < snapPiksel) yeniY = zY;
+                        else if (Math.abs((yeniY + selectedItem.height) - (zY + zH)) < snapPiksel) yeniY = (zY + zH) - selectedItem.height;
                     }
 
-                    // 2. KISA KESİMLERİ OTOMATİK EŞİTLEME 
-                    // (Sadece sağ/sol kenara yapıştıysa ve boyu PDF'e yakınsa çalışır)
-                    if (kenaraYapisti && Math.abs(selectedItem.height - zH) < 200) {
-                        yeniY = zY; 
-                        selectedItem.height = zH; // Boyu tam sayfa boyu yap
-                    } else {
-                        // Eğer boy eşitleme çalışmadıysa, alt/üst kenarlara normal mıknatıs yap
-                        if (Math.abs(yeniY - zY) < snapPiksel) {
-                            yeniY = zY; // Üste yapış
-                        } else if (Math.abs((yeniY + selectedItem.height) - (zY + zH)) < snapPiksel) {
-                            yeniY = (zY + zH) - selectedItem.height; // Alta yapış
-                        }
+                    if (selectedItem.cx !== undefined) { // Çember ise
+                        selectedItem.cx = yeniX; selectedItem.cy = yeniY;
+                    } else { // Resim vb. ise
+                        selectedItem.x = yeniX; selectedItem.y = yeniY;
                     }
                 }
-                // =============================================================
-
-                selectedItem.x = yeniX;
-                selectedItem.y = yeniY;
-                
-            } else if (selectedPointKey === 'p1') {
+            } 
+            else if (selectedPointKey === 'p1') { // ZİNCİR ŞİMDİ DÜZELDİ!
                 selectedItem.p1.x = originalStartPos.x + dx;
                 selectedItem.p1.y = originalStartPos.y + dy;
-            } else if (selectedPointKey === 'p2') {
+            } 
+            else if (selectedPointKey === 'p2') {
                 selectedItem.p2.x = originalStartPos.x + dx;
                 selectedItem.p2.y = originalStartPos.y + dy;
-            } else if (selectedPointKey === 'center') {
+            } 
+            else if (selectedPointKey === 'center') {
                 if (selectedItem.type === 'arc') {
                     selectedItem.cx = originalStartPos.x + dx;
                     selectedItem.cy = originalStartPos.y + dy;
                 } else if (selectedItem.type === 'polygon') {
-                     selectedItem.center.x = originalStartPos.x + dx;
-                     selectedItem.center.y = originalStartPos.y + dy;
+                    selectedItem.center.x = originalStartPos.x + dx;
+                    selectedItem.center.y = originalStartPos.y + dy;
                 }
             }
         }
@@ -3588,4 +3686,30 @@ function akilliSekilTani(stroke) {
         { type: 'segment', p1: { x: maxX, y: maxY }, p2: { x: minX, y: maxY }, color: col, width: wid, label1: l3, label2: l4 },
         { type: 'segment', p1: { x: minX, y: maxY }, p2: { x: minX, y: minY }, color: col, width: wid, label1: l4, label2: l1 }
     ];
+}
+
+function drawInteractionUI(ctx, stroke) {
+    // Sadece "Taşı" modundaysak ve o an tutulan şekil bu ise göster
+    if (currentTool !== 'move' || selectedItem !== stroke) return;
+
+    // getStrokeBounds fonksiyonunu 2. adımda eklemiştik
+    const b = getStrokeBounds(stroke); 
+    
+    ctx.save();
+    ctx.strokeStyle = '#00AAFF'; 
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]); // Kesikli çizgi
+    
+    // Şekli sarmalayan kutu
+    ctx.strokeRect(b.minX - 10, b.minY - 10, (b.maxX - b.minX) + 20, (b.maxY - b.minY) + 20);
+    
+    // Köşelere minik tutamaçlar (Görsel şov)
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'white';
+    ctx.strokeRect(b.minX - 14, b.minY - 14, 8, 8);
+    ctx.fillRect(b.minX - 14, b.minY - 14, 8, 8);
+    ctx.strokeRect(b.maxX + 6, b.maxY + 6, 8, 8);
+    ctx.fillRect(b.maxX + 6, b.maxY + 6, 8, 8);
+    
+    ctx.restore();
 }
