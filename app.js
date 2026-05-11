@@ -785,36 +785,35 @@ else if (stroke.type === 'rectangle') {
 } // <-- FONKSİYON BURADA KAPANIYOR
 
 
-// --- LASSO (SERBEST KES) SABİT ÖNİZLEME ---
-    // Bu blok sayesinde parmak/kalem ekrandan çekilse bile önizleme kaybolmaz
-    if (typeof currentTool !== 'undefined' && currentTool === 'lasso' && typeof isDrawingLasso !== 'undefined' && isDrawingLasso && lassoPoints && lassoPoints.length > 0) {
+// --- LASSO (SERBEST KES) SABİT ÖNİZLEME (KESİN ÇÖZÜM) ---
+    if (typeof currentTool !== 'undefined' && currentTool === 'lasso' && typeof lassoPoints !== 'undefined' && lassoPoints.length > 0) {
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
         
-        // 1. İşaretlenmiş tüm köşe noktalarını birbirine bağla
+        // 1. İşaretlenmiş tüm köşe noktalarını birbirine bağla (Parmak çekilse bile silinmez)
         for (let i = 1; i < lassoPoints.length; i++) {
             ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
         }
         
-        // 2. Eğer o an sistemde kayıtlı bir imleç konumu varsa ona doğru da kesikli çizgi çek
-        if (typeof currentMousePos !== 'undefined' && currentMousePos) {
+        // 2. SADECE parmak ekrandayken veya fare hareket ederken son noktaya canlı çizgi uzat
+        if (typeof currentMousePos !== 'undefined' && currentMousePos && typeof isDrawingLasso !== 'undefined' && isDrawingLasso) {
              ctx.lineTo(currentMousePos.x, currentMousePos.y);
         }
         
+        // Çizgi stili
         ctx.strokeStyle = '#00FFCC';
         ctx.setLineDash([5, 5]);
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // 3. Döngüyü kapatmak için nereye tıklanacağını gösteren YEŞİL HEDEF DAİRESİ (Her zaman görünür)
+        // 3. Kapatma noktası (Yeşil Hedef Dairesi - HER ZAMAN GÖRÜNÜR)
         ctx.beginPath();
         ctx.arc(lassoPoints[0].x, lassoPoints[0].y, 15, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0, 255, 204, 0.4)';
         ctx.fill();
         ctx.restore();
     }
-
 
 function processLassoCut() {
     if (lassoPoints.length < 3) return;
@@ -2670,6 +2669,9 @@ if (currentTool === 'pen' && isDrawing) {
     
     if (typeof snapIndicator !== 'undefined' && snapIndicator) snapIndicator.style.display = 'none';
 
+// BURAYA EKLİYORUZ: Parmak ekrandan çekildiğinde Lasso seçimi varsa inatla çizgiyi ekranda tut.
+    if (currentTool === 'lasso') redrawAllStrokes();
+
     redrawAllStrokes();
 
 }, { passive: false });
@@ -2693,6 +2695,9 @@ canvas.addEventListener('wheel', (e) => {
                 bg.width = newW;
                 bg.height = newH;
             });
+
+
+
             redrawAllStrokes();
         }
     }
