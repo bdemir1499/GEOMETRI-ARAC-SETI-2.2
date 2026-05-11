@@ -1805,9 +1805,9 @@ canvas.addEventListener('pointerdown', (e) => {
         if (lineOptions) { lineOptions.classList.add('hidden'); lineOptions.style.display = 'none'; }
     }
 
-    // CANLANDIRMA BAŞLANGICI (snapshot)
+    // --- SNAPSHOT (KUTU STANDART) SADECE DİKDÖRTGEN KESİM ---
     if (currentTool === 'snapshot') {
-        snapshotStart = snapPos; 
+        snapshotStart = getPointerPos(e); 
         return;
     }
 
@@ -2098,19 +2098,6 @@ canvas.addEventListener('pointermove', (e) => {
             if (selectedPointKey === 'self') { 
                 let yeniX = originalStartPos.x + dx;
                 let yeniY = originalStartPos.y + dy;
-
-                // --- SADECE OTOMATİK BOY EŞİTLEME (MIKNATIS İPTAL) ---
-                if (selectedItem.type === 'image' && selectedItem.isBackground === false) {
-                    const bg = drawnStrokes.find(s => s.isBackground === true);
-                    if (bg) {
-                        const zY = (bg.y !== undefined) ? bg.y : 0;
-                        const zH = (bg.height !== undefined) ? bg.height : canvas.height;
-                        if (Math.abs(selectedItem.height - zH) < 200) {
-                            yeniY = zY;               
-                            selectedItem.height = zH; 
-                        }
-                    }
-                }
 
                 selectedItem.x = yeniX;
                 selectedItem.y = yeniY;
@@ -2516,30 +2503,45 @@ canvas.addEventListener('pointerup', (e) => {
             tempCanvas.height = h;
             const tempCtx = tempCanvas.getContext('2d');
 
-            // --- 1. ARKA PLANI (PDF/RESİM) KES ---
+            // 1. Arka planı ve çizimleri kes
             const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
             if (bgLayer) {
-                // Tablet/PC Çözünürlük farkını hesapla
                 const sX = bgLayer.width / bgLayer.offsetWidth;
                 const sY = bgLayer.height / bgLayer.offsetHeight;
-                // Kaynak kanvasta (x,y) noktasından kes, hedefte (0,0) noktasına tam boyutta bas
                 tempCtx.drawImage(bgLayer, x * sX, y * sY, w * sX, h * sY, 0, 0, w, h);
             }
-
-            // --- 2. ÇİZİMLERİ KES ---
             tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
 
             const finalImage = tempCanvas.toDataURL('image/png');
-            const rect = canvas.getBoundingClientRect();
             
-            // Yüzen kutuyu oluştur (Yeşil ve pembe butonlu araç)
-            olusturYuzenKopya(finalImage, x + rect.left, y + rect.top, w, h);
+            // 2. Kopyayı yeni bir "image" nesnesi olarak sisteme ekle
+            const newImgStroke = {
+                type: 'image',
+                imgData: finalImage,
+                x: x, y: y,
+                width: w, height: h,
+                rotation: 0,
+                isBackground: false,
+                imgObj: null 
+            };
             
-            snapshotStart = null; // Seçimi sıfırla (Burası kritik: İkinci kez yapınca karışmasın)
-            setActiveTool('move'); // İşlem bitince taşıma moduna geç
+            const tempImg = new Image();
+            tempImg.src = finalImage;
+            tempImg.onload = () => {
+                newImgStroke.imgObj = tempImg;
+                redrawAllStrokes();
+            };
+            drawnStrokes.push(newImgStroke);
+            
+            // 3. Modu taşıma yap ve yeni parçayı seç
+            if (typeof setActiveTool === 'function') setActiveTool('move');
+            else currentTool = 'move';
+            
+            selectedItem = newImgStroke;
+            snapshotStart = null;
+            redrawAllStrokes();
         }
     }
-
 
     // --- DİKDÖRTGENİ TAMAMLAMA VE SİSTEME KAYDETME (TEK NESNE MODU) ---
 if (isDrawingRectangle && rectStartPoint && finalPos) {
