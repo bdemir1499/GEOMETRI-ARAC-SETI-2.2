@@ -2136,6 +2136,7 @@ canvas.addEventListener('pointermove', (e) => {
         return; 
     }
 
+
     // KRİTİK: Fiziksel araçlar çalışırken app.js'in koordinat sistemini meşgul etme!
     const isPhysicalTool = ['ruler', 'gonye', 'aciolcer', 'pergel'].includes(currentTool);
     if (isPhysicalTool) return;
