@@ -202,6 +202,13 @@ const aciolcerButton = document.getElementById('btn-aciolcer');
 const pergelButton = document.getElementById('btn-pergel');
 const polygonButton = document.getElementById('btn-cokgenler');
 const oyunlarButton = document.getElementById('btn-oyunlar');
+const oyunlarOptions = document.getElementById('oyunlar-options');
+
+if (oyunlarOptions) {
+    oyunlarOptions.classList.add('hidden');
+}
+oyunlarButton.classList.remove('active');
+
 // --- DİKDÖRTGEN BUTONU TANIMLAMASI ---
 const dikdortgenButton = document.getElementById('btn-dikdortgen');
 
@@ -231,7 +238,8 @@ const polygonPreviewLabel = document.getElementById('polygon-preview-label');
 const circleButton = document.getElementById('btn-cember');
 const regularPolygonButtons = document.querySelectorAll('#polygon-options button[data-sides]');
 const polygonColorOptions = document.querySelectorAll('#polygon-color-options .color-box');
-const oyunlarOptions = document.getElementById('oyunlar-options');
+// 🔑 Burada oyunlarOptions tekrar tanımlanmadı, yukarıdaki global tanım kullanılacak.
+
 
 // 3. Sağ Panel Araçları
 const undoButton = document.getElementById('btn-undo');
@@ -1197,8 +1205,7 @@ function setActiveTool(tool) {
         lineOptions.style.display = ''; 
     }
 
-    if (oyunlarOptions) { oyunlarOptions.classList.add('hidden'); oyunlarOptions.style.display = ''; }
-    if (fillOptions) { fillOptions.classList.add('hidden'); fillOptions.style.display = ''; }
+        if (fillOptions) { fillOptions.classList.add('hidden'); fillOptions.style.display = ''; }
     penOptions.classList.add('hidden'); 
 
     // Değişkenleri sıfırla
@@ -1547,35 +1554,38 @@ polygonButton.addEventListener('click', () => {
 });
 
 oyunlarButton.addEventListener('click', () => {
-    if (oyunlarButton.classList.contains('active')) { setActiveTool('none'); } 
-    else {
-        setActiveTool('none'); 
-        oyunlarOptions.innerHTML = ''; 
+    if (oyunlarButton.classList.contains('active')) {
+        // Paneli kapat
+        oyunlarOptions.classList.add('hidden');
+        oyunlarButton.classList.remove('active');
+    } else {
+        // Paneli aç
+        oyunlarOptions.innerHTML = ''; // önce temizle
+
         if (window.OyunListesi && window.OyunListesi.length > 0) {
             window.OyunListesi.forEach(oyun => {
                 const linkElement = document.createElement('a');
                 linkElement.href = oyun.link;
                 linkElement.innerText = oyun.isim;
                 linkElement.target = "_blank";
+
+                // Oyun seçilince paneli kapat
+                linkElement.addEventListener('click', () => {
+                    oyunlarOptions.classList.add('hidden');
+                    oyunlarButton.classList.remove('active');
+                });
+
                 oyunlarOptions.appendChild(linkElement);
             });
-        } else { oyunlarOptions.innerText = "Oyun bulunamadı."; }
-        oyunlarOptions.classList.remove('hidden'); oyunlarOptions.style.display = 'flex'; oyunlarButton.classList.add('active'); 
-        setTimeout(() => {
-            const buttonRect = oyunlarButton.getBoundingClientRect();
-            const panelRect = oyunlarButton.parentElement.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-            const margin = 10; 
-            let topOffset = buttonRect.top - panelRect.top;
-            const menuHeight = oyunlarOptions.offsetHeight;
-            if (buttonRect.top + menuHeight > (windowHeight - margin)) {
-                topOffset = (windowHeight - menuHeight - margin) - panelRect.top;
-                if (topOffset < 0) topOffset = 0; 
-            }
-            oyunlarOptions.style.top = `${topOffset}px`;
-        }, 0); 
+        } else {
+            oyunlarOptions.innerText = "Oyun bulunamadı.";
+        }
+
+        oyunlarOptions.classList.remove('hidden');
+        oyunlarButton.classList.add('active');
     }
 });
+
 
 circleButton.addEventListener('click', (e) => {
     e.stopPropagation();

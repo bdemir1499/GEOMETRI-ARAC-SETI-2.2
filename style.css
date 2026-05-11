@@ -878,3 +878,7 @@ body.cursor-snapshot {
 #drawing-canvas {
     touch-action: none !important;
 }
+
+#oyunlar-options.hidden {
+    display: none !important;
+}
