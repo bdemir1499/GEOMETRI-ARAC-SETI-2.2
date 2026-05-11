@@ -1903,6 +1903,13 @@ canvas.addEventListener('pointermove', (e) => {
 
     // -------------------------------------------
 
+// --- LASSO (SERBEST KES) İÇİN CANLI EKRAN TAZELEME TETİKLEYİCİSİ ---
+    if (currentTool === 'lasso' && isDrawingLasso) {
+        currentMousePos = getPointerPos(e);
+        redrawAllStrokes(); 
+        return;
+    }
+
 // --- PARDUS ÇİFT SİNYAL ENGELLEYİCİ ---
     if (e.pointerType === 'mouse') {
         let hasTouch = false;
@@ -2086,55 +2093,24 @@ canvas.addEventListener('pointermove', (e) => {
             selectedItem[selectedPointKey].y = rotationPivot.y + Math.sin(currentAngle) * selectedItem.startRadius;
         } 
 
-        // F. Genel Yer Değiştirme (Sürükleme)
+       // F. Genel Yer Değiştirme (Sürükleme)
         else {
             if (selectedPointKey === 'self') { 
                 let yeniX = originalStartPos.x + dx;
                 let yeniY = originalStartPos.y + dy;
 
-               // =============================================================
-                // --- YENİ: KOPYALAR İÇİN KURŞUN GEÇİRMEZ MIKNATIS VE EŞİTLEME ---
+                // --- SADECE OTOMATİK BOY EŞİTLEME (MIKNATIS İPTAL) ---
                 if (selectedItem.type === 'image' && selectedItem.isBackground === false) {
-                    // Zemini bul (PDF varsa onu, yoksa ana ekranı baz al)
                     const bg = drawnStrokes.find(s => s.isBackground === true);
-                    
-                    // Güvenlik: bg.x tanımsızsa 0 kabul et, bg.width tanımsızsa ekran genişliğini al
-                    const zX = (bg && bg.x !== undefined) ? bg.x : 0;
-                    const zY = (bg && bg.y !== undefined) ? bg.y : 0;
-                    const zW = (bg && bg.width !== undefined) ? bg.width : canvas.width;
-                    const zH = (bg && bg.height !== undefined) ? bg.height : canvas.height;
-
-                    const snapPiksel = 50; // Mıknatıs çekim alanı (50 piksel)
-                    
-                    const sagFark = Math.abs((yeniX + selectedItem.width) - (zX + zW));
-                    const solFark = Math.abs(yeniX - zX);
-
-                    let kenaraYapisti = false;
-
-                    // 1. SOLA VEYA SAĞA YAPIŞTIRMA (JİLET GİBİ SIFIRLAMA)
-                    if (solFark < snapPiksel) {
-                        yeniX = zX; // Sola sıfırla
-                        kenaraYapisti = true;
-                    } else if (sagFark < snapPiksel) {
-                        yeniX = (zX + zW) - selectedItem.width; // Sağa sıfırla
-                        kenaraYapisti = true;
-                    }
-
-                    // 2. KISA KESİMLERİ OTOMATİK EŞİTLEME 
-                    // (Sadece sağ/sol kenara yapıştıysa ve boyu PDF'e yakınsa çalışır)
-                    if (kenaraYapisti && Math.abs(selectedItem.height - zH) < 200) {
-                        yeniY = zY; 
-                        selectedItem.height = zH; // Boyu tam sayfa boyu yap
-                    } else {
-                        // Eğer boy eşitleme çalışmadıysa, alt/üst kenarlara normal mıknatıs yap
-                        if (Math.abs(yeniY - zY) < snapPiksel) {
-                            yeniY = zY; // Üste yapış
-                        } else if (Math.abs((yeniY + selectedItem.height) - (zY + zH)) < snapPiksel) {
-                            yeniY = (zY + zH) - selectedItem.height; // Alta yapış
+                    if (bg) {
+                        const zY = (bg.y !== undefined) ? bg.y : 0;
+                        const zH = (bg.height !== undefined) ? bg.height : canvas.height;
+                        if (Math.abs(selectedItem.height - zH) < 200) {
+                            yeniY = zY;               
+                            selectedItem.height = zH; 
                         }
                     }
                 }
-                // =============================================================
 
                 selectedItem.x = yeniX;
                 selectedItem.y = yeniY;
