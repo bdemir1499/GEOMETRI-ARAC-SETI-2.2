@@ -1600,6 +1600,18 @@ oyunlarButton.addEventListener('click', () => {
     } else {
         oyunlarOptions.innerHTML = ''; 
 
+// --- KAYDIRMA İPUCU ---
+        const kaydirmaBilgisi = document.createElement('div');
+        kaydirmaBilgisi.innerHTML = '⬇️ Liste kaydırılabilir ⬇️';
+        kaydirmaBilgisi.style.textAlign = 'center';
+        kaydirmaBilgisi.style.color = '#00ffcc'; // Neon turkuaz rengi
+        kaydirmaBilgisi.style.fontSize = '12px';
+        kaydirmaBilgisi.style.paddingBottom = '8px';
+        kaydirmaBilgisi.style.borderBottom = '1px solid rgba(255,255,255,0.2)';
+        kaydirmaBilgisi.style.marginBottom = '10px';
+        kaydirmaBilgisi.style.fontWeight = 'bold';
+        oyunlarOptions.appendChild(kaydirmaBilgisi);
+
         // 1. Menüyü kaydırılabilir olmaya ZORLA
         oyunlarOptions.style.overflowY = 'auto';
         oyunlarOptions.style.maxHeight = '400px'; 
