@@ -19,6 +19,45 @@ let initialHeight = 0;
 let isPenActive = false; // Avuç içi reddi için
 let penActiveTimer = null;
 
+// --- OYUNLAR LİSTESİ ---
+window.OyunListesi = [
+    { isim: "ÇEMBERLERDEN ÜÇGEN İNŞASI", link: "https://bekrmatmt25.my.canva.site/cemberden-ucgen-elde-etme" },
+    { isim: "AÇI ÖLÇER YERLEŞTİRME OYUNU", link: "https://bekrmatmt2507.my.canva.site/aci-olcer-yerlestirme-uygulamas" },
+    { isim: "DOĞRUYA DIŞINDAKİ NOKTADAN DİKME", link: "https://bekrmatmt25.my.canva.site/dogruya-disindeki-noktadan-dikme-cizmek" },
+    { isim: "AYNI DÜZLEMDE İKİ DOĞRUNUN YOLCULUĞU", link: "https://bdemir1499.github.io/ayni-duzlemde-iki-dogru/" },
+    { isim: "AYNI DÜZLEMDE 3 DOĞRUNUN DURUMLARI", link: "https://bekrmatmt2507.my.canva.site/ayniduzlemdeucdogrunundurumlari" },
+    { isim: "AÇI ÇEŞİTLERİ (TÜMLER/BÜTÜNLER/KOMŞU)", link: "https://bdemir1499.github.io/tumler-butunler-komsutumler-komsubutunler/" },
+    { isim: "AÇILARINA GÖRE ÜÇGENLER", link: "https://bekrmatmt25.my.canva.site/acilarina-gire-ucgenler" },
+    { isim: "AÇI ÇEŞİTLERİ (DAR, DİK, GENİŞ vb.)", link: "https://bekrmatmt2507.my.canva.site/aci-cesitleri" },
+    { isim: "TEMEL GEOMETRİK ŞEKİLLER", link: "https://bekrmatmt25.my.canva.site/temel-geometrik-sekiller" },
+    { isim: "ÇOKGENLERİN ELEMANLARI", link: "https://bekrmatmt2507.my.canva.site/cokgenlerin-elemanlari" },
+    { isim: "İKİ PARALEL VE KESENLE OLUŞAN AÇILAR (1)", link: "https://bekrmatmt25.my.canva.site/k-paralel-dogrunun-b-r-kesenle-yapt-g-ac-lar" },
+    { isim: "ÜÇ DOĞRUNUN İKİŞER KESİŞMESİ", link: "https://bekrmatmt2507.my.canva.site/ikiser-kesisen-dogru" },
+    { isim: "DİKDÖRTGENİN ÇEVRE VE ALANI", link: "https://bdemir1499.github.io/dikdortgen-cevre-ve-alan/" },
+    { isim: "DÖRTGENLERİN ÖZELLİKLERİ (TÜMEVARIM)", link: "https://bekrmatmt25.my.canva.site/dortgenler-ve-ozellikleri-tumevarim" },
+    { isim: "DÖRTGENLERİN ÖZELLİKLERİ (TÜMDEN GELİM)", link: "https://bdemir1499.github.io/dortgen-ve-ozellikleri-tumdengelim/" },
+    { isim: "İKİ PARALEL DOĞRUNUN BİR KESENLE YAPTIĞI AÇILAR (2)", link: "https://bekrmatmt25.my.canva.site/iki-paralel-dogrunun-bir-kesenle-yapt-g-ac-lar" },
+    { isim: "DÖNÜŞÜM GEOMETRİSİ (ÖTELEME/YANSIMA)", link: "https://bekrmatmt25.my.canva.site/oteleme-ve-yansima" },
+    { isim: "KOORDİNAT SİSTEMİ, DOĞRUSAL İLİŞKİLER", link: "https://bdemir1499.github.io/koordinatsistemi-dogrusaliliskiler-dogrudenklemleri-egim-donusumgeometrisi/" },
+    { isim: "DÖRTGEN ÇEŞİTLERİ KAVRAM HARİTASI", link: "https://bekrmatmt25.my.canva.site/dortgenler-kavram-haritasi" },
+    { isim: "DÖRTGENLER GENEL ÇIKARIMLAR", link: "https://bekrmatmt25.my.canva.site/dortgenler-genel-cikarimlar" },
+    { isim: "KESİRLERİN FARKLI GÖSTERİMLERİ", link: "https://bekrmatmt25.my.canva.site/kesirlerin-farkl-g-sterimleri" },
+    { isim: "KÖŞEGENLERDEN DÖRTGENLERE (1)", link: "https://bekrmatmt25.my.canva.site/k-egenlerden-d-rtgenlere" },
+    { isim: "CEBİRSEL İFADELER TEMEL KAVRAMLAR", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-temel-kavramlar" },
+    { isim: "CEBİRSEL İFADELER SÖZELDEN CEBİRE", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerle-oyun-tasar-m-kopyas" },
+    { isim: "CEBİRSEL İFADELER CEBİRDEN SÖZELE", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-2-cebirden-s-zele" },
+    { isim: "CEBİRSEL İFADELER DEĞER HESAPLAMA", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerin-degerini-hesaplamak" },
+    { isim: "ARAŞTIRMA ADIMLARI (Canva)", link: "https://bekrmatmt25.my.canva.site/5-sinif-arastirma-adimlari" },
+    { isim: "ARAŞTIRMA ADIMLARI (GitHub)", link: "https://bdemir1499.github.io/5.sinif-arastirma-asamalari/" },
+    { isim: "ÜÇGENDE YARDIMCI ELEMANLAR", link: "https://bekrmatmt25.my.canva.site/ucgende-yardim-i-elemanlar" },
+    { isim: "ÜÇGEN ÇİZİMİ", link: "https://bekrmatmt25.my.canva.site/ucgen-cizim-sartlari" },
+    { isim: "ÜÇGENDE EŞLİK VE BENZERLİK", link: "https://bdemir1499.github.io/eslikvebenzerlik/" },
+    { isim: "PRİZMALARIN ELEMANLARI", link: "https://bekrmatmt25.my.canva.site/prizmalarin-elemanlar-ve-a-inimlari" },
+    { isim: "PİRAMİT VE AÇINIMI", link: "https://bekrmatmt25.my.canva.site/piramidin-elemanlar-ve-acinimi" },
+    { isim: "PRİZMA, PİRAMİT, KONİ, SİLİNDİR", link: "https://sites.google.com/view/uc-boyutlu-sekiller/ana-sayfa_1" },
+    { isim: "KÖŞEGENLERDEN DÖRTGENLERE (2)", link: "https://bekrmatmt25.my.canva.site/kosegenlerden-dortgenlere" }
+];
+
 
 // Sayfa açıldığında kırmızı butonun yanlışlıkla görünmesini engellemek için:
 const closePdfBtn = document.getElementById('btn-close-pdf');
@@ -1555,38 +1594,48 @@ polygonButton.addEventListener('click', () => {
 });
 
 oyunlarButton.addEventListener('click', () => {
-    if (oyunlarButton.classList.contains('active')) {
-        // Paneli kapat
-        oyunlarOptions.classList.add('hidden');
-        oyunlarButton.classList.remove('active');
-    } else {
-        // Paneli aç
-        oyunlarOptions.innerHTML = ''; // önce temizle
+    if (oyunlarButton.classList.contains('active')) {
+        // Paneli kapat
+        oyunlarOptions.classList.add('hidden');
+        oyunlarButton.classList.remove('active');
+    } else {
+        // Paneli aç
+        oyunlarOptions.innerHTML = ''; // önce temizle
 
-        if (window.OyunListesi && window.OyunListesi.length > 0) {
-            window.OyunListesi.forEach(oyun => {
-                const linkElement = document.createElement('a');
-                linkElement.href = oyun.link;
-                linkElement.innerText = oyun.isim;
-                linkElement.target = "_blank";
+        if (window.OyunListesi && window.OyunListesi.length > 0) {
+            window.OyunListesi.forEach(oyun => {
+                const linkElement = document.createElement('a');
+                linkElement.href = '#'; // Sayfanın yukarı zıplamasını önlemek için boş link veriyoruz
+                linkElement.innerText = oyun.isim;
 
-               linkElement.addEventListener('click', () => {
-    setTimeout(() => {
-        oyunlarOptions.classList.add('hidden');
-        oyunlarButton.classList.remove('active');
-    }, 100);
-});
+                // --- AKILLI TAHTA VE DOKUNMATİK UYUMLU KESİN AÇILIŞ KODU ---
+                const linkiAc = (e) => {
+                    e.preventDefault(); // Tarayıcının kendi link açma çabasını durdur
+                    e.stopPropagation(); // Tıklamanın arkadaki kanvasa geçmesini engelle
+                    
+                    window.open(oyun.link, '_blank'); // Linki JavaScript ile kesin olarak yeni sekmede aç
+                    
+                    // İşlemden sonra menüyü kapat
+                    setTimeout(() => {
+                        oyunlarOptions.classList.add('hidden');
+                        oyunlarButton.classList.remove('active');
+                    }, 100);
+                };
 
+                // Hem mouse tıklamasını hem de akıllı tahta dokunuşunu ayrı ayrı dinliyoruz
+                linkElement.addEventListener('click', linkiAc);
+                linkElement.addEventListener('touchstart', linkiAc, { passive: false });
+                // -------------------------------------------------------------
 
-                oyunlarOptions.appendChild(linkElement);
-            });
-        } else {
-            oyunlarOptions.innerText = "Oyun bulunamadı.";
-        }
+                oyunlarOptions.appendChild(linkElement);
+            });
+        } else {
+            oyunlarOptions.innerText = "Oyun bulunamadı.";
+        }
 
-        oyunlarOptions.classList.remove('hidden');
-        oyunlarButton.classList.add('active');
-    }
+        oyunlarOptions.classList.remove('hidden');
+        oyunlarButton.classList.add('active');
+    }
 });
 
 
@@ -1663,14 +1712,6 @@ if (animateButton) {
 
 // --- MOUSE OLAYLARI ---
 
-canvas.addEventListener('pointerdown', (e) => {
-    // Akıllı tahtalarda sağ tık menüsü veya kaydırmayı engeller
-    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
-        e.preventDefault(); 
-    }
-    
-    isDrawing = true;
-    const pos = getPointerPos(e);
 
 // Mevcut pointerdown dinleyicisinin en başına (yaklaşık 5100. satırlar civarı)
 canvas.addEventListener('pointerdown', (e) => {
@@ -2434,6 +2475,10 @@ canvas.addEventListener('pointermove', (e) => {
 
 
 canvas.addEventListener('pointerup', (e) => {
+    isDrawing = false;
+    
+    // Kalemi kaldırdığında kilidi serbest bırak
+    canvas.releasePointerCapture(e.pointerId);
     // 1. Tarayıcı kilitlerini kaldır (Pardus Korumalı)
    
     if (e.pointerType === 'touch' && e.cancelable) e.preventDefault();
@@ -3617,9 +3662,6 @@ function akilliSekilTani(stroke) {
         { type: 'segment', p1: { x: maxX, y: maxY }, p2: { x: minX, y: maxY }, color: col, width: wid, label1: l3, label2: l4 },
         { type: 'segment', p1: { x: minX, y: maxY }, p2: { x: minX, y: minY }, color: col, width: wid, label1: l4, label2: l1 }
     ];
-}
 
-// Akıllı tahtada uzun basınca çıkan sağ tık menüsünü engeller
-canvas.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-}, false);
+} // <-- BU SÜSLÜ PARANTEZ ÇOK ÖNEMLİ, ÜSTTEKİ FONKSİYONU KAPATIR!
+
