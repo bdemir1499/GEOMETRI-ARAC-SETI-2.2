@@ -1665,6 +1665,22 @@ if (animateButton) {
 
 canvas.addEventListener('pointerdown', (e) => {
 
+// Mevcut pointerdown dinleyicisinin en başına (yaklaşık 5100. satırlar civarı)
+canvas.addEventListener('pointerdown', (e) => {
+    // AKILLI TAHTA YAMASI:
+    // Eğer kalemle dokunuluyorsa, dokunmatik (el) verisini geçici olarak devre dışı bırak
+    if (e.pointerType === 'pen') {
+        isPenActive = true;
+        clearTimeout(penActiveTimer);
+        // Kalem aktifken el dokunuşlarını 1 saniye boyunca görmezden gel
+        penActiveTimer = setTimeout(() => { isPenActive = false; }, 1000);
+    }
+
+    // Eğer el dokunuşu gelirse ve kalem o an aktifse, bu dokunuşu iptal et (Avuç içi engeli)
+    if (e.pointerType === 'touch' && isPenActive) {
+        return; 
+    }
+
     // 1. Tarayıcıyı sabitle
     if (e.cancelable) e.preventDefault();
     // NOT: setPointerCapture komutu Vestel tahtaları kilitlediği için tamamen kaldırıldı.
