@@ -1592,53 +1592,88 @@ polygonButton.addEventListener('click', () => {
     }
 });
 
+// --- OYUNLAR MENÜSÜ DOKUNMATİK KAYDIRMA VE TIKLAMA KESİN ÇÖZÜM ---
 oyunlarButton.addEventListener('click', () => {
-    if (oyunlarButton.classList.contains('active')) {
-        // Paneli kapat
-        oyunlarOptions.classList.add('hidden');
-        oyunlarButton.classList.remove('active');
-    } else {
-        // Paneli aç
-        oyunlarOptions.innerHTML = ''; // önce temizle
-        
-        // --- TABLET KAYDIRMA İZNİ BURADA VERİLİYOR ---
-        oyunlarOptions.style.touchAction = 'pan-y'; // Yalnızca yukarı-aşağı kaydırmaya izin ver
+    if (oyunlarButton.classList.contains('active')) {
+        oyunlarOptions.classList.add('hidden');
+        oyunlarButton.classList.remove('active');
+    } else {
+        oyunlarOptions.innerHTML = ''; 
 
-        if (window.OyunListesi && window.OyunListesi.length > 0) {
-            window.OyunListesi.forEach(oyun => {
-                const linkElement = document.createElement('a');
-                linkElement.href = '#'; 
-                linkElement.innerText = oyun.isim;
-                linkElement.className = 'tool-button-sub'; // Buton görünümü için CSS sınıfını ekliyoruz
-                linkElement.style.textDecoration = 'none';
-                linkElement.style.textAlign = 'center';
+        // 1. Menüyü kaydırılabilir olmaya ZORLA
+        oyunlarOptions.style.overflowY = 'auto';
+        oyunlarOptions.style.maxHeight = '400px'; 
+        oyunlarOptions.style.touchAction = 'pan-y'; // Sadece dikey kaydırmaya izin ver
+        oyunlarOptions.style.WebkitOverflowScrolling = 'touch'; // iOS/Tablet akıcı kaydırma
 
-                const linkiAc = (e) => {
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
-                    
-                    window.open(oyun.link, '_blank'); 
-                    
-                    setTimeout(() => {
-                        oyunlarOptions.classList.add('hidden');
-                        oyunlarButton.classList.remove('active');
-                    }, 100);
-                };
+        if (window.OyunListesi && window.OyunListesi.length > 0) {
+            window.OyunListesi.forEach(oyun => {
+                const linkElement = document.createElement('a');
+                linkElement.href = '#'; 
+                linkElement.innerText = oyun.isim;
+                linkElement.className = 'tool-button-sub'; 
+                linkElement.style.textDecoration = 'none';
+                linkElement.style.textAlign = 'center';
+                linkElement.style.display = 'block'; 
+                linkElement.style.padding = '10px'; 
+                linkElement.style.marginBottom = '5px';
 
-                // KRİTİK: touchstart sildik, sadece 'click' bıraktık.
-                // Modern mobil tarayıcılar "kaydırma" bitip parmak kalktığında tıklamayı sorunsuz algılar.
-                linkElement.addEventListener('click', linkiAc);
+                // --- KAYDIRMA VE TIKLAMA AYIRICI MANTIK ---
+                let isScrolling = false;
+                let startY = 0;
 
-                oyunlarOptions.appendChild(linkElement);
-            });
-        } else {
-            oyunlarOptions.innerText = "Oyun bulunamadı.";
-        }
+                // Parmağı koyduğunda:
+                linkElement.addEventListener('touchstart', (e) => {
+                    e.stopPropagation(); 
+                    isScrolling = false; // Başlangıçta kaydırmıyor varsay
+                    startY = e.touches[0].clientY; // Parmağın ilk değdiği yeri kaydet
+                }, { passive: true });
 
-        oyunlarOptions.classList.remove('hidden');
-        oyunlarButton.classList.add('active');
-    }
+                // Parmağı hareket ettirdiğinde:
+                linkElement.addEventListener('touchmove', (e) => {
+                    e.stopPropagation();
+                    // Parmak 10 pikselden fazla aşağı/yukarı kaydıysa, bu bir kaydırmadır (scroll)!
+                    if (Math.abs(e.touches[0].clientY - startY) > 10) {
+                        isScrolling = true;
+                    }
+                }, { passive: true });
+
+                // Parmağı çektiğinde veya tıkladığında işlemi yap:
+                const linkiAc = (e) => {
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
+                    
+                    // KRİTİK: Eğer kullanıcı sayfayı kaydırıyorsa, linki sakın açma!
+                    if (isScrolling) return;
+
+                    // Kaydırma yoksa (sadece dokunduysa) linki aç:
+                    window.open(oyun.link, '_blank'); 
+                    
+                    setTimeout(() => {
+                        oyunlarOptions.classList.add('hidden');
+                        oyunlarButton.classList.remove('active');
+                    }, 100);
+                };
+
+                // Hem dokunmatik çekme hem normal fare tıklamasını dinle
+                linkElement.addEventListener('touchend', linkiAc);
+                linkElement.addEventListener('click', linkiAc);
+
+                oyunlarOptions.appendChild(linkElement);
+            });
+        } else {
+            oyunlarOptions.innerText = "Oyun bulunamadı.";
+        }
+
+        oyunlarOptions.classList.remove('hidden');
+        oyunlarButton.classList.add('active');
+    }
 });
+
+// 2. Ana menü kutusunun da dışarıdaki "Ekran Kilitlerine" takılmasını engelle:
+oyunlarOptions.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
+oyunlarOptions.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
+oyunlarOptions.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
 
 circleButton.addEventListener('click', (e) => {
     e.stopPropagation();
