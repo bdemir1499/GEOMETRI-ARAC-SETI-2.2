@@ -1636,8 +1636,18 @@ oyunlarButton.addEventListener('click', (e) => {
         // Kaydırma İpucu
         const hint = document.createElement('div');
         hint.innerHTML = '⬇️ Liste kaydırılabilir ⬇️';
-        hint.style.cssText = 'text-align:center; color:#00ffcc; font-size:12px; padding:8px; border-bottom:1px solid #444; margin-bottom:5px; font-weight:bold;';
-        oyunlarOptions.appendChild(hint);
+       // Liste kaydırılabilir yazısı için (app.js içinde ilgili satırı bulup değiştirin)
+hint.style.cssText = `
+    text-align: center; 
+    color: #00ffcc; 
+    font-family: 'Fredoka', sans-serif; 
+    font-size: 14px; 
+    padding: 10px; 
+    margin-bottom: 5px; 
+    font-weight: 600;
+    background: rgba(0, 255, 204, 0.1); /* Hafif arka plan vurgusu */
+    border-radius: 10px;
+`;
 
         // 4. OYUN LİSTESİNİ OLUŞTUR
         if (window.OyunListesi && window.OyunListesi.length > 0) {

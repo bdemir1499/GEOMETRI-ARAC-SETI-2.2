@@ -1,3 +1,23 @@
+/* Tüm butonlar için ortak sevimli yazı stili */
+.tool-button, .tool-button-sub, #oyunlar-options div, button {
+    font-family: 'Fredoka', sans-serif !important;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: capitalize; /* Sadece baş harfleri büyük yaparak daha yumuşak bir görünüm sağlar */
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Tıklama hissi */
+}
+
+/* Butona basıldığında hafifçe küçülüp büyüme efekti (Sevimli bir dokunuş) */
+.tool-button:active, .tool-button-sub:active {
+    transform: scale(0.92);
+}
+
+/* Yazıların daha okunaklı ve şık durması için hafif bir derinlik */
+.tool-button-sub {
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+}
+
+
 /* =========================================
    1. EVRENSEL SIFIRLAMA VE DOKUNMATİK KİLİDİ
    ========================================= */
