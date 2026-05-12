@@ -340,20 +340,22 @@ body.cursor-eraser .eraser-cursor-preview {
     padding: 15px;
     border-radius: 15px;
     
+    display: flex;              /* 🔑 Burada flex ekle */
     flex-direction: column;
     gap: 8px;
     width: 200px; 
     
-    /* --- YENİ EKLENEN SATIRLAR --- */
-    max-height: 400px; /* Panel yüksekliğini 400px ile sınırla */
-    overflow-y: auto;  /* Eğer 400px'i aşarsa kaydırma çubuğu göster */
+    max-height: 400px;
+    overflow-y: auto;
     overflow-x: hidden;
-    /* --- YENİ EKLENTİ SONU --- */
 }
 
-/* Oyunlar menüsündeki linklerin (butonların) stili */
+#oyunlar-options.hidden {
+    display: none !important;   /* Kapalıyken gizle */
+}
+
+/* Oyunlar menüsündeki linklerin stili */
 #oyunlar-options a {
-    /* .tool-button-sub stilini taklit edelim */
     background: #333;
     color: #0ff;
     border: 1px solid #0ff;
@@ -361,8 +363,8 @@ body.cursor-eraser .eraser-cursor-preview {
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    text-decoration: none; /* Link alt çizgisini kaldır */
-    display: block; /* Tam genişlik kaplasın */
+    text-decoration: none;
+    display: block;
     transition: background 0.2s ease;
 }
 

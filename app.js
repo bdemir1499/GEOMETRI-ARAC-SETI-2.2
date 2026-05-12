@@ -209,6 +209,7 @@ if (oyunlarOptions) {
 }
 oyunlarButton.classList.remove('active');
 
+
 // --- DİKDÖRTGEN BUTONU TANIMLAMASI ---
 const dikdortgenButton = document.getElementById('btn-dikdortgen');
 
@@ -1569,11 +1570,13 @@ oyunlarButton.addEventListener('click', () => {
                 linkElement.innerText = oyun.isim;
                 linkElement.target = "_blank";
 
-                // Oyun seçilince paneli kapat
-                linkElement.addEventListener('click', () => {
-                    oyunlarOptions.classList.add('hidden');
-                    oyunlarButton.classList.remove('active');
-                });
+               linkElement.addEventListener('click', () => {
+    setTimeout(() => {
+        oyunlarOptions.classList.add('hidden');
+        oyunlarButton.classList.remove('active');
+    }, 100);
+});
+
 
                 oyunlarOptions.appendChild(linkElement);
             });
