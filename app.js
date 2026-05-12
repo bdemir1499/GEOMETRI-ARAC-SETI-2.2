@@ -1604,7 +1604,7 @@ polygonButton.addEventListener('click', () => {
     }
 });
 
-// --- OYUNLAR MENÜSÜ (YUKARI DOĞRU AÇILAN VE SİLGİ KAPATAN SİSTEM) ---
+// --- OYUNLAR MENÜSÜ: YUKARI AÇILAN, SEVİMLİ VE SİLGİ KAPATAN SİSTEM ---
 oyunlarButton.addEventListener('click', (e) => {
     e.stopPropagation();
     
@@ -1612,10 +1612,10 @@ oyunlarButton.addEventListener('click', (e) => {
         oyunlarOptions.classList.add('hidden');
         oyunlarButton.classList.remove('active');
     } else {
-        // 1. DİĞER ARAÇLARI VE SİLGİYİ KAPAT
+        // 1. DİĞER ARAÇLARI VE SİLGİYİ KAPAT (Işığını söndürür)
         if (typeof setActiveTool === 'function') setActiveTool('none'); 
         
-        oyunlarOptions.innerHTML = ''; 
+        oyunlarOptions.innerHTML = ''; // İçeriği temizle
         
         // 2. MENÜ GÖRÜNÜM AYARLARI
         oyunlarOptions.style.display = 'flex';
@@ -1625,37 +1625,45 @@ oyunlarButton.addEventListener('click', (e) => {
         oyunlarOptions.style.touchAction = 'pan-y';
         oyunlarOptions.style.WebkitOverflowScrolling = 'touch';
 
-        // 3. KONUMU YUKARI ALAN KRİTİK HESAPLAMA
+        // 3. KONUMU YUKARI ALAN HESAPLAMA (Ekrana sığması için)
         const buttonRect = oyunlarButton.getBoundingClientRect();
         const panelRect = oyunlarButton.parentElement.getBoundingClientRect();
-        
-        // 'top' değerini sıfırlayıp 'bottom' kullanarak menüyü yukarıya sabitliyoruz
         oyunlarOptions.style.top = 'auto'; 
         oyunlarOptions.style.bottom = (panelRect.bottom - buttonRect.bottom) + 'px';
 
-        // Kaydırma İpucu
+        // 4. KAYDIRMA İPUCU (Yazı Geri Geldi)
         const hint = document.createElement('div');
         hint.innerHTML = '⬇️ Liste kaydırılabilir ⬇️';
-       // Liste kaydırılabilir yazısı için (app.js içinde ilgili satırı bulup değiştirin)
-hint.style.cssText = `
-    text-align: center; 
-    color: #00ffcc; 
-    font-family: 'Fredoka', sans-serif; 
-    font-size: 14px; 
-    padding: 10px; 
-    margin-bottom: 5px; 
-    font-weight: 600;
-    background: rgba(0, 255, 204, 0.1); /* Hafif arka plan vurgusu */
-    border-radius: 10px;
-`;
+        hint.style.cssText = `
+            text-align: center; 
+            color: #00ffcc; 
+            font-family: 'Fredoka', sans-serif; 
+            font-size: 13px; 
+            padding: 12px; 
+            border-bottom: 1px solid rgba(255,255,255,0.1); 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            background: rgba(0, 255, 204, 0.05);
+            border-radius: 12px 12px 0 0;
+        `;
+        oyunlarOptions.appendChild(hint);
 
-        // 4. OYUN LİSTESİNİ OLUŞTUR
+        // 5. OYUNLARI EKLE
         if (window.OyunListesi && window.OyunListesi.length > 0) {
             window.OyunListesi.forEach(oyun => {
                 const linkElement = document.createElement('a');
                 linkElement.className = 'tool-button-sub';
                 linkElement.innerText = oyun.isim;
-                linkElement.style.cssText = 'text-decoration:none; display:block; padding:12px; text-align:center; color:white; border-bottom:1px solid #333;';
+                linkElement.style.cssText = `
+                    text-decoration: none; 
+                    display: block; 
+                    padding: 15px; 
+                    text-align: center; 
+                    color: white; 
+                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    font-family: 'Fredoka', sans-serif;
+                    font-size: 14px;
+                `;
 
                 let startY = 0;
                 let isScrolling = false;
@@ -1670,12 +1678,12 @@ hint.style.cssText = `
                 }, { passive: true });
 
                 const linkiAc = (ae) => {
-                    if (isScrolling) return; // Eğer parmak kayıyorsa linki açma
+                    if (isScrolling) return; 
                     ae.preventDefault();
                     ae.stopPropagation();
                     window.open(oyun.link, '_blank');
                     
-                    // TIKLAYINCA MENÜYÜ KAPAT
+                    // Kapatma işlemi
                     oyunlarOptions.classList.add('hidden');
                     oyunlarButton.classList.remove('active');
                 };
@@ -1691,14 +1699,13 @@ hint.style.cssText = `
     }
 });
 
-// Boşluğa veya Canvas'a tıklandığında menüyü kapat
+// --- BOŞLUĞA TIKLAYINCA KAPATMA (DOSYANIN EN ALTINA EKLEYİN) ---
 document.addEventListener('pointerdown', (e) => {
     if (oyunlarOptions && !oyunlarOptions.contains(e.target) && e.target !== oyunlarButton) {
         oyunlarOptions.classList.add('hidden');
         oyunlarButton.classList.remove('active');
     }
 });
-
 
 
 // 2. Ana menü kutusunun da dışarıdaki "Ekran Kilitlerine" takılmasını engelle:
