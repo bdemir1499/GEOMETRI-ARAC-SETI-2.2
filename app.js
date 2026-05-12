@@ -1664,6 +1664,13 @@ if (animateButton) {
 // --- MOUSE OLAYLARI ---
 
 canvas.addEventListener('pointerdown', (e) => {
+    // Akıllı tahtalarda sağ tık menüsü veya kaydırmayı engeller
+    if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+        e.preventDefault(); 
+    }
+    
+    isDrawing = true;
+    const pos = getPointerPos(e);
 
 // Mevcut pointerdown dinleyicisinin en başına (yaklaşık 5100. satırlar civarı)
 canvas.addEventListener('pointerdown', (e) => {
