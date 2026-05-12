@@ -22,7 +22,7 @@ let penActiveTimer = null;
 // --- OYUNLAR LİSTESİ ---
 window.OyunListesi = [
     { isim: "ÇEMBERLERDEN ÜÇGEN İNŞASI", link: "https://bekrmatmt25.my.canva.site/cemberden-ucgen-elde-etme" },
-    { isim: "AÇI ÖLÇER YERLEŞTİRME OYUNU", link: "https://bekrmatmt2507.my.canva.site/aci-olcer-yerlestirme-uygulamas" },
+    { isim: "AÇI ÖLÇER YERLEŞTİRME OYUNU", link: "https://bekrmatmt2507.my.canva.site/a-l-er-yar-mas" },
     { isim: "DOĞRUYA DIŞINDAKİ NOKTADAN DİKME", link: "https://bekrmatmt25.my.canva.site/dogruya-disindeki-noktadan-dikme-cizmek" },
     { isim: "AYNI DÜZLEMDE İKİ DOĞRUNUN YOLCULUĞU", link: "https://bdemir1499.github.io/ayni-duzlemde-iki-dogru/" },
     { isim: "AYNI DÜZLEMDE 3 DOĞRUNUN DURUMLARI", link: "https://bekrmatmt2507.my.canva.site/ayniduzlemdeucdogrunundurumlari" },
@@ -38,7 +38,6 @@ window.OyunListesi = [
     { isim: "DÖRTGENLERİN ÖZELLİKLERİ (TÜMDEN GELİM)", link: "https://bdemir1499.github.io/dortgen-ve-ozellikleri-tumdengelim/" },
     { isim: "İKİ PARALEL DOĞRUNUN BİR KESENLE YAPTIĞI AÇILAR (2)", link: "https://bekrmatmt25.my.canva.site/iki-paralel-dogrunun-bir-kesenle-yapt-g-ac-lar" },
     { isim: "DÖNÜŞÜM GEOMETRİSİ (ÖTELEME/YANSIMA)", link: "https://bekrmatmt25.my.canva.site/oteleme-ve-yansima" },
-    { isim: "KOORDİNAT SİSTEMİ, DOĞRUSAL İLİŞKİLER", link: "https://bdemir1499.github.io/koordinatsistemi-dogrusaliliskiler-dogrudenklemleri-egim-donusumgeometrisi/" },
     { isim: "DÖRTGEN ÇEŞİTLERİ KAVRAM HARİTASI", link: "https://bekrmatmt25.my.canva.site/dortgenler-kavram-haritasi" },
     { isim: "DÖRTGENLER GENEL ÇIKARIMLAR", link: "https://bekrmatmt25.my.canva.site/dortgenler-genel-cikarimlar" },
     { isim: "KESİRLERİN FARKLI GÖSTERİMLERİ", link: "https://bekrmatmt25.my.canva.site/kesirlerin-farkl-g-sterimleri" },
@@ -2661,9 +2660,8 @@ if (isDrawingRectangle && rectStartPoint && finalPos) {
 }
 
 // --- AKILLI TAHTA NOKTA KOYMA YAMASI VE AKILLI ŞEKİL TANIMA ---
-if (currentTool === 'pen' && isDrawing) {
-    const lastStroke = drawnStrokes[drawnStrokes.length - 1];
-    
+if (currentTool === 'pen') {
+    const lastStroke = drawnStrokes[drawnStrokes.length - 1];    
     // Sadece tek nokta konduysa
     if (lastStroke && lastStroke.type === 'pen' && lastStroke.path.length <= 3) {
         const p = lastStroke.path[0];
