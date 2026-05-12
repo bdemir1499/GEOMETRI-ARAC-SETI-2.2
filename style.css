@@ -894,24 +894,17 @@ canvas {
 
 /* --- OYUNLAR MENÜSÜ İÇİN SABİT KAYDIRMA ÇUBUĞU --- */
 #oyunlar-options::-webkit-scrollbar {
-    width: 8px;
-    -webkit-appearance: none;
+    width: 8px !important;
+    display: block !important; 
+    -webkit-appearance: none !important;
 }
 
 #oyunlar-options::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2); /* Arka planın hafif koyu hali */
-    border-radius: 10px;
-    margin-top: 5px;
-    margin-bottom: 5px;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-radius: 10px !important;
 }
 
 #oyunlar-options::-webkit-scrollbar-thumb {
-    background: #00ffcc; /* Sizin uygulamanızın buton renklerine uygun turkuaz/yeşil */
-    border-radius: 10px;
-    border: 2px solid rgba(0,0,0,0); /* Şık durması için şeffaf kenarlık */
-    background-clip: padding-box;
-}
-
-#oyunlar-options::-webkit-scrollbar-thumb:hover {
-    background: #00cca3; /* Üzerine gelince biraz koyulaşsın (bilgisayar için) */
+    background: #00ffcc !important; 
+    border-radius: 10px !important;
 }
