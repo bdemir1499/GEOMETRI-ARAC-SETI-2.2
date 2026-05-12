@@ -1689,6 +1689,8 @@ document.addEventListener('pointerdown', (e) => {
     }
 });
 
+
+
 // 2. Ana menü kutusunun da dışarıdaki "Ekran Kilitlerine" takılmasını engelle:
 oyunlarOptions.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
 oyunlarOptions.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
