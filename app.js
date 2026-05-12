@@ -1600,31 +1600,34 @@ oyunlarButton.addEventListener('click', () => {
     } else {
         // Paneli aç
         oyunlarOptions.innerHTML = ''; // önce temizle
+        
+        // --- TABLET KAYDIRMA İZNİ BURADA VERİLİYOR ---
+        oyunlarOptions.style.touchAction = 'pan-y'; // Yalnızca yukarı-aşağı kaydırmaya izin ver
 
         if (window.OyunListesi && window.OyunListesi.length > 0) {
             window.OyunListesi.forEach(oyun => {
                 const linkElement = document.createElement('a');
-                linkElement.href = '#'; // Sayfanın yukarı zıplamasını önlemek için boş link veriyoruz
+                linkElement.href = '#'; 
                 linkElement.innerText = oyun.isim;
+                linkElement.className = 'tool-button-sub'; // Buton görünümü için CSS sınıfını ekliyoruz
+                linkElement.style.textDecoration = 'none';
+                linkElement.style.textAlign = 'center';
 
-                // --- AKILLI TAHTA VE DOKUNMATİK UYUMLU KESİN AÇILIŞ KODU ---
                 const linkiAc = (e) => {
-                    e.preventDefault(); // Tarayıcının kendi link açma çabasını durdur
-                    e.stopPropagation(); // Tıklamanın arkadaki kanvasa geçmesini engelle
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
                     
-                    window.open(oyun.link, '_blank'); // Linki JavaScript ile kesin olarak yeni sekmede aç
+                    window.open(oyun.link, '_blank'); 
                     
-                    // İşlemden sonra menüyü kapat
                     setTimeout(() => {
                         oyunlarOptions.classList.add('hidden');
                         oyunlarButton.classList.remove('active');
                     }, 100);
                 };
 
-                // Hem mouse tıklamasını hem de akıllı tahta dokunuşunu ayrı ayrı dinliyoruz
+                // KRİTİK: touchstart sildik, sadece 'click' bıraktık.
+                // Modern mobil tarayıcılar "kaydırma" bitip parmak kalktığında tıklamayı sorunsuz algılar.
                 linkElement.addEventListener('click', linkiAc);
-                linkElement.addEventListener('touchstart', linkiAc, { passive: false });
-                // -------------------------------------------------------------
 
                 oyunlarOptions.appendChild(linkElement);
             });
@@ -1636,7 +1639,6 @@ oyunlarButton.addEventListener('click', () => {
         oyunlarButton.classList.add('active');
     }
 });
-
 
 circleButton.addEventListener('click', (e) => {
     e.stopPropagation();
