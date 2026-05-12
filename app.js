@@ -1202,10 +1202,14 @@ window.distance = distance;
 
 // --- ARAÇ SEÇİMİ (TAMAMEN DÜZELTİLMİŞ VERSİYON) ---
 function setActiveTool(tool) {
-    // 1. Önceki tüm aktiflikleri temizle (Çizgi butonu dahil!)
+    // Oyunlar menüsünü her araç değişiminde kapat
+    if (oyunlarOptions) oyunlarOptions.classList.add('hidden');
+    if (oyunlarButton) oyunlarButton.classList.remove('active');
+
+    // Mevcut butonların aktifliğini temizle
     penButton.classList.remove('active');
     eraserButton.classList.remove('active');
-    lineButton.classList.remove('active'); // <-- KRİTİK SATIR
+    lineButton.classList.remove('active');
     pointButton.classList.remove('active');
     straightLineButton.classList.remove('active');
     infinityLineButton.classList.remove('active');
@@ -1218,17 +1222,25 @@ function setActiveTool(tool) {
     polygonButton.classList.remove('active');
     circleButton.classList.remove('active');
     moveButton.classList.remove('active');
-    oyunlarButton.classList.remove('active');
-    regularPolygonButtons.forEach(b => b.classList.remove('active'));
-    
     if(fillButton) fillButton.classList.remove('active');
     if(animateButton) animateButton.classList.remove('active'); 
 
     // İmleçleri temizle
-    body.classList.remove('cursor-pen');
-    body.classList.remove('cursor-eraser');
-    body.classList.remove('cursor-snapshot');
+    body.classList.remove('cursor-pen', 'cursor-eraser', 'cursor-snapshot');
+    if (eraserPreview) eraserPreview.style.display = 'none'; 
 
+    // Yeni aracı ayarla
+    currentTool = tool;
+
+    // Seçilen aracın ışığını yak
+    if (tool === 'pen') {
+        penButton.classList.add('active');
+        body.classList.add('cursor-pen');
+    } else if (tool === 'eraser') {
+        eraserButton.classList.add('active');
+        body.classList.add('cursor-eraser');
+    }
+    // ... (Kodun devamı senin dosyadakiyle aynı kalabilir, sadece baş kısmı böyle olsun)
 // --- BU SATIRI EKLE ---
     if (eraserPreview) eraserPreview.style.display = 'none'; 
     // ----------------------
@@ -1592,93 +1604,88 @@ polygonButton.addEventListener('click', () => {
     }
 });
 
-// --- OYUNLAR MENÜSÜ DOKUNMATİK KAYDIRMA VE TIKLAMA KESİN ÇÖZÜM ---
-oyunlarButton.addEventListener('click', () => {
+// --- OYUNLAR MENÜSÜ (YUKARI DOĞRU AÇILAN VE SİLGİ KAPATAN SİSTEM) ---
+oyunlarButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    
     if (oyunlarButton.classList.contains('active')) {
         oyunlarOptions.classList.add('hidden');
         oyunlarButton.classList.remove('active');
     } else {
+        // 1. DİĞER ARAÇLARI VE SİLGİYİ KAPAT
+        if (typeof setActiveTool === 'function') setActiveTool('none'); 
+        
         oyunlarOptions.innerHTML = ''; 
-
-// --- KAYDIRMA İPUCU ---
-        const kaydirmaBilgisi = document.createElement('div');
-        kaydirmaBilgisi.innerHTML = '⬇️ Liste kaydırılabilir ⬇️';
-        kaydirmaBilgisi.style.textAlign = 'center';
-        kaydirmaBilgisi.style.color = '#00ffcc'; // Neon turkuaz rengi
-        kaydirmaBilgisi.style.fontSize = '12px';
-        kaydirmaBilgisi.style.paddingBottom = '8px';
-        kaydirmaBilgisi.style.borderBottom = '1px solid rgba(255,255,255,0.2)';
-        kaydirmaBilgisi.style.marginBottom = '10px';
-        kaydirmaBilgisi.style.fontWeight = 'bold';
-        oyunlarOptions.appendChild(kaydirmaBilgisi);
-
-        // 1. Menüyü kaydırılabilir olmaya ZORLA
+        
+        // 2. MENÜ GÖRÜNÜM AYARLARI
+        oyunlarOptions.style.display = 'flex';
+        oyunlarOptions.style.flexDirection = 'column';
+        oyunlarOptions.style.maxHeight = '400px';
         oyunlarOptions.style.overflowY = 'auto';
-        oyunlarOptions.style.maxHeight = '400px'; 
-        oyunlarOptions.style.touchAction = 'pan-y'; // Sadece dikey kaydırmaya izin ver
-        oyunlarOptions.style.WebkitOverflowScrolling = 'touch'; // iOS/Tablet akıcı kaydırma
+        oyunlarOptions.style.touchAction = 'pan-y';
+        oyunlarOptions.style.WebkitOverflowScrolling = 'touch';
 
+        // 3. KONUMU YUKARI ALAN KRİTİK HESAPLAMA
+        const buttonRect = oyunlarButton.getBoundingClientRect();
+        const panelRect = oyunlarButton.parentElement.getBoundingClientRect();
+        
+        // 'top' değerini sıfırlayıp 'bottom' kullanarak menüyü yukarıya sabitliyoruz
+        oyunlarOptions.style.top = 'auto'; 
+        oyunlarOptions.style.bottom = (panelRect.bottom - buttonRect.bottom) + 'px';
+
+        // Kaydırma İpucu
+        const hint = document.createElement('div');
+        hint.innerHTML = '⬇️ Liste kaydırılabilir ⬇️';
+        hint.style.cssText = 'text-align:center; color:#00ffcc; font-size:12px; padding:8px; border-bottom:1px solid #444; margin-bottom:5px; font-weight:bold;';
+        oyunlarOptions.appendChild(hint);
+
+        // 4. OYUN LİSTESİNİ OLUŞTUR
         if (window.OyunListesi && window.OyunListesi.length > 0) {
             window.OyunListesi.forEach(oyun => {
                 const linkElement = document.createElement('a');
-                linkElement.href = '#'; 
+                linkElement.className = 'tool-button-sub';
                 linkElement.innerText = oyun.isim;
-                linkElement.className = 'tool-button-sub'; 
-                linkElement.style.textDecoration = 'none';
-                linkElement.style.textAlign = 'center';
-                linkElement.style.display = 'block'; 
-                linkElement.style.padding = '10px'; 
-                linkElement.style.marginBottom = '5px';
+                linkElement.style.cssText = 'text-decoration:none; display:block; padding:12px; text-align:center; color:white; border-bottom:1px solid #333;';
 
-                // --- KAYDIRMA VE TIKLAMA AYIRICI MANTIK ---
-                let isScrolling = false;
                 let startY = 0;
+                let isScrolling = false;
 
-                // Parmağı koyduğunda:
-                linkElement.addEventListener('touchstart', (e) => {
-                    e.stopPropagation(); 
-                    isScrolling = false; // Başlangıçta kaydırmıyor varsay
-                    startY = e.touches[0].clientY; // Parmağın ilk değdiği yeri kaydet
+                linkElement.addEventListener('touchstart', (te) => {
+                    startY = te.touches[0].clientY;
+                    isScrolling = false;
                 }, { passive: true });
 
-                // Parmağı hareket ettirdiğinde:
-                linkElement.addEventListener('touchmove', (e) => {
-                    e.stopPropagation();
-                    // Parmak 10 pikselden fazla aşağı/yukarı kaydıysa, bu bir kaydırmadır (scroll)!
-                    if (Math.abs(e.touches[0].clientY - startY) > 10) {
-                        isScrolling = true;
-                    }
+                linkElement.addEventListener('touchmove', (te) => {
+                    if (Math.abs(te.touches[0].clientY - startY) > 10) isScrolling = true;
                 }, { passive: true });
 
-                // Parmağı çektiğinde veya tıkladığında işlemi yap:
-                const linkiAc = (e) => {
-                    e.preventDefault(); 
-                    e.stopPropagation(); 
+                const linkiAc = (ae) => {
+                    if (isScrolling) return; // Eğer parmak kayıyorsa linki açma
+                    ae.preventDefault();
+                    ae.stopPropagation();
+                    window.open(oyun.link, '_blank');
                     
-                    // KRİTİK: Eğer kullanıcı sayfayı kaydırıyorsa, linki sakın açma!
-                    if (isScrolling) return;
-
-                    // Kaydırma yoksa (sadece dokunduysa) linki aç:
-                    window.open(oyun.link, '_blank'); 
-                    
-                    setTimeout(() => {
-                        oyunlarOptions.classList.add('hidden');
-                        oyunlarButton.classList.remove('active');
-                    }, 100);
+                    // TIKLAYINCA MENÜYÜ KAPAT
+                    oyunlarOptions.classList.add('hidden');
+                    oyunlarButton.classList.remove('active');
                 };
 
-                // Hem dokunmatik çekme hem normal fare tıklamasını dinle
                 linkElement.addEventListener('touchend', linkiAc);
                 linkElement.addEventListener('click', linkiAc);
-
                 oyunlarOptions.appendChild(linkElement);
             });
-        } else {
-            oyunlarOptions.innerText = "Oyun bulunamadı.";
         }
 
         oyunlarOptions.classList.remove('hidden');
         oyunlarButton.classList.add('active');
+    }
+});
+
+// Boşluğa veya Canvas'a tıklandığında menüyü kapat
+document.addEventListener('pointerdown', (e) => {
+    if (oyunlarOptions && !oyunlarOptions.contains(e.target) && e.target !== oyunlarButton) {
+        oyunlarOptions.classList.add('hidden');
+        oyunlarButton.classList.remove('active');
     }
 });
 
@@ -3711,4 +3718,24 @@ function akilliSekilTani(stroke) {
     ];
 
 } // <-- BU SÜSLÜ PARANTEZ ÇOK ÖNEMLİ, ÜSTTEKİ FONKSİYONU KAPATIR!
+
+// --- BAŞKA BİR ARACA TIKLANDIĞINDA SİLGİYİ OTOMATİK KAPATMA YAMASI ---
+document.querySelectorAll('.tool-button, .tool-button-sub').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Eğer tıklanan buton "Silgi" değilse çalışsın
+        if (this.id !== 'btn-silgi') {
+            const silgiBtn = document.getElementById('btn-silgi');
+            
+            // Silgi butonu aktifse, aktiflik sınıfını kaldır (ışığını söndür)
+            if (silgiBtn && silgiBtn.classList.contains('active')) {
+                silgiBtn.classList.remove('active');
+                
+                // Arka planda çizim aracını 'silgi' modundan çıkar (uygulamanızdaki değişken ismine göre 'none' veya 'pen' yapıyoruz)
+                if (typeof currentTool !== 'undefined' && currentTool === 'eraser') {
+                    currentTool = 'none'; 
+                }
+            }
+        }
+    });
+});
 
