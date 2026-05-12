@@ -884,3 +884,10 @@ body.cursor-snapshot {
 #oyunlar-options.hidden {
     display: none !important;
 }
+
+canvas {
+    touch-action: none; /* Tarayıcının tüm dokunmatik hareketleri yönetmesini engeller, çizime izin verir */
+    cursor: crosshair;
+    -webkit-user-select: none; /* Metin seçmeyi engeller */
+    user-select: none;
+}

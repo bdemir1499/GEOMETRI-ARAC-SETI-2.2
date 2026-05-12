@@ -3618,3 +3618,8 @@ function akilliSekilTani(stroke) {
         { type: 'segment', p1: { x: minX, y: maxY }, p2: { x: minX, y: minY }, color: col, width: wid, label1: l4, label2: l1 }
     ];
 }
+
+// Akıllı tahtada uzun basınca çıkan sağ tık menüsünü engeller
+canvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+}, false);
