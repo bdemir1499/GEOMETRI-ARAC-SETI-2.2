@@ -2,14 +2,14 @@
 let currentLang = 'tr'; // Varsayılan dil
 
 const translations = {
-    tr: { yukle: "Resim/Dosya Yükle", silgi: "Silgi", kalem: "Kalem", cizgi: "Çizgi", nokta: "Nokta", d_cizgi: "Düz Çizgi", dogru: "Doğru", dogru_parcasi: "Doğru Parçası", isin: "Işın", cetvel: "Cetvel", gonye: "Gönye", aciolcer: "Açı Ölçer", pergel: "Pergel", cokgenler: "Çokgenler", cember: "Çember", d_ucgen: "Düzgün 3gen", d_dortgen: "Düzgün 4gen", dikdortgen: "Dikdörtgen", d_besgen: "Düzgün 5gen", d_altigen: "Düzgün 6gen", d_yedigen: "Düzgün 7gen", d_sekizgen: "Düzgün 8gen", oyunlar: "Oyunlar", arac_rengi: "Araç Rengi", geri_al: "Geri Al", hepsini_sil: "Hepsini Sil", tasi: "Taşı", canlandir: "Canlandır ✂️", kutu: "Kutu (Standart)", serbest: "Serbest Kes", yardim: "Video Yardım" },
-    en: { yukle: "Upload Image/PDF", silgi: "Eraser", kalem: "Pen", cizgi: "Line", nokta: "Point", d_cizgi: "Straight Line", dogru: "Line (Inf.)", dogru_parcasi: "Segment", isin: "Ray", cetvel: "Ruler", gonye: "Set Square", aciolcer: "Protractor", pergel: "Compass", cokgenler: "Polygons", cember: "Circle", d_ucgen: "Regular Triangle", d_dortgen: "Square", dikdortgen: "Rectangle", d_besgen: "Pentagon", d_altigen: "Hexagon", d_yedigen: "Heptagon", d_sekizgen: "Octagon", oyunlar: "Games", arac_rengi: "Tool Color", geri_al: "Undo", hepsini_sil: "Clear All", tasi: "Move", canlandir: "Animate ✂️", kutu: "Box", serbest: "Free Cut", yardim: "Video Help" },
-    de: { yukle: "Bild/PDF hochladen", silgi: "Radiergummi", kalem: "Stift", cizgi: "Linie", nokta: "Punkt", d_cizgi: "Gerade Linie", dogru: "Gerade", dogru_parcasi: "Strecke", isin: "Strahl", cetvel: "Lineal", gonye: "Geodreieck", aciolcer: "Winkelmesser", pergel: "Zirkel", cokgenler: "Polygone", cember: "Kreis", d_ucgen: "Gleichseitiges Dreieck", d_dortgen: "Quadrat", dikdortgen: "Rechteck", d_besgen: "Fünfeck", d_altigen: "Sechseck", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Spiele", arac_rengi: "Farbe", geri_al: "Rückgängig", hepsini_sil: "Alles löschen", tasi: "Bewegen", canlandir: "Animieren ✂️", kutu: "Box", serbest: "Freihand", yardim: "Hilfe-Video" },
-    ar: { yukle: "تحميل صورة/ملف", silgi: "ممحاة", kalem: "قلم", cizgi: "خط", nokta: "نقطة", d_cizgi: "خط مستقيم", dogru: "مستقيم", dogru_parcasi: "قطعة مستقيمة", isin: "شعاع", cetvel: "مسطرة", gonye: "مثلث قائم", aciolcer: "منقلة", pergel: "فرجار", cokgenler: "مضلعات", cember: "دائرة", d_ucgen: "مثلث منتظم", d_dortgen: "مربع", dikdortgen: "مستطيل", d_besgen: "مخمس", d_altigen: "مسدس", d_yedigen: "مسبع", d_sekizgen: "مثمن", oyunlar: "ألعاب", arac_rengi: "لون الأداة", geri_al: "تراجع", hepsini_sil: "مسح الكل", tasi: "تحريك", canlandir: "تحريك ✂️", kutu: "صندوق", serbest: "قص حر", yardim: "فيديو المساعدة" },
-    hi: { yukle: "छवि/पीडीएफ अपलोड करें", silgi: "इरेज़र", kalem: "पेन", cizgi: "रेखा", nokta: "बिंदُ", d_cizgi: "सीधी रेखा", dogru: "रेखा", dogru_parcasi: "रेखा खंड", isin: "किरण", cetvel: "पैमाना", gonye: "सेट स्क्वायर", aciolcer: "चांदा", pergel: "परकार", cokgenler: "बहुभुज", cember: "वृत्त", d_ucgen: "समबाहु त्रिभुज", d_dortgen: "वर्ग", dikdortgen: "आयत", d_besgen: "पंचभुज", d_altigen: "षट्भुज", d_yedigen: "सप्तभुज", d_sekizgen: "अष्टभुज", oyunlar: "खेल", arac_rengi: "उपकरण का रंग", geri_al: "पूर्ववत करें", hepsini_sil: "सभी साफ़ करें", tasi: "ले जाएँ", canlandir: "एनिमेट करें ✂️", kutu: "बॉक्स", serbest: "मुक्त कट", yardim: "वीडियो सहायता" },
-    ms: { yukle: "Muat Naik Gambar/PDF", silgi: "Pemadam", kalem: "Pen", cizgi: "Garisan", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis", dogru_parcasi: "Segmen Garis", isin: "Sinar", cetvel: "Pembaris", gonye: "Sesiku", aciolcer: "Jangka Sudut", pergel: "Jangka Lukis", cokgenler: "Poligon", cember: "Bulatan", d_ucgen: "Segi Tiga Sekata", d_dortgen: "Segi Empat Sama", dikdortgen: "Segi Empat Tepat", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna Alat", geri_al: "Batal", hepsini_sil: "Padam Semua", tasi: "Gerak", canlandir: "Animasi ✂️", kutu: "Kotak", serbest: "Potong Bebas", yardim: "Video Bantuan" },
-    id: { yukle: "Unggah Gambar/PDF", silgi: "Penghapus", kalem: "Pena", cizgi: "Garis", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis (Tanpa Batas)", dogru_parcasi: "Segmen Garis", isin: "Sinar", cetvel: "Penggaris", gonye: "Penggaris Segitiga", aciolcer: "Busur Derajat", pergel: "Jangka", cokgenler: "Poligon", cember: "Lingkaran", d_ucgen: "Segitiga Sama Sisi", d_dortgen: "Persegi", dikdortgen: "Persegi Panjang", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna Alat", geri_al: "Urungkan", hepsini_sil: "Hapus Semua", tasi: "Pindah", canlandir: "Animasikan ✂️", kutu: "Kotak", serbest: "Potong Bebas", yardim: "Bantuan Video" },
-    zh: { yukle: "上传图片/PDF", silgi: "橡皮", kalem: "笔", cizgi: "线", nokta: "点", d_cizgi: "直线", dogru: "直线 (无限)", dogru_parcasi: "线段", isin: "射线", cetvel: "直尺", gonye: "三角板", aciolcer: "量角器", pergel: "圆规", cokgenler: "多边形", cember: "圆", d_ucgen: "等边三角形", d_dortgen: "正方形", dikdortgen: "长方形", d_besgen: "五边形", d_altigen: "六边形", d_yedigen: "七边形", d_sekizgen: "八边形", oyunlar: "游戏", arac_rengi: "工具颜色", geri_al: "撤销", hepsini_sil: "全部清除", tasi: "移动", canlandir: "动画 ✂️", kutu: "框选", serbest: "自由裁剪", yardim: "视频帮助" }
+    tr: { yukle: "Resim/Dosya Yükle", ins_title: "Uygulamayı Yükle", ins_desc: "Daha iyi performans için uygulamayı cihazına yükle.", ins_btn: "Yükle", ins_close: "Kapat", silgi: "Silgi", kalem: "Kalem", oyunlar: "Oyunlar", geri_al: "Geri Al", temizle: "Hepsini Sil", tasi: "Taşı", canlandir: "Canlandır ✂️", yardim: "Video Yardım", arac_rengi: "Araç Rengi" },
+    en: { yukle: "Upload Image/PDF", ins_title: "Install App", ins_desc: "Install the app on your device for better performance.", ins_btn: "Install", ins_close: "Close", silgi: "Eraser", kalem: "Pen", oyunlar: "Games", geri_al: "Undo", temizle: "Clear All", tasi: "Move", canlandir: "Animate ✂️", yardim: "Video Help", arac_rengi: "Tool Color" },
+    de: { yukle: "Bild/PDF hochladen", ins_title: "App installieren", ins_desc: "Installieren Sie die App für eine bessere Leistung.", ins_btn: "Installieren", ins_close: "Schließen", silgi: "Radiergummi", kalem: "Stift", oyunlar: "Spiele", geri_al: "Rückgängig", temizle: "Alles löschen", tasi: "Bewegen", canlandir: "Animieren ✂️", yardim: "Hilfe-Video", arac_rengi: "Farbe" },
+    ar: { yukle: "تحميل صورة/ملف", ins_title: "تثبيت التطبيق", ins_desc: "قم بتثبيت التطبيق على جهازك للحصول على أداء أفضل.", ins_btn: "تثبيت", ins_close: "إغلاق", silgi: "ممحاة", kalem: "قلم", oyunlar: "ألعاب", geri_al: "تراجع", temizle: "مسح الكل", tasi: "تحريك", canlandir: "تحريك ✂️", yardim: "فيديو المساعدة", arac_rengi: "لون الأداة" },
+    hi: { yukle: "छवि/पीडीएफ अपलोड करें", ins_title: "ऐप इंस्टॉल करें", ins_desc: "बेहतर प्रदर्शन के लिए अपने डिवाइस पर ऐप इंस्टॉल करें।", ins_btn: "इंस्टॉल", ins_close: "बंद करें", silgi: "इरेज़र", kalem: "पेन", oyunlar: "खेल", geri_al: "पूर्ववत करें", temizle: "सभी साफ़ करें", tasi: "ले जाएँ", canlandir: "एनिमेट करें ✂️", yardim: "वीडियो सहायता", arac_rengi: "उपकरण का रंग" },
+    ms: { yukle: "Muat Naik Gambar/PDF", ins_title: "Pasang Aplikasi", ins_desc: "Pasang aplikasi pada peranti anda untuk prestasi lebih baik.", ins_btn: "Pasang", ins_close: "Tutup", silgi: "Pemadam", kalem: "Pen", oyunlar: "Permainan", geri_al: "Batal", temizle: "Padam Tüm", tasi: "Gerak", canlandir: "Animasi ✂️", yardim: "Video Bantuan", arac_rengi: "Warna Alat" },
+    id: { yukle: "Unggah Gambar/PDF", ins_title: "Instal Aplikasi", ins_desc: "Instal aplikasi di perangkat Anda untuk performa yang lebih baik.", ins_btn: "Instal", ins_close: "Tutup", silgi: "Penghapus", kalem: "Pena", oyunlar: "Permainan", geri_al: "Urungkan", temizle: "Hapus Semua", tasi: "Pindah", canlandir: "Animasikan ✂️", yardim: "Bantuan Video", arac_rengi: "Warna Alat" },
+    zh: { yukle: "上传图片/PDF", ins_title: "安装应用", ins_desc: "在您的设备上安装该应用，以获得更好的性能。", ins_btn: "安装", ins_close: "关闭", silgi: "橡皮", kalem: "笔", oyunlar: "游戏", geri_al: "撤销", temizle: "全部清除", tasi: "移动", canlandir: "动画 ✂️", yardim: "视频帮助", arac_rengi: "工具颜色" }
 };
 
 let isDrawingLasso = false;
@@ -4121,51 +4121,34 @@ function setLanguage(lang) {
 
     const update = (id, text) => {
         const el = document.getElementById(id);
-        if (el) el.innerText = text;
+        if (el && text) el.innerText = text;
     };
 
-    // --- SOL PANEL ---
+    // 1. ANA PANEL BUTONLARI
+    update('btn-upload', t.yukle);
     update('btn-silgi', t.silgi);
     update('btn-kalem', t.kalem);
-    update('btn-cizgi', t.cizgi);
-    update('btn-nokta', t.nokta);
-    update('btn-d_cizgi', t.d_cizgi);
-    update('btn-dogru', t.dogru);
-    update('btn-dogru_parcasi', t.dogru_parcasi);
-    update('btn-isin', t.isin);
-    update('btn-cetvel', t.cetvel);
-    update('btn-gonye', t.gonye);
-    update('btn-aciolcer', t.aciolcer);
-    update('btn-pergel', t.pergel);
-    update('btn-cokgenler', t.cokgenler);
-    update('btn-cember', t.cember);
-    update('btn-duzgun_ucgen', t.d_ucgen);
-    update('btn-duzgun_dortgen', t.d_dortgen);
-    update('btn-dikdortgen', t.dikdortgen);
-    update('btn-duzgun_besgen', t.d_besgen);
-    update('btn-duzgun_altigen', t.d_altigen);
-    update('btn-duzgun_yedigen', t.d_yedigen);
-    update('btn-duzgun_sekizgen', t.d_sekizgen);
-    update('btn-oyunlar', t.oyunlar);
-
-    // --- SAĞ PANEL ---
     update('btn-undo', t.geri_al);
-    update('btn-clear-all', t.hepsini_sil);
+    update('btn-clear-all', t.temizle);
     update('btn-move', t.tasi);
-    update('btn-upload', t.yukle); // YÜKLE BUTONU ARTIK ÇALIŞIR
+    update('btn-oyunlar', t.oyunlar);
     update('btn-snapshot-main', t.canlandir);
-    update('btn-snapshot-box', t.kutu);
-    update('btn-snapshot-lasso', t.serbest);
     update('btn-help', t.yardim);
 
-    // Araç Rengi Başlığı (Rengi bozmadan)
+    // 2. YÜKLEME PENCERESİ (YENİ EKLENEN KISIM)
+    update('install-title', t.ins_title);
+    update('install-desc', t.ins_desc);
+    update('btn-popup-install', t.ins_btn);
+    update('btn-popup-close', t.ins_close);
+
+    // 3. ARAÇ RENĞİ KONTROLÜ
     const colorBtn = document.getElementById('btn-tool-color');
     if (colorBtn) {
         const currentColor = colorBtn.innerText.split(': ')[1] || "Siyah";
         colorBtn.innerText = `${t.arac_rengi}: ${currentColor}`;
     }
 
-    // Oyunlar menüsünü tazele
+    // 4. OYUNLAR MENÜSÜ TAZELEME
     try {
         if (typeof oyunlarButton !== 'undefined' && oyunlarButton.classList.contains('active')) {
             oyunlarButton.click(); 
@@ -4173,10 +4156,10 @@ function setLanguage(lang) {
         }
     } catch(e) {}
 
-    // Arapça için sağdan sola desteği
+    // 5. ARAPÇA İÇİN SAĞDAN SOLA DESTEĞİ
     document.body.dir = (lang === 'ar') ? 'rtl' : 'ltr';
 
-    // Ekranı Kapat
+    // 6. SEÇİM EKRANINI KAPAT (EKRANA GEÇİŞ)
     const overlay = document.getElementById('language-overlay');
     if (overlay) overlay.style.display = 'none';
 }
