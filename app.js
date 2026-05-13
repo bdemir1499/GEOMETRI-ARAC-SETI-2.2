@@ -4,12 +4,12 @@ let currentLang = 'tr'; // Varsayılan dil
 const translations = {
     tr: { yukle: "Resim/Dosya Yükle", ins_title: "Uygulamayı Yükle", ins_desc: "Daha iyi performans için uygulamayı cihazına yükle.", ins_btn: "Yükle", ins_close: "Kapat", silgi: "Silgi", kalem: "Kalem", oyunlar: "Oyunlar", geri_al: "Geri Al", temizle: "Hepsini Sil", tasi: "Taşı", canlandir: "Canlandır ✂️", yardim: "Video Yardım", arac_rengi: "Araç Rengi" },
     en: { yukle: "Upload Image/PDF", ins_title: "Install App", ins_desc: "Install the app on your device for better performance.", ins_btn: "Install", ins_close: "Close", silgi: "Eraser", kalem: "Pen", oyunlar: "Games", geri_al: "Undo", temizle: "Clear All", tasi: "Move", canlandir: "Animate ✂️", yardim: "Video Help", arac_rengi: "Tool Color" },
-    de: { yukle: "Bild/PDF hochladen", ins_title: "App installieren", ins_desc: "Installieren Sie die App für eine bessere Leistung.", ins_btn: "Installieren", ins_close: "Schließen", silgi: "Radiergummi", kalem: "Stift", oyunlar: "Spiele", geri_al: "Rückgängig", temizle: "Alles löschen", tasi: "Bewegen", canlandir: "Animieren ✂️", yardim: "Hilfe-Video", arac_rengi: "Farbe" },
-    ar: { yukle: "تحميل صورة/ملف", ins_title: "تثبيت التطبيق", ins_desc: "قم بتثبيت التطبيق على جهازك للحصول على أداء أفضل.", ins_btn: "تثبيت", ins_close: "إغلاق", silgi: "ممحاة", kalem: "قلم", oyunlar: "ألعاب", geri_al: "تراجع", temizle: "مسح الكل", tasi: "تحريك", canlandir: "تحريك ✂️", yardim: "فيديو المساعدة", arac_rengi: "لون الأداة" },
-    hi: { yukle: "छवि/पीडीएफ अपलोड करें", ins_title: "ऐप इंस्टॉल करें", ins_desc: "बेहतर प्रदर्शन के लिए अपने डिवाइस पर ऐप इंस्टॉल करें।", ins_btn: "इंस्टॉल", ins_close: "बंद करें", silgi: "इरेज़र", kalem: "पेन", oyunlar: "खेल", geri_al: "पूर्ववत करें", temizle: "सभी साफ़ करें", tasi: "ले जाएँ", canlandir: "एनिमेट करें ✂️", yardim: "वीडियो सहायता", arac_rengi: "उपकरण का रंग" },
-    ms: { yukle: "Muat Naik Gambar/PDF", ins_title: "Pasang Aplikasi", ins_desc: "Pasang aplikasi pada peranti anda untuk prestasi lebih baik.", ins_btn: "Pasang", ins_close: "Tutup", silgi: "Pemadam", kalem: "Pen", oyunlar: "Permainan", geri_al: "Batal", temizle: "Padam Tüm", tasi: "Gerak", canlandir: "Animasi ✂️", yardim: "Video Bantuan", arac_rengi: "Warna Alat" },
-    id: { yukle: "Unggah Gambar/PDF", ins_title: "Instal Aplikasi", ins_desc: "Instal aplikasi di perangkat Anda untuk performa yang lebih baik.", ins_btn: "Instal", ins_close: "Tutup", silgi: "Penghapus", kalem: "Pena", oyunlar: "Permainan", geri_al: "Urungkan", temizle: "Hapus Semua", tasi: "Pindah", canlandir: "Animasikan ✂️", yardim: "Bantuan Video", arac_rengi: "Warna Alat" },
-    zh: { yukle: "上传图片/PDF", ins_title: "安装应用", ins_desc: "在您的设备上安装该应用，以获得更好的性能。", ins_btn: "安装", ins_close: "关闭", silgi: "橡皮", kalem: "笔", oyunlar: "游戏", geri_al: "撤销", temizle: "全部清除", tasi: "移动", canlandir: "动画 ✂️", yardim: "视频帮助", arac_rengi: "工具颜色" }
+    de: { yukle: "Bild/PDF hochladen", ins_title: "App installieren", ins_desc: "Für eine bessere Leistung installieren.", ins_btn: "Installieren", ins_close: "Schließen", silgi: "Radiergummi", kalem: "Stift", oyunlar: "Spiele", geri_al: "Rückgängig", temizle: "Alles löschen", tasi: "Bewegen", canlandir: "Animieren ✂️", yardim: "Hilfe-Video", arac_rengi: "Farbe" },
+    ar: { yukle: "تحميل ملف", ins_title: "تثبيت التطبيق", ins_desc: "قم بتثبيت التطبيق للحصول على أداء أفضل.", ins_btn: "تثبيت", ins_close: "إغلاق", silgi: "ممحاة", kalem: "قلم", oyunlar: "ألعاب", geri_al: "تراجع", temizle: "مسح الكل", tasi: "تحريك", canlandir: "تحريك ✂️", yardim: "فيديو المساعدة", arac_rengi: "لون الأداة" },
+    hi: { yukle: "फ़ाइल अपलोड करें", ins_title: "ऐप इंस्टॉल करें", ins_desc: "बेहतर प्रदर्शन के लिए ऐप इंस्टॉल करें।", ins_btn: "इंस्टॉल", ins_close: "बंद करें", silgi: "इरेज़र", kalem: "पेन", oyunlar: "खेल", geri_al: "पूर्ववत करें", temizle: "सभी साफ़ करें", tasi: "ले जाएँ", canlandir: "एनिमेट करें ✂️", yardim: "वीडियो सहायता", arac_rengi: "उपकरण का रंग" },
+    ms: { yukle: "Muat Naik Fail", ins_title: "Pasang Aplikasi", ins_desc: "Pasang aplikasi untuk prestasi lebih baik.", ins_btn: "Pasang", ins_close: "Tutup", silgi: "Pemadam", kalem: "Pen", oyunlar: "Permainan", geri_al: "Batal", temizle: "Padam Tüm", tasi: "Gerak", canlandir: "Animasi ✂️", yardim: "Video Bantuan", arac_rengi: "Warna Alat" },
+    id: { yukle: "Unggah Berkas", ins_title: "Instal Aplikasi", ins_desc: "Instal aplikasi untuk performa lebih baik.", ins_btn: "Instal", ins_close: "Tutup", silgi: "Penghapus", kalem: "Pena", oyunlar: "Permainan", geri_al: "Urungkan", temizle: "Hapus Semua", tasi: "Pindah", canlandir: "Animasikan ✂️", yardim: "Bantuan Video", arac_rengi: "Warna Alat" },
+    zh: { yukle: "上传文件", ins_title: "安装应用", ins_desc: "安装以获得更好体验。", ins_btn: "安装", ins_close: "关闭", silgi: "橡皮", kalem: "笔", oyunlar: "游戏", geri_al: "撤销", temizle: "全部清除", tasi: "移动", canlandir: "动画 ✂️", yardim: "视频帮助", arac_rengi: "工具颜色" }
 };
 
 let isDrawingLasso = false;
@@ -4124,7 +4124,7 @@ function setLanguage(lang) {
         if (el && text) el.innerText = text;
     };
 
-    // 1. ANA PANEL BUTONLARI
+    // 1. ANA PANEL
     update('btn-upload', t.yukle);
     update('btn-silgi', t.silgi);
     update('btn-kalem', t.kalem);
@@ -4135,31 +4135,23 @@ function setLanguage(lang) {
     update('btn-snapshot-main', t.canlandir);
     update('btn-help', t.yardim);
 
-    // 2. YÜKLEME PENCERESİ (YENİ EKLENEN KISIM)
+    // 2. YÜKLEME PENCERESİ (BURASI SENİN KODUNLA TAM UYUMLU)
     update('install-title', t.ins_title);
     update('install-desc', t.ins_desc);
     update('btn-popup-install', t.ins_btn);
     update('btn-popup-close', t.ins_close);
 
-    // 3. ARAÇ RENĞİ KONTROLÜ
+    // 3. ARAÇ RENGİ
     const colorBtn = document.getElementById('btn-tool-color');
     if (colorBtn) {
         const currentColor = colorBtn.innerText.split(': ')[1] || "Siyah";
         colorBtn.innerText = `${t.arac_rengi}: ${currentColor}`;
     }
 
-    // 4. OYUNLAR MENÜSÜ TAZELEME
-    try {
-        if (typeof oyunlarButton !== 'undefined' && oyunlarButton.classList.contains('active')) {
-            oyunlarButton.click(); 
-            oyunlarButton.click(); 
-        }
-    } catch(e) {}
-
-    // 5. ARAPÇA İÇİN SAĞDAN SOLA DESTEĞİ
+    // 4. ARAPÇA YÖNÜ
     document.body.dir = (lang === 'ar') ? 'rtl' : 'ltr';
 
-    // 6. SEÇİM EKRANINI KAPAT (EKRANA GEÇİŞ)
+    // 5. EKRANI KAPAT
     const overlay = document.getElementById('language-overlay');
     if (overlay) overlay.style.display = 'none';
 }
