@@ -1,3 +1,16 @@
+// --- DİL SÖZLÜĞÜ ---
+let currentLang = 'tr'; // Varsayılan dil
+
+const translations = {
+    tr: { yukle: "Resim/Dosya Yükle", silgi: "Silgi", kalem: "Kalem", cizgi: "Çizgi", nokta: "Nokta", d_cizgi: "Düz Çizgi", dogru: "Doğru", dogru_parcasi: "Doğru Parçası", isin: "Işın", cetvel: "Cetvel", gonye: "Gönye", aciolcer: "Açı Ölçer", pergel: "Pergel", cokgenler: "Çokgenler", cember: "Çember", d_ucgen: "Düzgün 3gen", d_dortgen: "Düzgün 4gen", dikdortgen: "Dikdörtgen", d_besgen: "Düzgün 5gen", d_altigen: "Düzgün 6gen", d_yedigen: "Düzgün 7gen", d_sekizgen: "Düzgün 8gen", oyunlar: "Oyunlar", arac_rengi: "Araç Rengi", geri_al: "Geri Al", hepsini_sil: "Hepsini Sil", tasi: "Taşı", canlandir: "Canlandır ✂️", kutu: "Kutu (Standart)", serbest: "Serbest Kes", yardim: "Video Yardım" },
+    en: { yukle: "Upload Image/PDF", silgi: "Eraser", kalem: "Pen", cizgi: "Line", nokta: "Point", d_cizgi: "Straight Line", dogru: "Line (Inf.)", dogru_parcasi: "Segment", isin: "Ray", cetvel: "Ruler", gonye: "Set Square", aciolcer: "Protractor", pergel: "Compass", cokgenler: "Polygons", cember: "Circle", d_ucgen: "Regular Triangle", d_dortgen: "Square", dikdortgen: "Rectangle", d_besgen: "Pentagon", d_altigen: "Hexagon", d_yedigen: "Heptagon", d_sekizgen: "Octagon", oyunlar: "Games", arac_rengi: "Tool Color", geri_al: "Undo", hepsini_sil: "Clear All", tasi: "Move", canlandir: "Animate ✂️", kutu: "Box", serbest: "Free Cut", yardim: "Video Help" },
+    de: { yukle: "Bild/PDF hochladen", silgi: "Radiergummi", kalem: "Stift", cizgi: "Linie", nokta: "Punkt", d_cizgi: "Gerade Linie", dogru: "Gerade", dogru_parcasi: "Strecke", isin: "Strahl", cetvel: "Lineal", gonye: "Geodreieck", aciolcer: "Winkelmesser", pergel: "Zirkel", cokgenler: "Polygone", cember: "Kreis", d_ucgen: "Gleichseitiges Dreieck", d_dortgen: "Quadrat", dikdortgen: "Rechteck", d_besgen: "Fünfeck", d_altigen: "Sechseck", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Spiele", arac_rengi: "Farbe", geri_al: "Rückgängig", hepsini_sil: "Alles löschen", tasi: "Bewegen", canlandir: "Animieren ✂️", kutu: "Box", serbest: "Freihand", yardim: "Hilfe-Video" },
+    ar: { yukle: "تحميل صورة/ملف", silgi: "ممحاة", kalem: "قلم", cizgi: "خط", nokta: "نقطة", d_cizgi: "خط مستقيم", dogru: "مستقيم", dogru_parcasi: "قطعة مستقيمة", isin: "شعاع", cetvel: "مسطرة", gonye: "مثلث قائم", aciolcer: "منقلة", pergel: "فرجار", cokgenler: "مضلعات", cember: "دائرة", d_ucgen: "مثلث منتظم", d_dortgen: "مربع", dikdortgen: "مستطيل", d_besgen: "مخمس", d_altigen: "مسدس", d_yedigen: "مسبع", d_sekizgen: "مثمن", oyunlar: "ألعاب", arac_rengi: "لون الأداة", geri_al: "تراجع", hepsini_sil: "مسح الكل", tasi: "تحريك", canlandir: "تحريك ✂️", kutu: "صندوق", serbest: "قص حر", yardim: "فيديو المساعدة" },
+    hi: { yukle: "छवि/पीडीएफ अपलोड करें", silgi: "इरेज़र", kalem: "पेन", cizgi: "रेखा", nokta: "बिंदُ", d_cizgi: "सीधी रेखा", dogru: "रेखा", dogru_parcasi: "रेखा खंड", isin: "किरण", cetvel: "पैमाना", gonye: "सेट स्क्वायर", aciolcer: "चांदा", pergel: "परकार", cokgenler: "बहुभुज", cember: "वृत्त", d_ucgen: "समबाहु त्रिभुज", d_dortgen: "वर्ग", dikdortgen: "आयत", d_besgen: "पंचभुज", d_altigen: "षट्भुज", d_yedigen: "सप्तभुज", d_sekizgen: "अष्टभुज", oyunlar: "खेल", arac_rengi: "उपकरण का रंग", geri_al: "पूर्ववत करें", hepsini_sil: "सभी साफ़ करें", tasi: "ले जाएँ", canlandir: "एनिमेट करें ✂️", kutu: "बॉक्स", serbest: "मुक्त कट", yardim: "वीडियो सहायता" },
+    ms: { yukle: "Muat Naik Gambar/PDF", silgi: "Pemadam", kalem: "Pen", cizgi: "Garisan", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis", dogru_parcasi: "Segmen Garis", isin: "Sinar", cetvel: "Pembaris", gonye: "Sesiku", aciolcer: "Jangka Sudut", pergel: "Jangka Lukis", cokgenler: "Poligon", cember: "Bulatan", d_ucgen: "Segi Tiga Sekata", d_dortgen: "Segi Empat Sama", dikdortgen: "Segi Empat Tepat", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna Alat", geri_al: "Batal", hepsini_sil: "Padam Semua", tasi: "Gerak", canlandir: "Animasi ✂️", kutu: "Kotak", serbest: "Potong Bebas", yardim: "Video Bantuan" },
+    id: { yukle: "Unggah Gambar/PDF", silgi: "Penghapus", kalem: "Pena", cizgi: "Garis", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis (Tanpa Batas)", dogru_parcasi: "Segmen Garis", isin: "Sinar", cetvel: "Penggaris", gonye: "Penggaris Segitiga", aciolcer: "Busur Derajat", pergel: "Jangka", cokgenler: "Poligon", cember: "Lingkaran", d_ucgen: "Segitiga Sama Sisi", d_dortgen: "Persegi", dikdortgen: "Persegi Panjang", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna Alat", geri_al: "Urungkan", hepsini_sil: "Hapus Semua", tasi: "Pindah", canlandir: "Animasikan ✂️", kutu: "Kotak", serbest: "Potong Bebas", yardim: "Bantuan Video" },
+    zh: { yukle: "上传图片/PDF", silgi: "橡皮", kalem: "笔", cizgi: "线", nokta: "点", d_cizgi: "直线", dogru: "直线 (无限)", dogru_parcasi: "线段", isin: "射线", cetvel: "直尺", gonye: "三角板", aciolcer: "量角器", pergel: "圆规", cokgenler: "多边形", cember: "圆", d_ucgen: "等边三角形", d_dortgen: "正方形", dikdortgen: "长方形", d_besgen: "五边形", d_altigen: "六边形", d_yedigen: "七边形", d_sekizgen: "八边形", oyunlar: "游戏", arac_rengi: "工具颜色", geri_al: "撤销", hepsini_sil: "全部清除", tasi: "移动", canlandir: "动画 ✂️", kutu: "框选", serbest: "自由裁剪", yardim: "视频帮助" }
+};
 
 let isDrawingLasso = false;
 let lassoPoints = [];
@@ -19,45 +32,383 @@ let initialHeight = 0;
 let isPenActive = false; // Avuç içi reddi için
 let penActiveTimer = null;
 
-// --- OYUNLAR LİSTESİ ---
+// --- ÇOK DİLLİ OYUNLAR LİSTESİ ---
 window.OyunListesi = [
-    { isim: "ÇEMBERLERDEN ÜÇGEN İNŞASI", link: "https://bekrmatmt25.my.canva.site/cemberden-ucgen-elde-etme" },
-    { isim: "AÇI ÖLÇER YERLEŞTİRME OYUNU", link: "https://bekrmatmt2507.my.canva.site/a-l-er-yar-mas" },
-    { isim: "DOĞRUYA DIŞINDAKİ NOKTADAN DİKME", link: "https://bekrmatmt25.my.canva.site/dogruya-disindeki-noktadan-dikme-cizmek" },
-    { isim: "AYNI DÜZLEMDE İKİ DOĞRUNUN YOLCULUĞU", link: "https://bdemir1499.github.io/ayni-duzlemde-iki-dogru/" },
-    { isim: "AYNI DÜZLEMDE 3 DOĞRUNUN DURUMLARI", link: "https://bekrmatmt2507.my.canva.site/ayniduzlemdeucdogrunundurumlari" },
-    { isim: "AÇI ÇEŞİTLERİ (TÜMLER/BÜTÜNLER/KOMŞU)", link: "https://bdemir1499.github.io/tumler-butunler-komsutumler-komsubutunler/" },
-    { isim: "AÇILARINA GÖRE ÜÇGENLER", link: "https://bekrmatmt25.my.canva.site/acilarina-gire-ucgenler" },
-    { isim: "AÇI ÇEŞİTLERİ (DAR, DİK, GENİŞ vb.)", link: "https://bekrmatmt2507.my.canva.site/aci-cesitleri" },
-    { isim: "TEMEL GEOMETRİK ŞEKİLLER", link: "https://bekrmatmt25.my.canva.site/temel-geometrik-sekiller" },
-    { isim: "ÇOKGENLERİN ELEMANLARI", link: "https://bekrmatmt2507.my.canva.site/cokgenlerin-elemanlari" },
-    { isim: "İKİ PARALEL VE KESENLE OLUŞAN AÇILAR (1)", link: "https://bekrmatmt25.my.canva.site/k-paralel-dogrunun-b-r-kesenle-yapt-g-ac-lar" },
-    { isim: "ÜÇ DOĞRUNUN İKİŞER KESİŞMESİ", link: "https://bekrmatmt2507.my.canva.site/ikiser-kesisen-dogru" },
-    { isim: "DİKDÖRTGENİN ÇEVRE VE ALANI", link: "https://bdemir1499.github.io/dikdortgen-cevre-ve-alan/" },
-    { isim: "DÖRTGENLERİN ÖZELLİKLERİ (TÜMEVARIM)", link: "https://bekrmatmt25.my.canva.site/dortgenler-ve-ozellikleri-tumevarim" },
-    { isim: "DÖRTGENLERİN ÖZELLİKLERİ (TÜMDEN GELİM)", link: "https://bdemir1499.github.io/dortgen-ve-ozellikleri-tumdengelim/" },
-    { isim: "İKİ PARALEL DOĞRUNUN BİR KESENLE YAPTIĞI AÇILAR (2)", link: "https://bekrmatmt25.my.canva.site/iki-paralel-dogrunun-bir-kesenle-yapt-g-ac-lar" },
-    { isim: "DÖNÜŞÜM GEOMETRİSİ (ÖTELEME/YANSIMA)", link: "https://bekrmatmt25.my.canva.site/oteleme-ve-yansima" },
-    { isim: "DÖRTGEN ÇEŞİTLERİ KAVRAM HARİTASI", link: "https://bekrmatmt25.my.canva.site/dortgenler-kavram-haritasi" },
-    { isim: "DÖRTGENLER GENEL ÇIKARIMLAR", link: "https://bekrmatmt25.my.canva.site/dortgenler-genel-cikarimlar" },
-    { isim: "KESİRLERİN FARKLI GÖSTERİMLERİ", link: "https://bekrmatmt25.my.canva.site/kesirlerin-farkl-g-sterimleri" },
-    { isim: "KÖŞEGENLERDEN DÖRTGENLERE (1)", link: "https://bekrmatmt25.my.canva.site/k-egenlerden-d-rtgenlere" },
-    { isim: "CEBİRSEL İFADELER TEMEL KAVRAMLAR", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-temel-kavramlar" },
-    { isim: "CEBİRSEL İFADELER SÖZELDEN CEBİRE", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerle-oyun-tasar-m-kopyas" },
-    { isim: "CEBİRSEL İFADELER CEBİRDEN SÖZELE", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-2-cebirden-s-zele" },
-    { isim: "CEBİRSEL İFADELER DEĞER HESAPLAMA", link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerin-degerini-hesaplamak" },
-    { isim: "ARAŞTIRMA ADIMLARI (Canva)", link: "https://bekrmatmt25.my.canva.site/5-sinif-arastirma-adimlari" },
-    { isim: "ARAŞTIRMA ADIMLARI (GitHub)", link: "https://bdemir1499.github.io/5.sinif-arastirma-asamalari/" },
-    { isim: "ÜÇGENDE YARDIMCI ELEMANLAR", link: "https://bekrmatmt25.my.canva.site/ucgende-yardim-i-elemanlar" },
-    { isim: "ÜÇGEN ÇİZİMİ", link: "https://bekrmatmt25.my.canva.site/ucgen-cizim-sartlari" },
-    { isim: "ÜÇGENDE EŞLİK VE BENZERLİK", link: "https://bdemir1499.github.io/eslikvebenzerlik/" },
-    { isim: "PRİZMALARIN ELEMANLARI", link: "https://bekrmatmt25.my.canva.site/prizmalarin-elemanlar-ve-a-inimlari" },
-    { isim: "PİRAMİT VE AÇINIMI", link: "https://bekrmatmt25.my.canva.site/piramidin-elemanlar-ve-acinimi" },
-    { isim: "PRİZMA, PİRAMİT, KONİ, SİLİNDİR", link: "https://sites.google.com/view/uc-boyutlu-sekiller/ana-sayfa_1" },
-    { isim: "KÖŞEGENLERDEN DÖRTGENLERE (2)", link: "https://bekrmatmt25.my.canva.site/kosegenlerden-dortgenlere" }
+    {
+        tr: "ÇEMBERLERDEN ÜÇGEN İNŞASI",
+        en: "TRIANGLE CONSTRUCTION FROM CIRCLES",
+        de: "DREIECKSKONSTRUKTION AUS KREISEN",
+        ar: "بناء المثلث من الدوائر",
+        hi: "वृत्तों से त्रिभुज निर्माण",
+        ms: "PEMBINAAN SEGI TIGA DARIPADA BULATAN",
+        id: "KONSTRUKSI SEGITIGA DARI LINGKARAN",
+        zh: "从圆构建三角形",
+        link: "https://bekrmatmt25.my.canva.site/cemberden-ucgen-elde-etme"
+    },
+    {
+        tr: "AÇI ÖLÇER YERLEŞTİRME OYUNU",
+        en: "PROTRACTOR PLACEMENT GAME",
+        de: "WINKELMESSER-PLATZIERUNGSSPIEL",
+        ar: "لعبة وضع المنقلة",
+        hi: "चांदा प्लेसमेंट गेम",
+        ms: "PERMAINAN PENEMPATAN JANGKA SUDUT",
+        id: "PERMAINAN PENEMPATAN BUSUR DERAJAT",
+        zh: "量角器放置游戏",
+        link: "https://bekrmatmt2507.my.canva.site/a-l-er-yar-mas"
+    },
+    {
+        tr: "DOĞRUYA DIŞINDAKİ NOKTADAN DİKME",
+        en: "PERPENDICULAR FROM EXTERNAL POINT",
+        de: "LORECHT VON EINEM EXTERNEN PUNKT",
+        ar: "إسقاط عمود من نقطة خارج الخط",
+        hi: "बाहरी बिंदु से लंबवत रेखा",
+        ms: "SERENJANG DARI TITIK LUAR",
+        id: "TEGAK LURUS DARI TITIK LUAR",
+        zh: "从外部点画垂线",
+        link: "https://bekrmatmt25.my.canva.site/dogruya-disindeki-noktadan-dikme-cizmek"
+    },
+    {
+        tr: "AYNI DÜZLEMDE İKİ DOĞRUNUN YOLCULUĞU",
+        en: "JOURNEY OF TWO LINES IN THE SAME PLANE",
+        de: "REISE ZWEIER LINIEN IN DERSELBEN EBENE",
+        ar: "رحلة خطين في نفس المستوى",
+        hi: "एक ही तल में दो रेखाओं की यात्रा",
+        ms: "PERJALANAN DUA GARIS DALAM SATAH YANG SAMA",
+        id: "PERJALANAN DUA GARIS DALAM BIDANG YANG SAMA",
+        zh: "同一平面内两条线的旅程",
+        link: "https://bdemir1499.github.io/ayni-duzlemde-iki-dogru/"
+    },
+    {
+        tr: "AYNI DÜZLEMDE 3 DOĞRUNUN DURUMLARI",
+        en: "POSITIONS OF 3 LINES IN THE SAME PLANE",
+        de: "LAGE VON 3 LINIEN IN DERSELBEN EBENE",
+        ar: "حالات 3 خطوط في نفس المستوى",
+        hi: "एक ही तल में 3 रेखाओं की स्थितियाँ",
+        ms: "KEDUDUKAN 3 GARIS DALAM SATAH YANG SAMA",
+        id: "POSISI 3 GARIS DALAM BIDANG YANG SAMA",
+        zh: "同一平面内3条线的位置",
+        link: "https://bekrmatmt2507.my.canva.site/ayniduzlemdeucdogrunundurumlari"
+    },
+    {
+        tr: "AÇI ÇEŞİTLERİ (TÜMLER/BÜTÜNLER/KOMŞU)",
+        en: "ANGLE TYPES (COMPLEMENTARY/SUPPLEMENTARY/ADJACENT)",
+        de: "WINKELARTEN (KOMPLEMENTÄR/SUPPLEMENTÄR/NEBENWINKEL)",
+        ar: "أنواع الزوايا (متتامة/متكاملة/متجاورة)",
+        hi: "कोणों के प्रकार (पूरक/संपूरक/आसन्न)",
+        ms: "JENIS SUDUT (PELENGKAP/PENGGENAP/BERSEBELAH)",
+        id: "JENIS SUDUT (BERPELURUS/BERPENYIKU/BERDAMPINGAN)",
+        zh: "角的类型（余角/补角/邻角）",
+        link: "https://bdemir1499.github.io/tumler-butunler-komsutumler-komsubutunler/"
+    },
+    {
+        tr: "AÇILARINA GÖRE ÜÇGENLER",
+        en: "TRIANGLES ACCORDING TO THEIR ANGLES",
+        de: "DREIECKE NACH IHREN WINKELN",
+        ar: "المثلثات حسب زواياها",
+        hi: "कोणों के आधार पर त्रिभुज",
+        ms: "SEGI TIGA MENGIKUT SUDUT",
+        id: "SEGITIGA BERDASARKAN SUDUTNYA",
+        zh: "按角分类的三角形",
+        link: "https://bekrmatmt25.my.canva.site/acilarina-gire-ucgenler"
+    },
+    {
+        tr: "AÇI ÇEŞİTLERİ (DAR, DİK, GENİŞ vb.)",
+        en: "ANGLE TYPES (ACUTE, RIGHT, OBTUSE etc.)",
+        de: "WINKELARTEN (SPITZ, RECHT, STUMPF usw.)",
+        ar: "أنواع الزوايا (حادة، قائمة، منفرجة إلخ)",
+        hi: "कोणों के प्रकार (न्यून, सम, अधिक आदि)",
+        ms: "JENIS SUDUT (TIRUS, TEGAK, CAWAK dsb.)",
+        id: "JENIS SUDUT (LANCIP, SIKU, TUMPUL dll.)",
+        zh: "角的类型（锐角、直角、钝角等）",
+        link: "https://bekrmatmt2507.my.canva.site/aci-cesitleri"
+    },
+    {
+        tr: "TEMEL GEOMETRİK ŞEKİLLER",
+        en: "BASIC GEOMETRIC SHAPES",
+        de: "GEOMETRISCHE GRUNDFORMEN",
+        ar: "الأشكال الهندسية الأساسية",
+        hi: "बुनियादी ज्यामितीय आकृतियाँ",
+        ms: "BENTUK GEOMETRI ASAS",
+        id: "BENTUK GEOMETRIS DASAR",
+        zh: "基本几何图形",
+        link: "https://bekrmatmt25.my.canva.site/temel-geometrik-sekiller"
+    },
+    {
+        tr: "ÇOKGENLERİN ELEMANLARI",
+        en: "ELEMENTS OF POLYGONS",
+        de: "ELEMENTE VON POLYGONEN",
+        ar: "عناصر المضلعات",
+        hi: "बहुभुज के तत्व",
+        ms: "ELEMEN POLIGON",
+        id: "UNSUR-UNSUR POLIGON",
+        zh: "多边形的要素",
+        link: "https://bekrmatmt2507.my.canva.site/cokgenlerin-elemanlari"
+    },
+    {
+        tr: "İKİ PARALEL VE KESENLE OLUŞAN AÇILAR (1)",
+        en: "ANGLES FORMED BY TWO PARALLELS AND A TRANSVERSAL (1)",
+        de: "WINKEL AN PARALLELEN UND SCHNEIDENDEN LINIEN (1)",
+        ar: "الزوايا الناتجة عن متوازيين وقاطع (1)",
+        hi: "दो समांतर रेखाओं और एक तिर्यक रेखा द्वारा बने कोण (1)",
+        ms: "SUDUT YANG DIBENTUK OLEH DUA GARIS SELARI DAN KERENTAS (1)",
+        id: "SUDUT YANG DIBENTUK OLEH DUA GARIS SEJAJAR DAN TRANSVERSAL (1)",
+        zh: "两条平行线和一条截线形成的角 (1)",
+        link: "https://bekrmatmt25.my.canva.site/k-paralel-dogrunun-b-r-kesenle-yapt-g-ac-lar"
+    },
+    {
+        tr: "ÜÇ DOĞRUNUN İKİŞER KESİŞMESİ",
+        en: "INTERSECTION OF THREE LINES IN PAIRS",
+        de: "PAARWEISE SCHNITTPUNKTE VON DREI LINIEN",
+        ar: "تقاطع ثلاث خطوط مثنى مثنى",
+        hi: "तीन रेखाओं का युग्मों में प्रतिच्छेदन",
+        ms: "PERSILANGAN TIGA GARIS SECARA BERPASANGAN",
+        id: "PERPOTONGAN TIGA GARIS BERPASANGAN",
+        zh: "三条线两两相交",
+        link: "https://bekrmatmt2507.my.canva.site/ikiser-kesisen-dogru"
+    },
+    {
+        tr: "DİKDÖRTGENİN ÇEVRE VE ALANI",
+        en: "PERIMETER AND AREA OF RECTANGLE",
+        de: "UMFANG UND FLÄCHE DES RECHTECKS",
+        ar: "محيط ومساحة المستطيل",
+        hi: "आयत का परिमाप और क्षेत्रफल",
+        ms: "PERIMETER DAN LUAS SEGI EMPAT TEPAT",
+        id: "KELILING DAN LUAS PERSEGI PANJANG",
+        zh: "长方形的周长和面积",
+        link: "https://bdemir1499.github.io/dikdortgen-cevre-ve-alan/"
+    },
+    {
+        tr: "DÖRTGENLERİN ÖZELLİKLERİ (TÜMEVARIM)",
+        en: "PROPERTIES OF QUADRILATERALS (INDUCTION)",
+        de: "EIGENSCHAFTEN VON VIERECKEN (INDUKTION)",
+        ar: "خصائص الأشكال الرباعية (الاستقراء)",
+        hi: "चतुर्भुज के गुण (आगमन)",
+        ms: "SIFAT-SIFAT SISI EMPAT (INDUKSI)",
+        id: "SIFAT-SIFAT SEGI EMPAT (INDUKSI)",
+        zh: "四边形的属性（归纳法）",
+        link: "https://bekrmatmt25.my.canva.site/dortgenler-ve-ozellikleri-tumevarim"
+    },
+    {
+        tr: "DÖRTGENLERİN ÖZELLİKLERİ (TÜMDEN GELİM)",
+        en: "PROPERTIES OF QUADRILATERALS (DEDUCTION)",
+        de: "EIGENSCHAFTEN VON VIERECKEN (DEDUKTION)",
+        ar: "خصائص الأشكال الرباعية (الاستنتاج)",
+        hi: "चतुर्भुज के गुण (निगमन)",
+        ms: "SIFAT-SIFAT SISI EMPAT (DEDUKSI)",
+        id: "SIFAT-SIFAT SEGI EMPAT (DEDUKSI)",
+        zh: "四边形的属性（演绎法）",
+        link: "https://bdemir1499.github.io/dortgen-ve-ozellikleri-tumdengelim/"
+    },
+    {
+        tr: "İKİ PARALEL DOĞRUNUN BİR KESENLE YAPTIĞI AÇILAR (2)",
+        en: "ANGLES FORMED BY TWO PARALLEL LINES AND A TRANSVERSAL (2)",
+        de: "WINKEL AN PARALLELEN UND SCHNEIDENDEN LINIEN (2)",
+        ar: "الزوايا الناتجة عن متوازيين وقاطع (2)",
+        hi: "दो समांतर रेखाओं और bir तिर्यक रेखा द्वारा बने कोण (2)",
+        ms: "SUDUT YANG DIBENTUK OLEH DUA GARIS SELARI DAN KERENTAS (2)",
+        id: "SUDUT YANG DIBENTUK OLEH DUA GARIS SEJAJAR DAN TRANSVERSAL (2)",
+        zh: "两条平行线和一条截线形成的角 (2)",
+        link: "https://bekrmatmt25.my.canva.site/iki-paralel-dogrunun-bir-kesenle-yapt-g-ac-lar"
+    },
+    {
+        tr: "DÖNÜŞÜM GEOMETRİSİ (ÖTELEME/YANSIMA)",
+        en: "TRANSFORMATION GEOMETRY (TRANSLATION/REFLECTION)",
+        de: "TRANSFORMATIONSGEOMETRIE (VERSCHIEBUNG/SPIEGELUNG)",
+        ar: "الهندسة التحويلية (الإزاحة/الانعكاس)",
+        hi: "रूपांतरण ज्यामिति (स्थानांतरण/परावर्तन)",
+        ms: "GEOMETRI TRANSFORMASI (TRANSLASI/PANTULAN)",
+        id: "GEOMETRI TRANSFORMASI (TRANSLASI/REFLEKSI)",
+        zh: "变换几何（平移/反射）",
+        link: "https://bekrmatmt25.my.canva.site/oteleme-ve-yansima"
+    },
+    {
+        tr: "DÖRTGEN ÇEŞİTLERİ KAVRAM HARİTASI",
+        en: "CONCEPT MAP OF QUADRILATERAL TYPES",
+        de: "BEGRIFFSMAP DER VIERECKARTEN",
+        ar: "خريطة مفاهيم أنواع الأشكال الرباعية",
+        hi: "चतुर्भुज प्रकारों का अवधारणा मानचित्र",
+        ms: "PETA KONSEP JENIS SISI EMPAT",
+        id: "PETA KONSEP JENIS SEGI EMPAT",
+        zh: "四边形类型概念图",
+        link: "https://bekrmatmt25.my.canva.site/dortgenler-kavram-haritasi"
+    },
+    {
+        tr: "DÖRTGENLER GENEL ÇIKARIMLAR",
+        en: "GENERAL INFERENCES ABOUT QUADRILATERALS",
+        de: "ALLGEMEINE SCHLUSSFOLGERUNGEN ÜBER VIERECKE",
+        ar: "الاستنتاجات العامة حول الأشكال الرباعية",
+        hi: "चतुर्भुजों के बारे में सामान्य निष्कर्ष",
+        ms: "INFERENS UMUM TENTANG SISI EMPAT",
+        id: "KESIMPULAN UMUM TENTANG SEGI EMPAT",
+        zh: "关于四边形的一般推论",
+        link: "https://bekrmatmt25.my.canva.site/dortgenler-genel-cikarimlar"
+    },
+    {
+        tr: "KESİRLERİN FARKLI GÖSTERİMLERİ",
+        en: "DIFFERENT REPRESENTATIONS OF FRACTIONS",
+        de: "VERSCHIEDENE DARSTELLUNGEN VON BRÜCHEN",
+        ar: "تمثيلات مختلفة للكسور",
+        hi: "भिन्नों के विभिन्न निरूपण",
+        ms: "PERWAKILAN PECAHAN YANG BERBEZA",
+        id: "BERBAGAI REPRESENTASI PECAHAN",
+        zh: "分数的不同表示形式",
+        link: "https://bekrmatmt25.my.canva.site/kesirlerin-farkl-g-sterimleri"
+    },
+    {
+        tr: "KÖŞEGENLERDEN DÖRTGENLERE (1)",
+        en: "FROM DIAGONALS TO QUADRILATERALS (1)",
+        de: "VON DIAGONALEN ZU VIERECKEN (1)",
+        ar: "من الأقطار إلى الأشكال الرباعية (1)",
+        hi: "विकर्णों से चतुर्भुज तक (1)",
+        ms: "DARIPADA PEPENJURU KEPADA SISI EMPAT (1)",
+        id: "DARI DIAGONAL KE SEGI EMPAT (1)",
+        zh: "从对角线到四边形 (1)",
+        link: "https://bekrmatmt25.my.canva.site/k-egenlerden-d-rtgenlere"
+    },
+    {
+        tr: "CEBİRSEL İFADELER TEMEL KAVRAMLAR",
+        en: "ALGEBRAIC EXPRESSIONS BASIC CONCEPTS",
+        de: "ALGEBRAISCHE AUSDRÜCKE - GRUNDBEGRIFFE",
+        ar: "المفاهيم الأساسية للتعبيرات الجبرية",
+        hi: "बीजगणितीय व्यंजक बुनियादी अवधारणाएँ",
+        ms: "UNGKAPAN ALGEBRA KONSEP ASAS",
+        id: "KONSEP DASAR EKSPRESI ALJABAR",
+        zh: "代数式基本概念",
+        link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-temel-kavramlar"
+    },
+    {
+        tr: "CEBİRSEL İFADELER SÖZELDEN CEBİRE",
+        en: "ALGEBRAIC EXPRESSIONS FROM VERBAL TO ALGEBRAIC",
+        de: "VON DER SPRACHE ZUR ALGEBRA",
+        ar: "التعبيرات الجبرية من اللفظية إلى الجبرية",
+        hi: "बीजगणितीय व्यंजक: मौखिक से बीजगणितीय",
+        ms: "UNGKAPAN ALGEBRA DARIPADA LISAN KEPADA ALGEBRA",
+        id: "EKSPRESI ALJABAR DARI VERBAL KE ALJABAR",
+        zh: "代数式：从语言到代数",
+        link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerle-oyun-tasar-m-kopyas"
+    },
+    {
+        tr: "CEBİRSEL İFADELER CEBİRDEN SÖZELE",
+        en: "ALGEBRAIC EXPRESSIONS FROM ALGEBRAIC TO VERBAL",
+        de: "VON DER ALGEBRA ZUR SPRACHE",
+        ar: "التعبيرات الجبرية من الجبرية إلى اللفظية",
+        hi: "बीजगणितीय व्यंजक: बीजगणितीय से मौखिक",
+        ms: "UNGKAPAN ALGEBRA DARIPADA ALGEBRA KEPADA LISAN",
+        id: "EKSPRESI ALJABAR DARI ALJABAR KE VERBAL",
+        zh: "代数式：从代数到语言",
+        link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-2-cebirden-s-zele"
+    },
+    {
+        tr: "CEBİRSEL İFADELER DEĞER HESAPLAMA",
+        en: "CALCULATING VALUES OF ALGEBRAIC EXPRESSIONS",
+        de: "BERECHNEN VON WERTE ALGEBRAISCHER AUSDRÜCKE",
+        ar: "حساب قيم التعبيرات الجبرية",
+        hi: "बीजगणितीय व्यंजकों के मानों की गणना",
+        ms: "MENGIRA NILAI UNGKAPAN ALGEBRA",
+        id: "MENGHITUNG NILAI EKSPRESI ALJABAR",
+        zh: "计算代数式的值",
+        link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerin-degerini-hesaplamak"
+    },
+    {
+        tr: "ARAŞTIRMA ADIMLARI (Canva)",
+        en: "RESEARCH STEPS (Canva)",
+        de: "FORSCHUNGSSCHRITTE (Canva)",
+        ar: "خطوات البحث (كانفا)",
+        hi: "अनुसंधान चरण (Canva)",
+        ms: "LANGKAH PENYELIDIKAN (Canva)",
+        id: "LANGKAH PENELITIAN (Canva)",
+        zh: "研究步骤 (Canva)",
+        link: "https://bekrmatmt25.my.canva.site/5-sinif-arastirma-adimlari"
+    },
+    {
+        tr: "ARAŞTIRMA ADIMLARI (GitHub)",
+        en: "RESEARCH STEPS (GitHub)",
+        de: "FORSCHUNGSSCHRITTE (GitHub)",
+        ar: "خطوات البحث (جيت هاب)",
+        hi: "अनुसंधान चरण (GitHub)",
+        ms: "LANGKAH PENYELIDIKAN (GitHub)",
+        id: "LANGKAH PENELITIAN (GitHub)",
+        zh: "研究步骤 (GitHub)",
+        link: "https://bdemir1499.github.io/5.sinif-arastirma-asamalari/"
+    },
+    {
+        tr: "ÜÇGENDE YARDIMCI ELEMANLAR",
+        en: "AUXILIARY ELEMENTS IN TRIANGLES",
+        de: "HILFSELEMENTE IN DREIECKEN",
+        ar: "العناصر المساعدة في المثلث",
+        hi: "त्रिभुजों में सहायक तत्व",
+        ms: "ELEMEN PEMBANTU DALAM SEGI TIGA",
+        id: "UNSUR PEMBANTU DALAM SEGITIGA",
+        zh: "三角形中的辅助要素",
+        link: "https://bekrmatmt25.my.canva.site/ucgende-yardim-i-elemanlar"
+    },
+    {
+        tr: "ÜÇGEN ÇİZİMİ",
+        en: "TRIANGLE DRAWING",
+        de: "DREIECKE ZEICHNEN",
+        ar: "رسم المثلث",
+        hi: "त्रिभुज आरेखण",
+        ms: "LUKISAN SEGI TIGA",
+        id: "MENGGAMBAR SEGITIGA",
+        zh: "三角形绘制",
+        link: "https://bekrmatmt25.my.canva.site/ucgen-cizim-sartlari"
+    },
+    {
+        tr: "ÜÇGENDE EŞLİK VE BENZERLİK",
+        en: "CONGRUENCE AND SIMILARITY IN TRIANGLES",
+        de: "KONGRUENZ UND ÄHNLICHKEIT IN DREIECKEN",
+        ar: "تطابق وتشابه المثلثات",
+        hi: "त्रिभुजों में सर्वांगसमता और समरूपता",
+        ms: "KONGRUEN DAN KESERUPAAN DALAM SEGI TIGA",
+        id: "KEKONGRUENAN DAN KESEBANGUNAN DALAM SEGITIGA",
+        zh: "三角形的全等和相似",
+        link: "https://bdemir1499.github.io/eslikvebenzerlik/"
+    },
+    {
+        tr: "PRİZMALARIN ELEMANLARI",
+        en: "ELEMENTS OF PRISMS",
+        de: "ELEMENTE VON PRISMEN",
+        ar: "عناصر المنشورات",
+        hi: "प्रिज्म के तत्व",
+        ms: "ELEMEN PRISMA",
+        id: "UNSUR-UNSUR PRISMA",
+        zh: "棱柱的要素",
+        link: "https://bekrmatmt25.my.canva.site/prizmalarin-elemanlar-ve-a-inimlari"
+    },
+    {
+        tr: "PİRAMİT VE AÇINIMI",
+        en: "PYRAMID AND ITS NET",
+        de: "PYRAMIDE UND IHR NETZ",
+        ar: "الهرم وشبكته",
+        hi: "पिरामिड और उसका जाल",
+        ms: "PIRAMID DAN BENTANGANNYA",
+        id: "LIMAS DAN JARING-JARINGNYA",
+        zh: "棱锥及其展开图",
+        link: "https://bekrmatmt25.my.canva.site/piramidin-elemanlar-ve-acinimi"
+    },
+    {
+        tr: "PRİZMA, PİRAMİT, KONİ, SİLİNDİR",
+        en: "PRISM, PYRAMID, CONE, CYLINDER",
+        de: "PRISMA, PYRAMIDE, KEGEL, ZYLINDER",
+        ar: "المنشور، الهرم، المخروط، الاسطوانة",
+        hi: "प्रिज्म, पिरामिड, शंकु, बेलन",
+        ms: "PRISMA, PIRAMID, KON, SILINDIR",
+        id: "PRISMA, LIMAS, KERUCUT, TABUNG",
+        zh: "棱柱、棱锥、圆锥、圆柱",
+        link: "https://sites.google.com/view/uc-boyutlu-sekiller/ana-sayfa_1"
+    },
+    {
+        tr: "KÖŞEGENLERDEN DÖRTGENLERE (2)",
+        en: "FROM DIAGONALS TO QUADRILATERALS (2)",
+        de: "VON DIAGONALEN ZU VIERECKEN (2)",
+        ar: "من الأقطار إلى الأشكال الرباعية (2)",
+        hi: "विकर्णों से चतुर्भुज तक (2)",
+        ms: "DARIPADA PEPENJURU KEPADA SISI EMPAT (2)",
+        id: "DARI DIAGONAL KE SEGI EMPAT (2)",
+        zh: "从对角线到四边形 (2)",
+        link: "https://bekrmatmt25.my.canva.site/kosegenlerden-dortgenlere"
+    }
 ];
-
-
 // Sayfa açıldığında kırmızı butonun yanlışlıkla görünmesini engellemek için:
 const closePdfBtn = document.getElementById('btn-close-pdf');
 if (closePdfBtn) {
@@ -1649,21 +2000,26 @@ oyunlarButton.addEventListener('click', (e) => {
         oyunlarOptions.appendChild(hint);
 
         // 5. OYUNLARI EKLE
-        if (window.OyunListesi && window.OyunListesi.length > 0) {
-            window.OyunListesi.forEach(oyun => {
-                const linkElement = document.createElement('a');
-                linkElement.className = 'tool-button-sub';
-                linkElement.innerText = oyun.isim;
-                linkElement.style.cssText = `
-                    text-decoration: none; 
-                    display: block; 
-                    padding: 15px; 
-                    text-align: center; 
-                    color: white; 
-                    border-bottom: 1px solid rgba(255,255,255,0.05);
-                    font-family: 'Fredoka', sans-serif;
-                    font-size: 14px;
-                `;
+       if (window.OyunListesi && window.OyunListesi.length > 0) {
+    window.OyunListesi.forEach(oyun => {
+        const linkElement = document.createElement('a');
+        linkElement.className = 'tool-button-sub';
+        
+        // KRİTİK DEĞİŞİKLİK BURADA:
+        // 'oyun.isim' yerine 'oyun[currentLang]' kullanıyoruz.
+        // Eğer o dilde karşılığı yoksa (hata vermemesi için) Türkçe'yi gösterir.
+        linkElement.innerText = oyun[currentLang] || oyun.tr; 
+
+        linkElement.style.cssText = `
+            text-decoration: none; 
+            display: block; 
+            padding: 15px; 
+            text-align: center; 
+            color: white; 
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-family: 'Fredoka', sans-serif;
+            font-size: 14px;
+        `;
 
                 let startY = 0;
                 let isScrolling = false;
@@ -3758,3 +4114,69 @@ document.querySelectorAll('.tool-button, .tool-button-sub').forEach(btn => {
     });
 });
 
+function setLanguage(lang) {
+    if (!translations[lang]) return;
+    currentLang = lang;
+    const t = translations[lang];
+
+    const update = (id, text) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = text;
+    };
+
+    // --- SOL PANEL ---
+    update('btn-silgi', t.silgi);
+    update('btn-kalem', t.kalem);
+    update('btn-cizgi', t.cizgi);
+    update('btn-nokta', t.nokta);
+    update('btn-d_cizgi', t.d_cizgi);
+    update('btn-dogru', t.dogru);
+    update('btn-dogru_parcasi', t.dogru_parcasi);
+    update('btn-isin', t.isin);
+    update('btn-cetvel', t.cetvel);
+    update('btn-gonye', t.gonye);
+    update('btn-aciolcer', t.aciolcer);
+    update('btn-pergel', t.pergel);
+    update('btn-cokgenler', t.cokgenler);
+    update('btn-cember', t.cember);
+    update('btn-duzgun_ucgen', t.d_ucgen);
+    update('btn-duzgun_dortgen', t.d_dortgen);
+    update('btn-dikdortgen', t.dikdortgen);
+    update('btn-duzgun_besgen', t.d_besgen);
+    update('btn-duzgun_altigen', t.d_altigen);
+    update('btn-duzgun_yedigen', t.d_yedigen);
+    update('btn-duzgun_sekizgen', t.d_sekizgen);
+    update('btn-oyunlar', t.oyunlar);
+
+    // --- SAĞ PANEL ---
+    update('btn-undo', t.geri_al);
+    update('btn-clear-all', t.hepsini_sil);
+    update('btn-move', t.tasi);
+    update('btn-upload', t.yukle); // YÜKLE BUTONU ARTIK ÇALIŞIR
+    update('btn-snapshot-main', t.canlandir);
+    update('btn-snapshot-box', t.kutu);
+    update('btn-snapshot-lasso', t.serbest);
+    update('btn-help', t.yardim);
+
+    // Araç Rengi Başlığı (Rengi bozmadan)
+    const colorBtn = document.getElementById('btn-tool-color');
+    if (colorBtn) {
+        const currentColor = colorBtn.innerText.split(': ')[1] || "Siyah";
+        colorBtn.innerText = `${t.arac_rengi}: ${currentColor}`;
+    }
+
+    // Oyunlar menüsünü tazele
+    try {
+        if (typeof oyunlarButton !== 'undefined' && oyunlarButton.classList.contains('active')) {
+            oyunlarButton.click(); 
+            oyunlarButton.click(); 
+        }
+    } catch(e) {}
+
+    // Arapça için sağdan sola desteği
+    document.body.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+    // Ekranı Kapat
+    const overlay = document.getElementById('language-overlay');
+    if (overlay) overlay.style.display = 'none';
+}

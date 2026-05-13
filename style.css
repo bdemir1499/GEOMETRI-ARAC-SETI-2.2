@@ -928,3 +928,22 @@ canvas {
     background: #00ffcc !important; 
     border-radius: 10px !important;
 }
+
+.lang-btn {
+    background: #00ffcc;
+    color: #000;
+    border: none;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+    font-family: 'Fredoka', sans-serif;
+}
+
+.lang-btn:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,255,204,0.3);
+}
