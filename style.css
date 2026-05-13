@@ -947,3 +947,13 @@ canvas {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,255,204,0.3);
 }
+
+#drawing-canvas {
+    /* Akıllı tahtalarda kaydırma/zoom hareketlerini tamamen iptal eder */
+    touch-action: none !important;
+    -ms-touch-action: none !important;
+    
+    /* Seçim yapmayı engeller */
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
