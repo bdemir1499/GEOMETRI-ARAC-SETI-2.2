@@ -1187,36 +1187,45 @@ else if (stroke.type === 'rectangle') {
     window.nextPointChar = nextPointChar;
     // ---------------------------------------------------------
 
-// --- LASSO (SERBEST KES) SABİT ÖNİZLEME (KESİN ÇÖZÜM) ---
-    if (typeof currentTool !== 'undefined' && currentTool === 'lasso' && typeof lassoPoints !== 'undefined' && lassoPoints.length > 0) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
-        
-        // 1. İşaretlenmiş tüm köşe noktalarını birbirine bağla (Parmak çekilse bile silinmez)
-        for (let i = 1; i < lassoPoints.length; i++) {
-            ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
-        }
-        
-        // 2. SADECE parmak ekrandayken veya fare hareket ederken son noktaya canlı çizgi uzat
-        if (typeof currentMousePos !== 'undefined' && currentMousePos && typeof isDrawingLasso !== 'undefined' && isDrawingLasso) {
-             ctx.lineTo(currentMousePos.x, currentMousePos.y);
-        }
-        
-        // Çizgi stili
-        ctx.strokeStyle = '#00FFCC';
-        ctx.setLineDash([5, 5]);
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        // 3. Kapatma noktası (Yeşil Hedef Dairesi - HER ZAMAN GÖRÜNÜR)
-        ctx.beginPath();
-        ctx.arc(lassoPoints[0].x, lassoPoints[0].y, 15, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0, 255, 204, 0.4)';
-        ctx.fill();
-        ctx.restore();
+// --- BİRLEŞTİRİLMİŞ KUSURSUZ LASSO ÖNİZLEMESİ (PC + TABLET + AKILLI TAHTA) ---
+if (typeof currentTool !== 'undefined' && currentTool === 'lasso' && typeof lassoPoints !== 'undefined' && lassoPoints.length > 0) {
+    ctx.save();
+    
+    // 1. Çizgi Stilini Ayarla (Turkuaz ve Kesikli)
+    ctx.strokeStyle = '#00FFCC'; 
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2;
+    
+    // 2. Mevcut Hattı Çiz (Parmağını çeksen de ekranda kalan sabit hat)
+    ctx.beginPath();
+    ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+    for (let i = 1; i < lassoPoints.length; i++) {
+        ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
     }
+    
+    // 3. CANLI TAKİP: Sadece parmak ekrandayken parmağın ucuna giden lastik çizgi
+    if (typeof isDrawingLasso !== 'undefined' && isDrawingLasso && typeof currentMousePos !== 'undefined' && currentMousePos) {
+        ctx.lineTo(currentMousePos.x, currentMousePos.y);
+    }
+    
+    ctx.stroke();
 
+    // 4. ÇİFT KATMANLI HEDEF GÖSTERGESİ (En Önemli Kısım)
+    
+    // A) GENİŞ HEDEF ALANI: Akıllı tahtada dokunmayı kolaylaştırmak için 15px şeffaf turkuaz
+    ctx.beginPath();
+    ctx.arc(lassoPoints[0].x, lassoPoints[0].y, 15, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 255, 204, 0.3)'; 
+    ctx.fill();
+
+    // B) NET MERKEZ NOKTASI: Kapatma noktasını tam görmek için 6px belirgin kırmızı
+    ctx.beginPath();
+    ctx.arc(lassoPoints[0].x, lassoPoints[0].y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#FF0000'; 
+    ctx.fill();
+    
+    ctx.restore();
+}
 
 
 } // <-- FONKSİYON BURADA KAPANIYOR
