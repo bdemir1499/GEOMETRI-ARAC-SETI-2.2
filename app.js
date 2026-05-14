@@ -2064,19 +2064,12 @@ oyunlarButton.addEventListener('click', (e) => {
 
 // --- BOŞLUĞA TIKLAYINCA KAPATMA (DOSYANIN EN ALTINA EKLEYİN) ---
 document.addEventListener('pointerdown', (e) => {
-
-    // ÇÖZÜM 1: Sadece ve sadece kanvasa tıklandıysa kilitleme yap! 
-    // Yoksa dil butonları ve diğer menüler tıklamaları algılayamaz.
-    if (e.target === canvas) {
-        canvas.setPointerCapture(e.pointerId);
-    }
     
     if (oyunlarOptions && !oyunlarOptions.contains(e.target) && e.target !== oyunlarButton) {
         oyunlarOptions.classList.add('hidden');
         oyunlarButton.classList.remove('active');
     }
 });
-
 // 2. Ana menü kutusunun da dışarıdaki "Ekran Kilitlerine" takılmasını engelle:
 oyunlarOptions.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: true });
 oyunlarOptions.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: true });
@@ -2158,8 +2151,7 @@ if (animateButton) {
 
 // Mevcut pointerdown dinleyicisinin en başına (yaklaşık 5100. satırlar civarı)
 canvas.addEventListener('pointerdown', (e) => {
-// Parmağı veya kalemi tahtaya mühürle!
-    canvas.setPointerCapture(e.pointerId);
+// (Mühürleme kodu tamamen silindi)
     // AKILLI TAHTA YAMASI:
     // Eğer kalemle dokunuluyorsa, dokunmatik (el) verisini geçici olarak devre dışı bırak
     if (e.pointerType === 'pen') {
@@ -3860,13 +3852,7 @@ function setLanguage(lang) {
     const overlay = document.getElementById('language-overlay');
     if (overlay) overlay.style.display = 'none';
 
-    const mainApp = document.getElementById('app-container'); 
-    if (mainApp) {
-        mainApp.style.display = 'block';
-    }
-
-    // ÇÖZÜM 2: Ekran görünür olduktan hemen sonra kanvası yeni boyutlara göre oturt.
-    // Aksi halde görünmez bir çizim alanı ortaya çıkabilir.
+    // GECİKMELİ KANVAS UYANDIRMA (Ekranın siyah/boş kalmasını kesin engeller)
     setTimeout(() => {
         if (typeof setupCanvasResolution === 'function') setupCanvasResolution();
         if (typeof resizeCanvas === 'function') resizeCanvas();
