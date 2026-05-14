@@ -2064,6 +2064,9 @@ oyunlarButton.addEventListener('click', (e) => {
 
 // --- BOŞLUĞA TIKLAYINCA KAPATMA (DOSYANIN EN ALTINA EKLEYİN) ---
 document.addEventListener('pointerdown', (e) => {
+
+// KRİTİK: Kalemi kanvasa mühürler, böylece hareket ederken odak kaybolmaz.
+    canvas.setPointerCapture(e.pointerId);
     if (oyunlarOptions && !oyunlarOptions.contains(e.target) && e.target !== oyunlarButton) {
         oyunlarOptions.classList.add('hidden');
         oyunlarButton.classList.remove('active');
@@ -4206,5 +4209,17 @@ canvasEl.addEventListener('touchstart', function(e) {
 }, { passive: false });
 
 canvasEl.addEventListener('touchmove', function(e) {
+    if (e.cancelable) e.preventDefault();
+}, { passive: false });
+
+
+// Akıllı tahtalarda kalemin sayfayı kaydırmasını (scroll) JS seviyesinde durdurur
+const canvasElement = document.getElementById('drawing-canvas');
+
+canvasElement.addEventListener('touchstart', (e) => {
+    if (e.cancelable) e.preventDefault();
+}, { passive: false });
+
+canvasElement.addEventListener('touchmove', (e) => {
     if (e.cancelable) e.preventDefault();
 }, { passive: false });
