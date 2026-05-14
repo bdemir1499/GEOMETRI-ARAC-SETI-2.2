@@ -3939,3 +3939,41 @@ canvasElement.addEventListener('touchstart', (e) => {
 canvasElement.addEventListener('touchmove', (e) => {
     if (e.cancelable) e.preventDefault();
 }, { passive: false });
+
+// =========================================================================
+// AKILLI TAHTA KESİNTİSİZ ÇİZİM VE HAYALET PARMAK YAMASI (EN ALTA EKLE)
+// =========================================================================
+
+// 1. Tarayıcının kalem hareketini kaydırma/zoom sanmasını kesin olarak yasakla
+window.addEventListener('load', () => {
+    const c = document.getElementById('drawing-canvas');
+    if (c) {
+        c.style.touchAction = 'none'; 
+        c.style.msTouchAction = 'none';
+    }
+});
+
+// 2. Hayalet Parmak Koruması: Tahtada parmak/kalem kalktığı an hafızayı temizle
+window.addEventListener('pointerup', (e) => {
+    if (typeof pointers !== 'undefined' && pointers.has(e.pointerId)) {
+        pointers.delete(e.pointerId);
+    }
+    if (typeof pointers !== 'undefined' && pointers.size < 2) {
+        if (typeof lastDist !== 'undefined') lastDist = 0;
+    }
+});
+
+// Sistem kesintiye uğrarsa (ekran dışına çıkma, avuç içi değmesi vs.) her şeyi sıfırla
+window.addEventListener('pointercancel', (e) => {
+    if (typeof pointers !== 'undefined') pointers.clear();
+    if (typeof lastDist !== 'undefined') lastDist = 0;
+    if (typeof isDrawing !== 'undefined') isDrawing = false;
+});
+
+// Yeni bir çizime başlarken, ekranda tek kalem varsa önceki tüm hatalı dokunuşları sil
+window.addEventListener('touchstart', (e) => {
+    if (e.touches && e.touches.length === 1 && typeof pointers !== 'undefined') {
+        pointers.clear();
+        if (typeof lastDist !== 'undefined') lastDist = 0;
+    }
+}, {passive: true});
