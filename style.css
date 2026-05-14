@@ -957,3 +957,65 @@ canvas {
     user-select: none !important;
     -webkit-user-select: none !important;
 }
+
+/* =========================================
+   DİL SEÇİM EKRANI VE GEÇİŞ KONTROLLERİ
+   ========================================= */
+
+/* 1. Dil Seçim Ekranı (Başlangıçta her şeyi kaplar) */
+#language-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #0d0d2b; /* Tema renginle uyumlu koyu arka plan */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    z-index: 30000; /* Her şeyin (panellerin ve araçların) üzerinde durmalı */
+    padding: 20px;
+}
+
+/* 2. Ana Uygulama Konteynırı (Dil seçilene kadar gizli tutulur) */
+#app-container {
+    display: none; /* JS 'block' yapana kadar çizim ekranını gösterme */
+}
+
+/* 3. Genel Gizleme Sınıfı (Önemli: !important ile diğer flex kurallarını ezer) */
+.hidden {
+    display: none !important;
+}
+
+/* Dil Seçim Başlığı */
+#language-overlay h1 {
+    color: #00ffcc;
+    font-family: 'Fredoka', sans-serif;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00ffcc;
+}
+
+/* Dil Butonları İçin Konteynır */
+.lang-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Butonları yan yana ikişerli dizer */
+    gap: 15px;
+}
+
+/* Pardus ve Akıllı Tahtalarda butonların daha net tıklanması için */
+.lang-btn {
+    min-width: 150px;
+    padding: 20px !important; /* Dokunma alanını genişlettik */
+    font-size: 18px !important;
+    border: 2px solid #00ffcc !important;
+    background: transparent !important;
+    color: #00ffcc !important;
+    box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+}
+
+.lang-btn:hover {
+    background: #00ffcc !important;
+    color: #0d0d2b !important;
+}
