@@ -2535,39 +2535,61 @@ canvas.addEventListener('pointermove', (e) => {
     if (isDrawingLine || isDrawingInfinityLine || isDrawingSegment || isDrawingRay || isDrawingRectangle || (window.tempPolygonData && window.tempPolygonData.center) || (currentTool === 'snapshot' && typeof snapshotStart !== 'undefined' && snapshotStart)) {
         redrawAllStrokes();
         
-        // SİLİNEN ÖNİZLEME KODLARI GERİ GELDİ
         const ctx = canvas.getContext('2d');
+        ctx.save(); // Kalemin mevcut ayarlarını yedekle
+        
         ctx.strokeStyle = window.currentLineColor || '#000000';
         ctx.lineWidth = 3;
+        ctx.setLineDash([5, 5]); // KESİKLİ ÇİZGİ EFEKTİ
 
         if (['straightLine', 'line', 'segment', 'ray'].includes(currentTool) && lineStartPoint) {
             ctx.beginPath();
             ctx.moveTo(lineStartPoint.x, lineStartPoint.y);
             ctx.lineTo(endPos.x, endPos.y);
             ctx.stroke();
-        } else if (isDrawingRectangle && rectStartPoint) {
+        } 
+        else if (isDrawingRectangle && rectStartPoint) {
             ctx.beginPath();
             ctx.rect(Math.min(rectStartPoint.x, endPos.x), Math.min(rectStartPoint.y, endPos.y), Math.abs(endPos.x - rectStartPoint.x), Math.abs(endPos.y - rectStartPoint.y));
             ctx.stroke();
-        } else if (window.tempPolygonData && window.tempPolygonData.center) {
-            const radius = Math.hypot(endPos.x - window.tempPolygonData.center.x, endPos.y - window.tempPolygonData.center.y);
-            window.tempPolygonData.radius = radius;
-            window.tempPolygonData.rotation = Math.atan2(endPos.y - window.tempPolygonData.center.y, endPos.x - window.tempPolygonData.center.x) * 180 / Math.PI;
+        } 
+        else if (window.tempPolygonData && window.tempPolygonData.center) {
+            const cx = window.tempPolygonData.center.x;
+            const cy = window.tempPolygonData.center.y;
             
-            if (window.tempPolygonData.type === 0) {
-                ctx.beginPath(); ctx.arc(window.tempPolygonData.center.x, window.tempPolygonData.center.y, radius, 0, Math.PI * 2); ctx.stroke();
-            } else if (window.PolygonTool && window.PolygonTool.drawPreview) {
-                window.PolygonTool.drawPreview(window.tempPolygonData.center, radius, window.tempPolygonData.type, window.tempPolygonData.rotation);
+            // Yarıçap ve açıyı hesapla
+            const radius = Math.hypot(endPos.x - cx, endPos.y - cy);
+            const angleRad = Math.atan2(endPos.y - cy, endPos.x - cx);
+            
+            window.tempPolygonData.radius = radius;
+            window.tempPolygonData.rotation = angleRad * 180 / Math.PI; // Derece olarak kaydet
+            
+            const sides = window.tempPolygonData.type;
+
+            ctx.beginPath();
+            if (sides === 0) {
+                // Çember Önizlemesi
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            } else if (sides >= 3) {
+                // Tüm Düzgün Çokgenlerin (3gen, 5gen, 6gen vb.) Kusursuz Önizlemesi
+                for (let i = 0; i <= sides; i++) {
+                    const polyAngle = (i * 2 * Math.PI / sides) + angleRad;
+                    const px = cx + radius * Math.cos(polyAngle);
+                    const py = cy + radius * Math.sin(polyAngle);
+                    if (i === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
             }
-        } else if (currentTool === 'snapshot' && snapshotStart) {
-            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+        } 
+        else if (currentTool === 'snapshot' && snapshotStart) {
             ctx.strokeStyle = '#00ffcc';
             ctx.beginPath();
             ctx.rect(Math.min(snapshotStart.x, endPos.x), Math.min(snapshotStart.y, endPos.y), Math.abs(endPos.x - snapshotStart.x), Math.abs(endPos.y - snapshotStart.y));
             ctx.stroke();
-            ctx.setLineDash([]);
         }
         
+        ctx.restore(); // Çizim bitince kalemi düz çizgiye geri çevir
         previewActive = true;
     }
 
