@@ -2232,11 +2232,21 @@ canvas.addEventListener('pointerdown', (e) => {
 
     // --- 1. FİZİKSEL ARAÇ KONTROLÜ ---
     const isToolElementClicked = e.target.closest('.ruler-container, .gonye-container, .aciolcer-container, #compass-container');
+// Herhangi bir araç değiştiğinde (Kalem, Taşı vb.) silgiyi gizle
+if (typeof eraserPreview !== 'undefined' && eraserPreview) {
+    eraserPreview.style.display = 'none';
+}
     if (isToolElementClicked) { 
         isDrawingLine = isDrawingInfinityLine = isDrawingSegment = isDrawingRay = false;
         lineStartPoint = null;
         window.tempPolygonData = null; 
-        polygonPreviewLabel.classList.add('hidden');
+        
+        // --- SİLGİ İMLECİNİ TEMİZLE ---
+        if (typeof eraserPreview !== 'undefined' && eraserPreview) {
+            eraserPreview.style.display = 'none';
+        }
+        
+        if (polygonPreviewLabel) polygonPreviewLabel.classList.add('hidden');
         return; 
     }
 
@@ -2274,7 +2284,13 @@ canvas.addEventListener('pointerdown', (e) => {
             } else if (hit.pointKey === 'center') {
                 originalStartPos = { x: (hit.item.cx || hit.item.center.x), y: (hit.item.cy || hit.item.center.y) };
             } else if (hit.pointKey === 'rotate' || hit.pointKey === 'resize' || hit.pointKey === 'image_resize') {
-                originalStartPos = { radius: hit.item.radius, rotation: hit.item.rotation };
+    // Hem çokgen hem dikdörtgen verilerini tek seferde yedekle
+    originalStartPos = { 
+        radius: hit.item.radius, 
+        rotation: hit.item.rotation,
+        x: hit.item.x || (hit.item.center ? hit.item.center.x : 0),
+        y: hit.item.y || (hit.item.center ? hit.item.center.y : 0)
+    };
 
                 // --- TABLET İÇİN KRİTİK EKLEME ---
                 if (selectedItem.type === 'rectangle') {
@@ -2490,13 +2506,13 @@ canvas.addEventListener('pointermove', (e) => {
         return;
     }
 
-    // --- 1. TAŞIMA (MOVE) MANTIĞI (ÇOKGEN + KUTU KOPYALARI) ---
+    // --- 1. TAŞIMA (MOVE) MANTIĞI (ÇOKGEN + DİKDÖRTGEN + KOPYALAR) ---
     if (currentTool === 'move' && isMoving && selectedItem) {
         const pos = getPointerPos(e);
         const dx = pos.x - dragStartPos.x;
         const dy = pos.y - dragStartPos.y;
 
-        // A) MERKEZDEN TUTUP TAŞIMA
+        // A) MERKEZDEN VEYA GÖVDEDEN TUTUP TAŞIMA
         if (selectedPointKey === 'self' || selectedPointKey === 'center') {
             if (selectedItem.type === 'arc') {
                 selectedItem.cx = originalStartPos.x + dx;
@@ -2505,18 +2521,18 @@ canvas.addEventListener('pointermove', (e) => {
                 selectedItem.center.x = originalStartPos.x + dx;
                 selectedItem.center.y = originalStartPos.y + dy;
             } else {
-                // Kutu kopyaları (image) ve diğerleri için
-                selectedItem.x = originalStartPos.x + dx;
-                selectedItem.y = originalStartPos.y + dy;
+                selectedItem.x = (originalStartPos.x || 0) + dx;
+                selectedItem.y = (originalStartPos.y || 0) + dy;
             }
             if (selectedItem.vertices) selectedItem.vertices = null;
         } 
         
-        // B) YEŞİL BUTON: DÖNDÜRME (ÇOKGEN VE KUTU KOPYASI)
+        // B) YEŞİL BUTON: DÖNDÜRME
         else if (selectedPointKey === 'rotate' || selectedPointKey === 'image_rotate') {
-            // Merkezin yerini belirle (Çokgen merkezi veya Resim merkezi)
-            const cX = selectedItem.type === 'image' ? selectedItem.x + selectedItem.width / 2 : selectedItem.center.x;
-            const cY = selectedItem.type === 'image' ? selectedItem.y + selectedItem.height / 2 : selectedItem.center.y;
+            // Dikdörtgen ve Resim için merkezi hesapla
+            const isRect = (selectedItem.type === 'rectangle' || selectedItem.type === 'rect' || selectedItem.type === 'image');
+            const cX = isRect ? selectedItem.x + selectedItem.width / 2 : selectedItem.center.x;
+            const cY = isRect ? selectedItem.y + selectedItem.height / 2 : selectedItem.center.y;
             
             const currentAngle = Math.atan2(pos.y - cY, pos.x - cX);
             const startAngle = Math.atan2(dragStartPos.y - cY, dragStartPos.x - cX);
@@ -2525,26 +2541,47 @@ canvas.addEventListener('pointermove', (e) => {
             if (selectedItem.vertices) selectedItem.vertices = null;
         } 
         
-     // C) PEMBE BUTON: YENİDEN BOYUTLANDIRMA + ANLIK UZUNLUK GÖSTERİMİ
+        // C) PEMBE BUTON: DİKDÖRTGEN VE ÇOKGEN BOYUTLANDIRMA (GÜNCEL VERSİYON)
         else if (selectedPointKey === 'resize' || selectedPointKey === 'image_resize') {
-            if (selectedItem.type === 'image') {
-                // KUTU KOPYASI BOYUTLANDIRMA (Önceki kodunuzla aynı)
-                const startCX = originalStartPos.x !== undefined ? originalStartPos.x + (initialWidth / 2) : selectedItem.x + (selectedItem.width / 2);
-                const startCY = originalStartPos.y !== undefined ? originalStartPos.y + (initialHeight / 2) : selectedItem.y + (selectedItem.height / 2);
+            const isRect = (selectedItem.type === 'rectangle' || selectedItem.type === 'rect' || selectedItem.type === 'image');
+            
+            if (isRect) {
+                // Konum ve boyutları 'originalStartPos' ve 'initialWidth' üzerinden al (DİKDÖRTGEN İÇİN)
+                const startX = originalStartPos.x || 0;
+                const startY = originalStartPos.y || 0;
+                const sW = initialWidth || selectedItem.width;
+                const sH = initialHeight || selectedItem.height;
+
+                // Sabit Merkez Hesapla
+                const startCX = startX + (sW / 2);
+                const startCY = startY + (sH / 2);
+
                 const currentDist = Math.hypot(pos.x - startCX, pos.y - startCY);
                 const startDist = Math.hypot(dragStartPos.x - startCX, dragStartPos.y - startCY);
                 
                 if (startDist > 10) {
                     const ratio = currentDist / startDist;
-                    const newW = initialWidth * ratio;
-                    const newH = initialHeight * ratio;
+                    const newW = sW * ratio;
+                    const newH = sH * ratio;
+                    
                     selectedItem.width = newW;
                     selectedItem.height = newH;
                     selectedItem.x = startCX - (newW / 2);
                     selectedItem.y = startCY - (newH / 2);
+
+                    // CM Etiketi Gösterimi
+                    const previewLabel = document.getElementById('polygon-preview-label');
+                    if (previewLabel && selectedItem.type !== 'image') {
+                        const kalibrasyon = 30; // 1cm = 30px
+                        previewLabel.innerText = `w: ${(newW / kalibrasyon).toFixed(1)} cm, h: ${(newH / kalibrasyon).toFixed(1)} cm`;
+                        previewLabel.style.left = (pos.x + 15) + 'px';
+                        previewLabel.style.top = (pos.y - 35) + 'px';
+                        previewLabel.style.display = 'block';
+                        previewLabel.classList.remove('hidden');
+                    }
                 }
             } else {
-                // --- ÇOKGEN BOYUTLANDIRMA VE UZUNLUK ETİKETİ ---
+                // STANDART ÇOKGEN BOYUTLANDIRMA (Üçgen, Beşgen vb.)
                 const currentDist = Math.hypot(pos.x - selectedItem.center.x, pos.y - selectedItem.center.y);
                 const startDist = Math.hypot(dragStartPos.x - selectedItem.center.x, dragStartPos.y - selectedItem.center.y);
                 
@@ -2553,18 +2590,13 @@ canvas.addEventListener('pointermove', (e) => {
                 }
                 if (selectedItem.vertices) selectedItem.vertices = null;
 
-                // ETİKETİ GÜNCELLE (CM Gösterimi)
+                // Çokgen CM Gösterimi
                 const previewLabel = document.getElementById('polygon-preview-label');
                 if (previewLabel) {
-                    const sides = selectedItem.sideCount || selectedItem.type; // 0 ise çember
+                    const sides = selectedItem.sideCount || selectedItem.type;
                     let kenarPx = selectedItem.radius;
-                    if (sides >= 3) {
-                        kenarPx = 2 * selectedItem.radius * Math.sin(Math.PI / sides);
-                    }
-                    
-                    const kalibrasyon = 30; // Senin sistemindeki 1cm = 30px standardı
-                    let cmUzunluk = (kenarPx / kalibrasyon).toFixed(1);
-                    
+                    if (sides >= 3) kenarPx = 2 * selectedItem.radius * Math.sin(Math.PI / sides);
+                    const cmUzunluk = (kenarPx / 30).toFixed(1);
                     previewLabel.innerText = sides === 0 ? `r: ${cmUzunluk} cm` : `a: ${cmUzunluk} cm`;
                     previewLabel.style.left = (pos.x + 15) + 'px';
                     previewLabel.style.top = (pos.y - 35) + 'px';
@@ -2598,11 +2630,16 @@ canvas.addEventListener('pointermove', (e) => {
         }
     }
 
-    // --- 3. SİLGİ ÖNİZLEMESİ ---
+    // --- 3. SİLGİ ÖNİZLEMESİ (GÜNCELLENDİ) ---
     if (currentTool === 'eraser') {
         eraserPreview.style.left = `${pos.x}px`;
         eraserPreview.style.top = `${pos.y}px`;
         eraserPreview.style.display = 'block';
+    } else {
+        // Silgi seçili değilse imleci her hareketle beraber gizle
+        if (typeof eraserPreview !== 'undefined' && eraserPreview) {
+            eraserPreview.style.display = 'none';
+        }
     }
 
    // --- 4. ÇİZİM ÖN İZLEMELERİ ---
@@ -4242,3 +4279,9 @@ if (canvasElm) {
 }
 // =========================================================================
 
+// Fare veya parmak kanvas alanından çıkarsa silgi imlecini zorla kapat
+canvas.addEventListener('pointerleave', () => {
+    if (typeof eraserPreview !== 'undefined' && eraserPreview) {
+        eraserPreview.style.display = 'none';
+    }
+});
