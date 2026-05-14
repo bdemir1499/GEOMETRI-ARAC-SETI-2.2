@@ -2382,24 +2382,48 @@ canvas.addEventListener('pointerdown', (e) => {
         case 'draw_polygon_6_sides':
         case 'draw_polygon_7_sides':
         case 'draw_polygon_8_sides':
-            if (window.tempPolygonData && window.tempPolygonData.center === null) {
+            // HATA ÇÖZÜMÜ: Eğer obje null ise önce oluşturuyoruz
+            if (!window.tempPolygonData) {
+                window.tempPolygonData = { center: null, type: 0, radius: 0, rotation: 0 };
+            }
+
+            if (window.tempPolygonData.center === null) {
                  window.tempPolygonData.center = snapPos;
-                 window.PolygonTool.state.isDrawing = true; 
-                 polygonPreviewLabel.classList.remove('hidden');
-            } else if (window.tempPolygonData && window.tempPolygonData.center) {
-                const finalRadius = window.tempPolygonData.radius || 0;
-                const finalRotation = window.tempPolygonData.rotation || 0;
-                const currentType = window.tempPolygonData.type;
-                if (currentType === 0) window.PolygonTool.finalizeCircle(finalRadius);
-                else window.PolygonTool.finalizeDraw(finalRadius, finalRotation);
-                polygonPreviewLabel.classList.add('hidden');
-                window.PolygonTool.handleDrawClick(null, currentType);
+                 window.tempPolygonData.type = currentTool === 'draw_polygon_circle' ? 0 : parseInt(currentTool.split('_')[2]);
+                 if (window.PolygonTool) window.PolygonTool.state.isDrawing = true; 
+                 if (polygonPreviewLabel) polygonPreviewLabel.classList.remove('hidden');
+            } else {
+                 const finalRadius = window.tempPolygonData.radius || 0;
+                 if (window.tempPolygonData.type === 0) window.PolygonTool.finalizeCircle(finalRadius);
+                 else window.PolygonTool.finalizeDraw(finalRadius, window.tempPolygonData.rotation);
+                 if (polygonPreviewLabel) polygonPreviewLabel.classList.add('hidden');
+                 window.tempPolygonData.center = null;
             }
             break;
     }
 }, { passive: false });
 
 canvas.addEventListener('pointermove', (e) => {
+
+if (!isDrawing) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const newPos = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+
+    // Eğer hareket 3 pikselden azsa işlem yapma (Nokta bırakma sorununu azaltır)
+    if (currentMousePos && Math.hypot(newPos.x - currentMousePos.x, newPos.y - currentMousePos.y) < 3) {
+        return;
+    }
+
+    currentMousePos = newPos;
+    
+    // Çokgen yarıçapını canlı güncelle
+    if (window.tempPolygonData && window.tempPolygonData.center) {
+        window.tempPolygonData.radius = Math.hypot(newPos.x - window.tempPolygonData.center.x, newPos.y - window.tempPolygonData.center.y);
+    }
+
+    redrawAllStrokes();
+});
 
 // PARDUS KORUMASI: Sürükleme sırasında tarayıcının araya girmesini kesin engelle
     if (e.cancelable) e.preventDefault();
@@ -2948,13 +2972,18 @@ canvas.addEventListener('pointerup', (e) => {
     // -----------------------------------------------------------------
     const finalPos = snapTarget || currentMousePos;
 
-    // --- A) FİZİKSEL ARAÇLAR İÇİN GÜVENLİK DUVARI ---
+    // --- A) FİZİKSEL ARAÇLAR İÇİN GÜVENLİK DUVARI (YENİLENMİŞ) ---
     const isPhysicalTool = ['ruler', 'gonye', 'aciolcer', 'pergel'].includes(currentTool);
-    
+
     if (isPhysicalTool) {
-        // BURADAKİ TÜM finalizeDraw ÇAĞRILARINI SİLDİK! 
-        // Her araç kendi çizimini kendisi sorunsuz kaydedecek.
         isDrawing = false;
+        
+        // Araçların finalize (bitirme) fonksiyonlarını tetikle ki çizim hafızaya kaydedilsin
+        if (currentTool === 'ruler' && window.RulerTool && window.RulerTool.finalizeDraw) window.RulerTool.finalizeDraw();
+        if (currentTool === 'gonye' && window.GonyeTool && window.GonyeTool.finalizeDraw) window.GonyeTool.finalizeDraw();
+        if (currentTool === 'aciolcer' && window.AciolcerTool && window.AciolcerTool.finalizeDraw) window.AciolcerTool.finalizeDraw();
+        if (currentTool === 'pergel' && window.PergelTool && window.PergelTool.finalizeDraw) window.PergelTool.finalizeDraw();
+
         redrawAllStrokes();
         return; // app.js burada durur, tahtaya fazladan çizgi atmaz.
     }
@@ -4200,6 +4229,36 @@ function setLanguage(lang) {
     const overlay = document.getElementById('language-overlay');
     if (overlay) overlay.style.display = 'none';
 }
+
+// ================================================================
+// DİL SEÇİMİ MOUSE/PARMAK UYUMLULUK YAMASI
+// ================================================================
+// Sayfa yüklendiğinde dil butonlarını her iki giriş tipi için de hazırla
+window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        // Mevcut onclick özniteliğini temizleyip kontrolü JS'e alıyoruz
+        const langMatch = btn.getAttribute('onclick')?.match(/'([^']+)'/);
+        const targetLang = langMatch ? langMatch[1] : btn.dataset.lang;
+
+        if (targetLang) {
+            // Önce HTML'deki eski onclick'i temizle (çakışma olmasın)
+            btn.onclick = null;
+            btn.removeAttribute('onclick');
+
+            // Ortak çalıştırma fonksiyonu
+            const handleSelect = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("Dil seçildi:", targetLang);
+                setLanguage(targetLang);
+            };
+
+            // Hem mouse tıklaması hem de dokunma için dinle
+            btn.addEventListener('click', handleSelect);
+            btn.addEventListener('touchstart', handleSelect, { passive: false });
+        }
+    });
+});
 
 // Akıllı tahtada parmak/kalem kaydırırken tarayıcının araya girmesini kesin olarak engeller
 const canvasEl = document.getElementById('drawing-canvas');
