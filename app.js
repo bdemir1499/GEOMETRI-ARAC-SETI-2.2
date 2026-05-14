@@ -1187,38 +1187,40 @@ else if (stroke.type === 'rectangle') {
     window.nextPointChar = nextPointChar;
     // ---------------------------------------------------------
 
-// --- BİRLEŞTİRİLMİŞ KUSURSUZ LASSO ÖNİZLEMESİ (PC + TABLET + AKILLI TAHTA) ---
-if (typeof currentTool !== 'undefined' && currentTool === 'lasso' && typeof lassoPoints !== 'undefined' && lassoPoints.length > 0) {
+// --- LASSO (SERBEST KES) TABLET VE TAHTA İÇİN SABİT ÖNİZLEME ---
+// Şartı değiştirdik: isDrawingLasso yerine sadece noktaların varlığına bakıyoruz!
+if (currentTool === 'lasso' && typeof lassoPoints !== 'undefined' && lassoPoints.length > 0) {
     ctx.save();
     
-    // 1. Çizgi Stilini Ayarla (Turkuaz ve Kesikli)
-    ctx.strokeStyle = '#00FFCC'; 
-    ctx.setLineDash([5, 5]);
-    ctx.lineWidth = 2;
-    
-    // 2. Mevcut Hattı Çiz (Parmağını çeksen de ekranda kalan sabit hat)
+    // 1. Sabit Hattı Çiz (Bu kısım parmak kalksa da ASLA silinmez)
     ctx.beginPath();
     ctx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
     for (let i = 1; i < lassoPoints.length; i++) {
         ctx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
     }
     
-    // 3. CANLI TAKİP: Sadece parmak ekrandayken parmağın ucuna giden lastik çizgi
-    if (typeof isDrawingLasso !== 'undefined' && isDrawingLasso && typeof currentMousePos !== 'undefined' && currentMousePos) {
-        ctx.lineTo(currentMousePos.x, currentMousePos.y);
-    }
-    
+    // Çizgi stili
+    ctx.strokeStyle = '#00FFCC'; 
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 2;
     ctx.stroke();
 
-    // 4. ÇİFT KATMANLI HEDEF GÖSTERGESİ (En Önemli Kısım)
-    
-    // A) GENİŞ HEDEF ALANI: Akıllı tahtada dokunmayı kolaylaştırmak için 15px şeffaf turkuaz
+    // 2. CANLI LASTİK ÇİZGİ (Sadece parmak ekrana DEĞDİĞİNDE parmağı takip eder)
+    if (typeof isDrawingLasso !== 'undefined' && isDrawingLasso && typeof currentMousePos !== 'undefined' && currentMousePos) {
+        ctx.beginPath();
+        const lastPoint = lassoPoints[lassoPoints.length - 1];
+        ctx.moveTo(lastPoint.x, lastPoint.y);
+        ctx.lineTo(currentMousePos.x, currentMousePos.y);
+        ctx.strokeStyle = 'rgba(0, 255, 204, 0.5)'; // Takip çizgisi daha hafif olsun
+        ctx.stroke();
+    }
+
+    // 3. BAŞLANGIÇ NOKTASI (Kapatma Hedefi)
     ctx.beginPath();
     ctx.arc(lassoPoints[0].x, lassoPoints[0].y, 15, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(0, 255, 204, 0.3)'; 
+    ctx.fillStyle = 'rgba(0, 255, 204, 0.2)'; 
     ctx.fill();
 
-    // B) NET MERKEZ NOKTASI: Kapatma noktasını tam görmek için 6px belirgin kırmızı
     ctx.beginPath();
     ctx.arc(lassoPoints[0].x, lassoPoints[0].y, 6, 0, Math.PI * 2);
     ctx.fillStyle = '#FF0000'; 
