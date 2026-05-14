@@ -2283,11 +2283,10 @@ canvas.addEventListener('pointerdown', (e) => {
                 }
                 // --------------------------------
                 
-                // --- KRİTİK EKLEME: Dikdörtgen boyutlarını kaydet ---
-                if (hit.item.type === 'rectangle') {
-                    initialWidth = hit.item.width;
-                    initialHeight = hit.item.height;
-                }
+                if (hit.item.type === 'rectangle' || hit.item.type === 'image') {
+    initialWidth = hit.item.width;
+    initialHeight = hit.item.height;
+}
                 // --------------------------------------------------
             }
             
@@ -2491,12 +2490,13 @@ canvas.addEventListener('pointermove', (e) => {
         return;
     }
 
-    // --- 1. TAŞIMA (MOVE) MANTIĞI ---
+    // --- 1. TAŞIMA (MOVE) MANTIĞI (ÇOKGEN + KUTU KOPYALARI) ---
     if (currentTool === 'move' && isMoving && selectedItem) {
+        const pos = getPointerPos(e);
         const dx = pos.x - dragStartPos.x;
         const dy = pos.y - dragStartPos.y;
 
-        // A) MERKEZDEN VEYA GÖVDEDEN TUTUP TAŞIMA
+        // A) MERKEZDEN TUTUP TAŞIMA
         if (selectedPointKey === 'self' || selectedPointKey === 'center') {
             if (selectedItem.type === 'arc') {
                 selectedItem.cx = originalStartPos.x + dx;
@@ -2505,36 +2505,54 @@ canvas.addEventListener('pointermove', (e) => {
                 selectedItem.center.x = originalStartPos.x + dx;
                 selectedItem.center.y = originalStartPos.y + dy;
             } else {
+                // Kutu kopyaları (image) ve diğerleri için
                 selectedItem.x = originalStartPos.x + dx;
                 selectedItem.y = originalStartPos.y + dy;
             }
-            // Çokgenin yeni konumda çizilmesi için köşe hafızasını temizle
             if (selectedItem.vertices) selectedItem.vertices = null;
         } 
         
-        // B) YEŞİL BUTON: SAAT YÖNÜ / TERSİ DÖNDÜRME
-        else if (selectedPointKey === 'rotate') {
-            const currentAngle = Math.atan2(pos.y - selectedItem.center.y, pos.x - selectedItem.center.x);
-            const startAngle = Math.atan2(dragStartPos.y - selectedItem.center.y, dragStartPos.x - selectedItem.center.x);
-            selectedItem.rotation = originalStartPos.rotation + (currentAngle - startAngle) * (180 / Math.PI);
+        // B) YEŞİL BUTON: DÖNDÜRME (ÇOKGEN VE KUTU KOPYASI)
+        else if (selectedPointKey === 'rotate' || selectedPointKey === 'image_rotate') {
+            // Merkezin yerini belirle (Çokgen merkezi veya Resim merkezi)
+            const cX = selectedItem.type === 'image' ? selectedItem.x + selectedItem.width / 2 : selectedItem.center.x;
+            const cY = selectedItem.type === 'image' ? selectedItem.y + selectedItem.height / 2 : selectedItem.center.y;
+            
+            const currentAngle = Math.atan2(pos.y - cY, pos.x - cX);
+            const startAngle = Math.atan2(dragStartPos.y - cY, dragStartPos.x - cX);
+            
+            selectedItem.rotation = (originalStartPos.rotation || 0) + (currentAngle - startAngle) * (180 / Math.PI);
             if (selectedItem.vertices) selectedItem.vertices = null;
         } 
         
-        // C) PEMBE BUTON: YENİDEN BOYUTLANDIRMA (YARIÇAP)
-        else if (selectedPointKey === 'resize') {
-            const currentDist = Math.hypot(pos.x - selectedItem.center.x, pos.y - selectedItem.center.y);
-            const startDist = Math.hypot(dragStartPos.x - selectedItem.center.x, dragStartPos.y - selectedItem.center.y);
-            if (startDist > 0) {
-                selectedItem.radius = originalStartPos.radius * (currentDist / startDist);
-            }
-            if (selectedItem.vertices) selectedItem.vertices = null;
-        }
-        
-        // D) DOĞRU PARÇASI UÇ NOKTALARI (p1, p2) TAŞIMA
-        else if (selectedPointKey === 'p1' || selectedPointKey === 'p2') {
-            if (selectedItem[selectedPointKey]) {
-                selectedItem[selectedPointKey].x = originalStartPos.x + dx;
-                selectedItem[selectedPointKey].y = originalStartPos.y + dy;
+        // C) PEMBE BUTON: YENİDEN BOYUTLANDIRMA (YARIÇAP VEYA KUTU BOYUTU)
+        else if (selectedPointKey === 'resize' || selectedPointKey === 'image_resize') {
+            if (selectedItem.type === 'image') {
+                // KUTU KOPYASI İÇİN BOYUTLANDIRMA
+                const cX = selectedItem.x + selectedItem.width / 2;
+                const cY = selectedItem.y + selectedItem.height / 2;
+                const currentDist = Math.hypot(pos.x - cX, pos.y - cY);
+                const startDist = Math.hypot(dragStartPos.x - cX, dragStartPos.y - cY);
+                
+                if (startDist > 0) {
+                    const ratio = currentDist / startDist;
+                    const newW = (initialWidth || selectedItem.width) * ratio;
+                    const newH = (initialHeight || selectedItem.height) * ratio;
+                    
+                    // Merkezi sabit tutarak genişlet/daralt
+                    selectedItem.x = cX - newW / 2;
+                    selectedItem.y = cY - newH / 2;
+                    selectedItem.width = newW;
+                    selectedItem.height = newH;
+                }
+            } else {
+                // ÇOKGEN İÇİN BOYUTLANDIRMA
+                const currentDist = Math.hypot(pos.x - selectedItem.center.x, pos.y - selectedItem.center.y);
+                const startDist = Math.hypot(dragStartPos.x - selectedItem.center.x, dragStartPos.y - selectedItem.center.y);
+                if (startDist > 0) {
+                    selectedItem.radius = originalStartPos.radius * (currentDist / startDist);
+                }
+                if (selectedItem.vertices) selectedItem.vertices = null;
             }
         }
 
