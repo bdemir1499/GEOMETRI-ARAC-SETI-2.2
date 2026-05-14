@@ -2492,11 +2492,52 @@ canvas.addEventListener('pointermove', (e) => {
     }
 
     // --- 1. TAŞIMA (MOVE) MANTIĞI ---
-    if (currentTool === 'move' && isMoving) {
+    if (currentTool === 'move' && isMoving && selectedItem) {
         const dx = pos.x - dragStartPos.x;
         const dy = pos.y - dragStartPos.y;
-        // ... (Buradaki tüm taşıma mantığı aynı kalacak)
-        // ... (Kod kısalığı için detayları atlıyorum ama sizin orijinal kodunuzu buraya koyun)
+
+        // A) MERKEZDEN VEYA GÖVDEDEN TUTUP TAŞIMA
+        if (selectedPointKey === 'self' || selectedPointKey === 'center') {
+            if (selectedItem.type === 'arc') {
+                selectedItem.cx = originalStartPos.x + dx;
+                selectedItem.cy = originalStartPos.y + dy;
+            } else if (selectedItem.center) {
+                selectedItem.center.x = originalStartPos.x + dx;
+                selectedItem.center.y = originalStartPos.y + dy;
+            } else {
+                selectedItem.x = originalStartPos.x + dx;
+                selectedItem.y = originalStartPos.y + dy;
+            }
+            // Çokgenin yeni konumda çizilmesi için köşe hafızasını temizle
+            if (selectedItem.vertices) selectedItem.vertices = null;
+        } 
+        
+        // B) YEŞİL BUTON: SAAT YÖNÜ / TERSİ DÖNDÜRME
+        else if (selectedPointKey === 'rotate') {
+            const currentAngle = Math.atan2(pos.y - selectedItem.center.y, pos.x - selectedItem.center.x);
+            const startAngle = Math.atan2(dragStartPos.y - selectedItem.center.y, dragStartPos.x - selectedItem.center.x);
+            selectedItem.rotation = originalStartPos.rotation + (currentAngle - startAngle) * (180 / Math.PI);
+            if (selectedItem.vertices) selectedItem.vertices = null;
+        } 
+        
+        // C) PEMBE BUTON: YENİDEN BOYUTLANDIRMA (YARIÇAP)
+        else if (selectedPointKey === 'resize') {
+            const currentDist = Math.hypot(pos.x - selectedItem.center.x, pos.y - selectedItem.center.y);
+            const startDist = Math.hypot(dragStartPos.x - selectedItem.center.x, dragStartPos.y - selectedItem.center.y);
+            if (startDist > 0) {
+                selectedItem.radius = originalStartPos.radius * (currentDist / startDist);
+            }
+            if (selectedItem.vertices) selectedItem.vertices = null;
+        }
+        
+        // D) DOĞRU PARÇASI UÇ NOKTALARI (p1, p2) TAŞIMA
+        else if (selectedPointKey === 'p1' || selectedPointKey === 'p2') {
+            if (selectedItem[selectedPointKey]) {
+                selectedItem[selectedPointKey].x = originalStartPos.x + dx;
+                selectedItem[selectedPointKey].y = originalStartPos.y + dy;
+            }
+        }
+
         redrawAllStrokes();
         return; 
     }
@@ -2544,10 +2585,38 @@ canvas.addEventListener('pointermove', (e) => {
 
         if (['straightLine', 'line', 'segment', 'ray'].includes(currentTool) && lineStartPoint) {
             ctx.beginPath();
-            ctx.moveTo(lineStartPoint.x, lineStartPoint.y);
-            ctx.lineTo(endPos.x, endPos.y);
+            
+            // Başlangıç ve bitiş arasındaki mesafe/yön farkı
+            const dx = endPos.x - lineStartPoint.x;
+            const dy = endPos.y - lineStartPoint.y;
+            
+            // Eğer fare hareket ettiyse yönü hesapla
+            if (dx !== 0 || dy !== 0) {
+                const devCarpan = 5000; // Ekran dışına taşıracak (sonsuzluk hissi verecek) çarpan
+                
+                if (currentTool === 'line') {
+                    // DOĞRU: Her iki uca doğru ekran dışına kadar uzar
+                    ctx.moveTo(lineStartPoint.x - dx * devCarpan, lineStartPoint.y - dy * devCarpan);
+                    ctx.lineTo(lineStartPoint.x + dx * devCarpan, lineStartPoint.y + dy * devCarpan);
+                } 
+                else if (currentTool === 'ray') {
+                    // IŞIN: Başlangıç noktasından çıkar, fare yönünde sonsuza uzar
+                    ctx.moveTo(lineStartPoint.x, lineStartPoint.y);
+                    ctx.lineTo(lineStartPoint.x + dx * devCarpan, lineStartPoint.y + dy * devCarpan);
+                } 
+                else {
+                    // DOĞRU PARÇASI / DÜZ ÇİZGİ: Sadece ilk noktadan fareye kadar çizilir
+                    ctx.moveTo(lineStartPoint.x, lineStartPoint.y);
+                    ctx.lineTo(endPos.x, endPos.y);
+                }
+            } else {
+                // Fare henüz hareket etmediyse sadece nokta koy
+                ctx.moveTo(lineStartPoint.x, lineStartPoint.y);
+                ctx.lineTo(endPos.x, endPos.y);
+            }
+            
             ctx.stroke();
-        } 
+        }
         else if (isDrawingRectangle && rectStartPoint) {
             ctx.beginPath();
             ctx.rect(Math.min(rectStartPoint.x, endPos.x), Math.min(rectStartPoint.y, endPos.y), Math.abs(endPos.x - rectStartPoint.x), Math.abs(endPos.y - rectStartPoint.y));
@@ -4034,4 +4103,106 @@ if (kanvasSabitleyici) {
         if (e.cancelable) e.preventDefault();
     }, { passive: false });
 }
+
+// // =========================================================================
+// KUSURSUZ AKILLI NESNE SİLGİSİ v2 (DİKDÖRTGEN VE İMLEÇ DESTEKLİ)
+// =========================================================================
+const canvasElm = document.getElementById('drawing-canvas');
+
+function akilliSilgi(e, isDown) {
+    // Sadece silgi aracı seçiliyse çalışsın
+    if (typeof currentTool === 'undefined' || currentTool !== 'eraser') return false;
+    
+    // Tıklanmıyorsa veya ekrana dokunulmuyorsa işlem yapma
+    const isClicking = isDown || (typeof isDrawing !== 'undefined' && isDrawing) || e.buttons > 0 || (e.touches && e.touches.length > 0);
+    if (!isClicking) return false;
+
+    const rect = canvasElm.getBoundingClientRect();
+    
+    let ex, ey;
+    if (e.touches && e.touches.length > 0) {
+        ex = e.touches[0].clientX - rect.left;
+        ey = e.touches[0].clientY - rect.top;
+    } else {
+        ex = e.clientX - rect.left;
+        ey = e.clientY - rect.top;
+    }
+
+    const eR = 25; // Silgi alanını biraz daha genişlettik (daha rahat siler)
+    let silindiMi = false;
+
+    const distToSeg = (p, v, w) => {
+        let l2 = (v.x - w.x)**2 + (v.y - w.y)**2;
+        if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+        let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+        t = Math.max(0, Math.min(1, t));
+        return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+    };
+
+    if (typeof drawnStrokes !== 'undefined') {
+        for (let i = drawnStrokes.length - 1; i >= 0; i--) {
+            const s = drawnStrokes[i];
+            if (s.isBackground) continue; // PDF/Arkaplan silinmez
+
+            let vuruldu = false;
+
+            // 1. Serbest Kalem
+            if (s.type === 'pen' && s.path) {
+                for (let j = 1; j < s.path.length; j++) {
+                    if (distToSeg({x: ex, y: ey}, s.path[j-1], s.path[j]) < eR + (s.width || 3)) { vuruldu = true; break; }
+                }
+                if (!vuruldu && s.path.length === 1) {
+                    if (Math.hypot(s.path[0].x - ex, s.path[0].y - ey) < eR + 5) vuruldu = true;
+                }
+            } 
+            // 2. Kutu ve Serbest Kesimler (Snapshot/Image)
+            else if (s.type === 'image') {
+                 if (ex >= (s.x||0) && ex <= (s.x||0) + (s.width||0) && ey >= (s.y||0) && ey <= (s.y||0) + (s.height||0)) vuruldu = true;
+            } 
+            // 3. Çokgenler (Üçgen, Beşgen, Altıgen)
+            else if (s.type === 'polygon' && s.center) {
+                 if (Math.hypot(s.center.x - ex, s.center.y - ey) <= (s.radius||0) + eR) vuruldu = true;
+            } 
+            // 4. Çember
+            else if (s.type === 'arc') {
+                 if (Math.hypot((s.cx||0) - ex, (s.cy||0) - ey) <= (s.radius||0) + eR) vuruldu = true;
+            } 
+            // 5. Cetvel Çizgileri
+            else if (s.p1 && s.p2) {
+                 if (distToSeg({x: ex, y: ey}, s.p1, s.p2) < eR + 10) vuruldu = true;
+            }
+            // 6. YENİ: DİKDÖRTGEN DESTEĞİ
+            else if (s.type === 'rectangle' || s.type === 'rect') {
+                 let rx = s.x !== undefined ? s.x : Math.min(s.startPoint?.x||0, s.endPoint?.x||0);
+                 let ry = s.y !== undefined ? s.y : Math.min(s.startPoint?.y||0, s.endPoint?.y||0);
+                 let rw = s.width !== undefined ? s.width : Math.abs((s.startPoint?.x||0) - (s.endPoint?.x||0));
+                 let rh = s.height !== undefined ? s.height : Math.abs((s.startPoint?.y||0) - (s.endPoint?.y||0));
+                 
+                 // Silgi dikdörtgenin sınırları içindeyse veya çizgisine değdiyse sil
+                 if (ex >= rx - eR && ex <= rx + rw + eR && ey >= ry - eR && ey <= ry + rh + eR) {
+                     vuruldu = true;
+                 }
+            }
+
+            // Eğer objeye dokunulduysa hafızadan at
+            if (vuruldu) {
+                drawnStrokes.splice(i, 1);
+                silindiMi = true;
+            }
+        }
+    }
+
+    if (silindiMi && window.redrawAllStrokes) {
+        window.redrawAllStrokes(); 
+    }
+}
+
+// YENİ: e.stopImmediatePropagation() kodları SİLİNDİ!
+// Artık silgi objeleri arka planda sessizce silecek, imleç ve diğer efektler çalışmaya devam edecek.
+if (canvasElm) {
+    canvasElm.addEventListener('pointerdown', (e) => akilliSilgi(e, true));
+    canvasElm.addEventListener('pointermove', (e) => akilliSilgi(e, false));
+    canvasElm.addEventListener('touchmove', (e) => akilliSilgi(e, false), {passive: true});
+}
+// =========================================================================
 
