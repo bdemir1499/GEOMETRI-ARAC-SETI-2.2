@@ -2525,34 +2525,52 @@ canvas.addEventListener('pointermove', (e) => {
             if (selectedItem.vertices) selectedItem.vertices = null;
         } 
         
-        // C) PEMBE BUTON: YENİDEN BOYUTLANDIRMA (YARIÇAP VEYA KUTU BOYUTU)
+     // C) PEMBE BUTON: YENİDEN BOYUTLANDIRMA + ANLIK UZUNLUK GÖSTERİMİ
         else if (selectedPointKey === 'resize' || selectedPointKey === 'image_resize') {
             if (selectedItem.type === 'image') {
-                // KUTU KOPYASI İÇİN BOYUTLANDIRMA
-                const cX = selectedItem.x + selectedItem.width / 2;
-                const cY = selectedItem.y + selectedItem.height / 2;
-                const currentDist = Math.hypot(pos.x - cX, pos.y - cY);
-                const startDist = Math.hypot(dragStartPos.x - cX, dragStartPos.y - cY);
+                // KUTU KOPYASI BOYUTLANDIRMA (Önceki kodunuzla aynı)
+                const startCX = originalStartPos.x !== undefined ? originalStartPos.x + (initialWidth / 2) : selectedItem.x + (selectedItem.width / 2);
+                const startCY = originalStartPos.y !== undefined ? originalStartPos.y + (initialHeight / 2) : selectedItem.y + (selectedItem.height / 2);
+                const currentDist = Math.hypot(pos.x - startCX, pos.y - startCY);
+                const startDist = Math.hypot(dragStartPos.x - startCX, dragStartPos.y - startCY);
                 
-                if (startDist > 0) {
+                if (startDist > 10) {
                     const ratio = currentDist / startDist;
-                    const newW = (initialWidth || selectedItem.width) * ratio;
-                    const newH = (initialHeight || selectedItem.height) * ratio;
-                    
-                    // Merkezi sabit tutarak genişlet/daralt
-                    selectedItem.x = cX - newW / 2;
-                    selectedItem.y = cY - newH / 2;
+                    const newW = initialWidth * ratio;
+                    const newH = initialHeight * ratio;
                     selectedItem.width = newW;
                     selectedItem.height = newH;
+                    selectedItem.x = startCX - (newW / 2);
+                    selectedItem.y = startCY - (newH / 2);
                 }
             } else {
-                // ÇOKGEN İÇİN BOYUTLANDIRMA
+                // --- ÇOKGEN BOYUTLANDIRMA VE UZUNLUK ETİKETİ ---
                 const currentDist = Math.hypot(pos.x - selectedItem.center.x, pos.y - selectedItem.center.y);
                 const startDist = Math.hypot(dragStartPos.x - selectedItem.center.x, dragStartPos.y - selectedItem.center.y);
+                
                 if (startDist > 0) {
                     selectedItem.radius = originalStartPos.radius * (currentDist / startDist);
                 }
                 if (selectedItem.vertices) selectedItem.vertices = null;
+
+                // ETİKETİ GÜNCELLE (CM Gösterimi)
+                const previewLabel = document.getElementById('polygon-preview-label');
+                if (previewLabel) {
+                    const sides = selectedItem.sideCount || selectedItem.type; // 0 ise çember
+                    let kenarPx = selectedItem.radius;
+                    if (sides >= 3) {
+                        kenarPx = 2 * selectedItem.radius * Math.sin(Math.PI / sides);
+                    }
+                    
+                    const kalibrasyon = 30; // Senin sistemindeki 1cm = 30px standardı
+                    let cmUzunluk = (kenarPx / kalibrasyon).toFixed(1);
+                    
+                    previewLabel.innerText = sides === 0 ? `r: ${cmUzunluk} cm` : `a: ${cmUzunluk} cm`;
+                    previewLabel.style.left = (pos.x + 15) + 'px';
+                    previewLabel.style.top = (pos.y - 35) + 'px';
+                    previewLabel.style.display = 'block';
+                    previewLabel.classList.remove('hidden');
+                }
             }
         }
 
