@@ -2581,6 +2581,36 @@ canvas.addEventListener('pointermove', (e) => {
                 }
             }
             ctx.stroke();
+// ========================================================
+            // GERÇEK ZAMANLI KENAR UZUNLUĞU GÖSTERGESİ
+            // ========================================================
+            const previewLabel = document.getElementById('polygon-preview-label');
+            if (previewLabel) {
+                let kenarPx = radius; // Varsayılan olarak çember için yarıçap
+                if (sides >= 3) {
+                    // Çokgen için matematiksel kenar uzunluğu formülü
+                    kenarPx = 2 * radius * Math.sin(Math.PI / sides);
+                }
+                
+                // =========================================================
+                // NOKTA ATIŞI EŞİTLEME (ŞEKİL İLE ÖNİZLEMEYİ BİRLEŞTİRME)
+                // cokgen.js dosyası ile birebir aynı kalibrasyon (30 piksel)
+                // =========================================================
+                const kalibrasyon = 30; // <--- İŞTE UYGULAMANIN GİZLİ SAYISI 30!
+                
+                let cmUzunluk = (kenarPx / kalibrasyon).toFixed(1);
+                
+                // Metni belirle
+                previewLabel.innerText = sides === 0 ? `r: ${cmUzunluk} cm` : `a: ${cmUzunluk} cm`;
+                
+                // Etiketi farenin/kalemin ucuna yerleştir
+                previewLabel.style.left = (endPos.x + 15) + 'px';
+                previewLabel.style.top = (endPos.y - 35) + 'px';
+                previewLabel.style.display = 'block';
+                previewLabel.classList.remove('hidden');
+            }        
+
+
         } 
         else if (currentTool === 'snapshot' && snapshotStart) {
             ctx.strokeStyle = '#00ffcc';
