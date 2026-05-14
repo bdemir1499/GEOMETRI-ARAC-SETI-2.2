@@ -774,7 +774,9 @@ function redrawAllStrokes() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
     // GÜVENLİK KİLİDİ
-    if (!window.drawnStrokes || window.drawnStrokes.length === 0) return;
+    // Ekranda çizim yoksa BİLE eğer Lasso ile bir yerleri kesiyorsak durma, devam et!
+const isLassoActive = (typeof lassoPoints !== 'undefined' && lassoPoints.length > 0);
+if ((!window.drawnStrokes || window.drawnStrokes.length === 0) && !isLassoActive) return;
 
     // --- BÜYÜK ÇÖZÜM: KATMAN (Z-INDEX) KORUMASI ---
     // Arka planı (sayfayı veya pdf'i) her zaman zorla en alta gönderir.
