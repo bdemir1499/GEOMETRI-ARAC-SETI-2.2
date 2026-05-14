@@ -2528,13 +2528,46 @@ canvas.addEventListener('pointermove', (e) => {
         eraserPreview.style.display = 'block';
     }
 
-    // --- 4. ÇİZİM ÖN İZLEMELERİ ---
+   // --- 4. ÇİZİM ÖN İZLEMELERİ ---
     let previewActive = false;
     const endPos = snapTarget || pos;
 
     if (isDrawingLine || isDrawingInfinityLine || isDrawingSegment || isDrawingRay || isDrawingRectangle || (window.tempPolygonData && window.tempPolygonData.center) || (currentTool === 'snapshot' && typeof snapshotStart !== 'undefined' && snapshotStart)) {
         redrawAllStrokes();
-        // ... (Buradaki tüm if/else önizleme çizim mantığı aynı kalacak)
+        
+        // SİLİNEN ÖNİZLEME KODLARI GERİ GELDİ
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = window.currentLineColor || '#000000';
+        ctx.lineWidth = 3;
+
+        if (['straightLine', 'line', 'segment', 'ray'].includes(currentTool) && lineStartPoint) {
+            ctx.beginPath();
+            ctx.moveTo(lineStartPoint.x, lineStartPoint.y);
+            ctx.lineTo(endPos.x, endPos.y);
+            ctx.stroke();
+        } else if (isDrawingRectangle && rectStartPoint) {
+            ctx.beginPath();
+            ctx.rect(Math.min(rectStartPoint.x, endPos.x), Math.min(rectStartPoint.y, endPos.y), Math.abs(endPos.x - rectStartPoint.x), Math.abs(endPos.y - rectStartPoint.y));
+            ctx.stroke();
+        } else if (window.tempPolygonData && window.tempPolygonData.center) {
+            const radius = Math.hypot(endPos.x - window.tempPolygonData.center.x, endPos.y - window.tempPolygonData.center.y);
+            window.tempPolygonData.radius = radius;
+            window.tempPolygonData.rotation = Math.atan2(endPos.y - window.tempPolygonData.center.y, endPos.x - window.tempPolygonData.center.x) * 180 / Math.PI;
+            
+            if (window.tempPolygonData.type === 0) {
+                ctx.beginPath(); ctx.arc(window.tempPolygonData.center.x, window.tempPolygonData.center.y, radius, 0, Math.PI * 2); ctx.stroke();
+            } else if (window.PolygonTool && window.PolygonTool.drawPreview) {
+                window.PolygonTool.drawPreview(window.tempPolygonData.center, radius, window.tempPolygonData.type, window.tempPolygonData.rotation);
+            }
+        } else if (currentTool === 'snapshot' && snapshotStart) {
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = '#00ffcc';
+            ctx.beginPath();
+            ctx.rect(Math.min(snapshotStart.x, endPos.x), Math.min(snapshotStart.y, endPos.y), Math.abs(endPos.x - snapshotStart.x), Math.abs(endPos.y - snapshotStart.y));
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
         previewActive = true;
     }
 
@@ -2566,8 +2599,10 @@ canvas.addEventListener('pointermove', (e) => {
 canvas.addEventListener('pointerup', (e) => {
     isDrawing = false;
     
-    // Kalemi kaldırdığında kilidi serbest bırak
-    canvas.releasePointerCapture(e.pointerId);
+    // HATA ÇÖZÜMÜ: Eğer kilit varsa serbest bırak, yoksa hata verme
+    if (canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+    }
     // 1. Tarayıcı kilitlerini kaldır (Pardus Korumalı)
    
     if (e.pointerType === 'touch' && e.cancelable) e.preventDefault();
