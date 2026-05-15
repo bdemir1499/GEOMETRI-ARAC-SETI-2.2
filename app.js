@@ -3084,16 +3084,78 @@ if (currentTool === 'pen') {
             isDrawingLasso = true;
             lassoPoints = [{ x: currentMousePos.x, y: currentMousePos.y }];
         } else if (window.lassoIsClosing) {
-            // 2. ŞEKLİ KAPAT (Başlangıca gelindi)
+            // 2. ŞEKLİ KAPAT VE KOPYALA
             lassoPoints.push({ x: lassoPoints[0].x, y: lassoPoints[0].y });
+
+            // --- KOPYALAMA (KIRPMA) ALGORİTMASI BAŞLIYOR ---
+            
+            // A) Çizdiğimiz çokgenin en geniş sınırlarını (kutusunu) bul
+            let minX = Math.min(...lassoPoints.map(p => p.x));
+            let minY = Math.min(...lassoPoints.map(p => p.y));
+            let maxX = Math.max(...lassoPoints.map(p => p.x));
+            let maxY = Math.max(...lassoPoints.map(p => p.y));
+            let w = maxX - minX;
+            let h = maxY - minY;
+
+            if (w > 10 && h > 10) {
+                // B) Görünmez bir dijital makas (tempCanvas) oluştur
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = w;
+                tempCanvas.height = h;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // C) Çokgenin şeklini makasa öğret (Clipping Mask)
+                tempCtx.beginPath();
+                tempCtx.moveTo(lassoPoints[0].x - minX, lassoPoints[0].y - minY);
+                for (let i = 1; i < lassoPoints.length; i++) {
+                    tempCtx.lineTo(lassoPoints[i].x - minX, lassoPoints[i].y - minY);
+                }
+                tempCtx.closePath();
+                tempCtx.clip(); // <--- SADECE İÇİNİ KESECEK OLAN SİHİRLİ KOMUT
+
+                // D) Arka planı (PDF) ve üzerindeki çizimleri bu maskenin içine aktar
+                const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
+                if (bgLayer) {
+                    const sX = bgLayer.width / bgLayer.offsetWidth;
+                    const sY = bgLayer.height / bgLayer.offsetHeight;
+                    tempCtx.drawImage(bgLayer, minX * sX, minY * sY, w * sX, h * sY, 0, 0, w, h);
+                }
+                tempCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
+
+                // E) Kestiğimiz bu özel şekilli parçayı resme çevirip sisteme kaydet
+                const finalImage = tempCanvas.toDataURL('image/png');
+                const newImgStroke = {
+                    type: 'image',
+                    imgData: finalImage,
+                    x: minX, y: minY,
+                    width: w, height: h,
+                    rotation: 0,
+                    isBackground: false,
+                    imgObj: null 
+                };
+                
+                const tempImg = new Image();
+                tempImg.src = finalImage;
+                tempImg.onload = () => {
+                    newImgStroke.imgObj = tempImg;
+                    if (window.redrawAllStrokes) window.redrawAllStrokes();
+                };
+                drawnStrokes.push(newImgStroke);
+                
+                // F) Otomatik olarak "Taşı" moduna geç ve kestiğimiz parçayı seç
+                if (typeof setActiveTool === 'function') setActiveTool('move');
+                else currentTool = 'move';
+                
+                selectedItem = newImgStroke;
+            }
+
+            // G) Çizim işlemini sıfırla, ekrandaki kılavuz çizgileri temizle
             isDrawingLasso = false;
             window.lassoIsClosing = false;
             currentMousePos = null;
-            
-            // ========================================================
-            // KESME FONKSİYONUNU BURADA ÇAĞIRMALISIN
-            // Örneğin: if (window.LassoTool) window.LassoTool.crop(); 
-            // ========================================================
+            lassoPoints = []; 
+            // -------------------------------------------------------------
+
         } else {
             // 3. YENİ BİR KÖŞE DAHA EKLE
             lassoPoints.push({ x: currentMousePos.x, y: currentMousePos.y });
