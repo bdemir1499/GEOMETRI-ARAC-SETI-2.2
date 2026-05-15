@@ -4476,3 +4476,55 @@ canvas.addEventListener('pointerleave', () => {
         eraserPreview.style.display = 'none';
     }
 });
+
+// =========================================================================
+// --- OTOMATİK AKILLI YAMA VE KOPYA TEMİZLEME MOTORU (EN ALTA EKLENECEK) ---
+// =========================================================================
+
+window.temizleLassoVeKopyalar = function() {
+    if (typeof drawnStrokes !== 'undefined' && drawnStrokes.length > 0) {
+        let silinenOlduMu = false;
+        
+        // Döngüyü tersten kuruyoruz ki silerken sıra kaymasın
+        for (let i = drawnStrokes.length - 1; i >= 0; i--) {
+            let s = drawnStrokes[i];
+            
+            // Eğer bu bir yamaysa (lasso-mask) VEYA kesilmiş bir kopyaysa onu sil!
+            if (s.type === 'lasso-mask' || (s.type === 'image' && s.isBackground === false)) {
+                drawnStrokes.splice(i, 1);
+                silinenOlduMu = true;
+            }
+        }
+        
+        // Eğer kesilen parça o an elimizde (seçili) ise onu da bırak
+        if (typeof selectedItem !== 'undefined') window.selectedItem = null;
+        
+        // Sadece bir şey silindiyse ekranı tazele (Gereksiz yorulmayı önler)
+        if (silinenOlduMu && typeof window.redrawAllStrokes === 'function') {
+            window.redrawAllStrokes();
+        }
+    }
+};
+
+// --- OTOMATİK TETİKLEYİCİ (GÖZLEMCİ) ---
+// Ekranda sayfa değiştirme veya silme butonlarına tıklandığını otomatik anlar
+document.addEventListener('click', function(e) {
+    let element = e.target.closest('button, div, a, i'); // Tıklanan butonu veya simgeyi bul
+    if (element) {
+        let id = (element.id || '').toLowerCase();
+        let sinif = (element.className || '').toLowerCase();
+        let metin = (element.innerText || '').toLowerCase();
+        
+        // Uygulamandaki olası buton isimlerini (İleri, Geri, Kapat, Temizle, Sil vb.) tarar
+        let silmeSartlari = [
+            'next', 'prev', 'page', 'clear', 'close', 'sil', 'kapat', 'ileri', 'geri', 'temizle'
+        ];
+
+        let tetikle = silmeSartlari.some(kelime => id.includes(kelime) || sinif.includes(kelime) || metin.includes(kelime));
+
+        if (tetikle) {
+            // PDF/Resim sayfa geçişinin tamamlanması için çok küçük bir süre tanıyıp temizliği yapar
+            setTimeout(window.temizleLassoVeKopyalar, 50);
+        }
+    }
+});
