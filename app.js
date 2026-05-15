@@ -1369,14 +1369,17 @@ function processLassoCut() {
     const tempImg = new Image();
     tempImg.src = imgSrc;
     tempImg.onload = () => {
+
         newImgStroke.imgObj = tempImg;
         if (window.redrawAllStrokes) window.redrawAllStrokes();
     };
     drawnStrokes.push(newImgStroke);
     
-    // --- BURASI TABLETTEKİ BUTONLARI AKTİF EDER ---
-    selectedItem = newImgStroke; // Yeni kestiğimiz parçayı "seçili" yap
-    isMoving = false;            // Sürükleme kilidini aç
+   // --- BUTONLARIN ÇIKMASI İÇİN ŞART ---
+    selectedItem = newImgStroke; // Yeni parçayı anında seç
+    isMoving = false;            // Sürükleme kilidini sıfırla
+    
+    if (window.redrawAllStrokes) window.redrawAllStrokes();
     
     // Aracı 'move' (Taşı) yap
     if (typeof setActiveTool === 'function') setActiveTool('move');
@@ -2197,7 +2200,7 @@ canvas.addEventListener('pointerdown', (e) => {
         lastDist = 0;
     }
 
-// --- SERBEST KES (LASSO) - TABLET VE TAHTA İÇİN KESİN ÇÖZÜM ---
+// --- SERBEST KES (LASSO) - TABLET DÜZELTMESİ ---
     if (currentTool === 'lasso') {
         const pos = getPointerPos(e);
         
@@ -2208,20 +2211,25 @@ canvas.addEventListener('pointerdown', (e) => {
             const startPoint = lassoPoints[0];
             const dist = Math.hypot(pos.x - startPoint.x, pos.y - startPoint.y);
             
-            // TABLET İÇİN: Mesafe toleransını 50 piksele çıkardık (Parmak payı)
-            if (lassoPoints.length > 2 && dist < 50) { 
+            // TABLET İÇİN: 20 piksel yerine 45 piksel yapıldı.
+            // Böylece parmakla kırmızı noktaya "yaklaşmak" yeterli olacaktır.
+            if (lassoPoints.length > 2 && dist < 45) { 
                 isDrawingLasso = false;
                 
-                // Kesimi işle
+                // 1. Kesimi yap
                 processLassoCut(); 
                 
-                // Noktaları temizle
+                // 2. Noktaları temizle
                 lassoPoints = []; 
                 
-                // MODU ZORLA DEĞİŞTİR: Hemen Taşı/Canlandır moduna geç
-                currentTool = 'move'; 
+                // 3. KRİTİK: Aracı otomatik olarak 'move' (Canlandır) yap
+                if (typeof setActiveTool === 'function') {
+                    setActiveTool('move');
+                } else {
+                    currentTool = 'move';
+                }
                 
-                // Butonların aktiflik durumunu (görsel olarak) zorla güncelle
+                // 4. ARAYÜZ GÜNCELLEME: Butonların aktiflik durumunu zorla değiştir
                 document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
                 const moveBtn = document.getElementById('btn-move');
                 if (moveBtn) moveBtn.classList.add('active');
@@ -2232,8 +2240,10 @@ canvas.addEventListener('pointerdown', (e) => {
         }
         if (window.redrawAllStrokes) window.redrawAllStrokes();
         return; 
-    }
-    // --- BUNU EKLE: Parmağı ekrana değdiği an kaydet ---
+    }   
+
+
+ // --- BUNU EKLE: Parmağı ekrana değdiği an kaydet ---
     pointers.set(e.pointerId, e); 
     // ------------------------------------------------
 
