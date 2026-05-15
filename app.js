@@ -1261,6 +1261,7 @@ else if (stroke.type === 'rectangle') {
         ctx.lineWidth = 1.5;
         ctx.stroke();
 
+
         // Tam dokunduğun yere minik bir merkez noktası
         ctx.beginPath();
         ctx.arc(currentMousePos.x, currentMousePos.y, 4, 0, Math.PI * 2);
