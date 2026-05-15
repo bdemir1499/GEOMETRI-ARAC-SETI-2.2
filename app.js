@@ -2213,7 +2213,7 @@ canvas.addEventListener('pointerdown', (e) => {
             
             // TABLET İÇİN: 20 piksel yerine 45 piksel yapıldı.
             // Böylece parmakla kırmızı noktaya "yaklaşmak" yeterli olacaktır.
-            if (lassoPoints.length > 2 && dist < 45) { 
+            if (lassoPoints.length > 2 && dist < 60) { 
                 isDrawingLasso = false;
                 
                 // 1. Kesimi yap
