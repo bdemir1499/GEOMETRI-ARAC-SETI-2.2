@@ -2966,10 +2966,20 @@ canvas.addEventListener('pointerup', (e) => {
             tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
 
             const finalImage = tempCanvas.toDataURL('image/png');
-            
-            // 2. Kopyayı yeni bir "image" nesnesi olarak sisteme ekle
-            const newImgStroke = {
-                type: 'image',
+                
+                // --- 1. EKSİK OLAN SİHİR: KESİLEN YERİ ZEMİN RENGİYLE YAMA YAP (MASKE) ---
+                const maskStroke = {
+                    type: 'lasso-mask',
+                    points: lassoPoints.map(p => ({ x: p.x, y: p.y })), // Kesilen noktaların hafızası
+                    fillColor: (typeof window.isToolThemeBlack !== 'undefined' && window.isToolThemeBlack) ? '#222222' : '#ffffff' // Temana göre delik rengi (Beyaz veya Koyu)
+                };
+                drawnStrokes.push(maskStroke); // Kopyadan ÖNCE maskeyi ekle ki yama altta kalsın
+                // --------------------------------------------------------------------------
+
+                // --- 2. KOPYAYI OLUŞTUR ---
+                // Kopya, orijinalin 30px sağ alt çaprazında belirecek
+                const newImgStroke = {
+                    type: 'image',
                 imgData: finalImage,
                 x: x, y: y,
                 width: w, height: h,
@@ -3074,103 +3084,104 @@ if (currentTool === 'pen') {
     
     if (typeof snapIndicator !== 'undefined' && snapIndicator) snapIndicator.style.display = 'none';
 
-    // --- 3. ADIM: KESKİN NİŞANCI LASSO NOKTA KOYMA (POINTERUP) ---
+    // --- 3. ADIM: KESKİN NİŞANCI LASSO NOKTA KOYMA VE KOPYALAMA (POINTERUP) ---
     if (currentTool === 'lasso') {
         if (!window.isDraggingLassoPoint) return;
-        window.isDraggingLassoPoint = false; // Nişan alma bitti, ateşe hazır
+        window.isDraggingLassoPoint = false; // Nişangahı kapat
         
         if (!isDrawingLasso) {
             // 1. İLK NOKTAYI ŞİMDİ KOY
             isDrawingLasso = true;
             lassoPoints = [{ x: currentMousePos.x, y: currentMousePos.y }];
-        } else if (window.lassoIsClosing) {
-            // 2. ŞEKLİ KAPAT VE KOPYALA
-            lassoPoints.push({ x: lassoPoints[0].x, y: lassoPoints[0].y });
-
-            // --- ÇOKGEN KOPYALAMA (KIRPMA) ALGORİTMASI ---
-            
-            // A) Çizdiğimiz çokgenin en geniş sınırlarını (kutusunu) bul
-            let minX = Math.min(...lassoPoints.map(p => p.x));
-            let minY = Math.min(...lassoPoints.map(p => p.y));
-            let maxX = Math.max(...lassoPoints.map(p => p.x));
-            let maxY = Math.max(...lassoPoints.map(p => p.y));
-            let w = Math.max(10, maxX - minX);
-            let h = Math.max(10, maxY - minY);
-
-            // B) Görünmez bir dijital makas (tempCanvas) oluştur
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = w;
-            tempCanvas.height = h;
-            const tempCtx = tempCanvas.getContext('2d');
-
-            // C) Çokgenin şeklini makasa öğret (Clipping Mask)
-            tempCtx.save();
-            tempCtx.beginPath();
-            tempCtx.moveTo(lassoPoints[0].x - minX, lassoPoints[0].y - minY);
-            for (let i = 1; i < lassoPoints.length; i++) {
-                tempCtx.lineTo(lassoPoints[i].x - minX, lassoPoints[i].y - minY);
-            }
-            tempCtx.closePath();
-            tempCtx.clip(); // <--- SADECE İÇİNİ KESECEK OLAN SİHİRLİ KOMUT
-
-            // D) Arka planı (PDF) ve üzerindeki çizimleri bu maskenin içine aktar
-            const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
-            if (bgLayer) {
-                const sX = bgLayer.width / bgLayer.offsetWidth;
-                const sY = bgLayer.height / bgLayer.offsetHeight;
-                tempCtx.drawImage(bgLayer, minX * sX, minY * sY, w * sX, h * sY, 0, 0, w, h);
-            }
-            tempCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
-            tempCtx.restore();
-
-            // E) Kestiğimiz bu özel şekilli parçayı resme çevirip sisteme kaydet
-            const finalImage = tempCanvas.toDataURL('image/png');
-            
-            // YENİLİK: Kopya oluştuğunu belli etmek için x ve y'ye +30 piksel ekliyoruz!
-            const newImgStroke = {
-                type: 'image',
-                imgData: finalImage,
-                x: minX + 30,  // <-- Orijinalinden biraz sağa kayar
-                y: minY + 30,  // <-- Orijinalinden biraz aşağı kayar
-                width: w, 
-                height: h,
-                rotation: 0,
-                isBackground: false,
-                imgObj: null 
-            };
-            
-            const tempImg = new Image();
-            tempImg.onload = () => {
-                newImgStroke.imgObj = tempImg;
-                if (typeof redrawAllStrokes === 'function') redrawAllStrokes();
-                else if (window.redrawAllStrokes) window.redrawAllStrokes();
-            };
-            tempImg.src = finalImage;
-            
-            drawnStrokes.push(newImgStroke);
-            
-            // F) Otomatik olarak "Taşı" moduna geç ve kestiğimiz parçayı seç
-            if (typeof setActiveTool === 'function') setActiveTool('move');
-            else currentTool = 'move';
-            
-            selectedItem = newImgStroke;
-
-            // G) Çizim işlemini sıfırla, ekrandaki nişangahı ve kırmızı noktaları temizle
-            isDrawingLasso = false;
-            window.lassoIsClosing = false;
-            currentMousePos = null;
-            lassoPoints = []; 
-            // -------------------------------------------------------------
-
         } else {
-            // 3. YENİ BİR KÖŞE DAHA EKLE
-            lassoPoints.push({ x: currentMousePos.x, y: currentMousePos.y });
+            // DİKKAT: Hareketsiz tıklamaları da yakalamak için mesafeyi tam parmak kalkarken ölçüyoruz!
+            let startPoint = lassoPoints[0];
+            const toleransScale = (typeof globalScale !== 'undefined' && globalScale > 0) ? globalScale : 1;
+            const kapanmaToleransi = 40 / toleransScale; 
+            let mesafe = Math.hypot(currentMousePos.x - startPoint.x, currentMousePos.y - startPoint.y);
+            
+            if (mesafe < kapanmaToleransi) {
+                // 2. ŞEKLİ KAPAT VE KOPYALA (HEDEFE VURULDU!)
+                lassoPoints.push({ x: startPoint.x, y: startPoint.y });
+
+                // --- ÇOKGEN KOPYALAMA (KIRPMA) ALGORİTMASI ---
+                let minX = Math.min(...lassoPoints.map(p => p.x));
+                let minY = Math.min(...lassoPoints.map(p => p.y));
+                let maxX = Math.max(...lassoPoints.map(p => p.x));
+                let maxY = Math.max(...lassoPoints.map(p => p.y));
+                let w = Math.max(10, maxX - minX);
+                let h = Math.max(10, maxY - minY);
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = w;
+                tempCanvas.height = h;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                tempCtx.save();
+                tempCtx.beginPath();
+                tempCtx.moveTo(lassoPoints[0].x - minX, lassoPoints[0].y - minY);
+                for (let i = 1; i < lassoPoints.length; i++) {
+                    tempCtx.lineTo(lassoPoints[i].x - minX, lassoPoints[i].y - minY);
+                }
+                tempCtx.closePath();
+                tempCtx.clip(); // <--- İÇİNİ KESECEK MAKAS
+
+                // Arka planı (PDF) ve çizimleri maskeye al
+                const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
+                if (bgLayer) {
+                    const sX = bgLayer.width / bgLayer.offsetWidth;
+                    const sY = bgLayer.height / bgLayer.offsetHeight;
+                    tempCtx.drawImage(bgLayer, minX * sX, minY * sY, w * sX, h * sY, 0, 0, w, h);
+                }
+                tempCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
+                tempCtx.restore();
+
+                const finalImage = tempCanvas.toDataURL('image/png');
+                
+                // Kopya, orijinalin 30px sağ alt çaprazında belirecek
+                const newImgStroke = {
+                    type: 'image',
+                    imgData: finalImage,
+                    x: minX + 30,  
+                    y: minY + 30,  
+                    width: w, 
+                    height: h,
+                    rotation: 0,
+                    isBackground: false,
+                    imgObj: null 
+                };
+                
+                const tempImg = new Image();
+                tempImg.onload = () => {
+                    newImgStroke.imgObj = tempImg;
+                    if (typeof redrawAllStrokes === 'function') redrawAllStrokes();
+                    else if (window.redrawAllStrokes) window.redrawAllStrokes();
+                };
+                tempImg.src = finalImage;
+                
+                drawnStrokes.push(newImgStroke);
+                
+                // Modu anında "Taşı" yap ve kestiğimiz yeni parçayı seç
+                if (typeof setActiveTool === 'function') setActiveTool('move');
+                else currentTool = 'move';
+                
+                selectedItem = newImgStroke;
+
+                // İşlemi tamamen sıfırla, kırmızı noktaları sil
+                isDrawingLasso = false;
+                window.lassoIsClosing = false;
+                currentMousePos = null;
+                lassoPoints = []; 
+                // -------------------------------------------------------------
+            } else {
+                // 3. HEDEF VURULMADI: YENİ BİR KÖŞE DAHA EKLE
+                lassoPoints.push({ x: currentMousePos.x, y: currentMousePos.y });
+            }
         }
         
         redrawAllStrokes();
         return;
     } else {
-        // Lasso dışında bir araçsa ekranı normal güncelle
         redrawAllStrokes();
     }
 
