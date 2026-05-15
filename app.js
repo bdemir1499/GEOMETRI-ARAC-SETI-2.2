@@ -4692,24 +4692,29 @@ window.temizleLassoVeKopyalar = function() {
     }
 };
 
-// --- OTOMATİK TETİKLEYİCİ (GÖZLEMCİ) ---
-// Ekranda sayfa değiştirme veya silme butonlarına tıklandığını otomatik anlar
+// --- OTOMATİK TETİKLEYİCİ (GÖZLEMCİ) - GÜNCELLENMİŞ ---
 document.addEventListener('click', function(e) {
-    let element = e.target.closest('button, div, a, i'); // Tıklanan butonu veya simgeyi bul
+    let element = e.target.closest('button, div, a, i'); 
     if (element) {
         let id = (element.id || '').toLowerCase();
         let sinif = (element.className || '').toLowerCase();
         let metin = (element.innerText || '').toLowerCase();
         
-        // Uygulamandaki olası buton isimlerini (İleri, Geri, Kapat, Temizle, Sil vb.) tarar
+        // KRİTİK DÜZELTME: Eğer tıklanan buton bir "Silgi" (Eraser) ise temizliği TETİKLEME!
+        let isSilgi = id.includes('silgi') || metin.includes('silgi') || id.includes('eraser') || metin.includes('eraser');
+        if (isSilgi) return; 
+
+        // Gerçek temizleme butonları (Hepsini sil, kapat, ileri-geri vb.)
         let silmeSartlari = [
-            'next', 'prev', 'page', 'clear', 'close', 'sil', 'kapat', 'ileri', 'geri', 'temizle'
+            'next', 'prev', 'page', 'clear', 'close', 'kapat', 'ileri', 'geri', 'temizle'
         ];
 
-        let tetikle = silmeSartlari.some(kelime => id.includes(kelime) || sinif.includes(kelime) || metin.includes(kelime));
+        // "sil" kelimesini sadece "hepsini_sil" veya "temizle" gibi durumlarda kabul et
+        let tamSilme = id.includes('clear-all') || id.includes('hepsini_sil') || metin.includes('hepsini sil');
+
+        let tetikle = tamSilme || silmeSartlari.some(kelime => id.includes(kelime) || sinif.includes(kelime) || metin.includes(kelime));
 
         if (tetikle) {
-            // PDF/Resim sayfa geçişinin tamamlanması için çok küçük bir süre tanıyıp temizliği yapar
             setTimeout(window.temizleLassoVeKopyalar, 50);
         }
     }
