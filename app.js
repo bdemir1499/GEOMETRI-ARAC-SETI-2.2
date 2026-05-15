@@ -1235,11 +1235,41 @@ else if (stroke.type === 'rectangle') {
         }
         
         ctx.restore();
+    } // <-- BURASI YENİ POLİGONAL LASSO BLOĞUNUN BİTİŞ PARANTEZİ
+
+
+    // --- HASSAS HEDEFLEME ÇAPRAZI (KESKİN NİŞANCI MODU) ---
+    // (Lasso seçiliyse ve parmak ekrana basılıysa her zaman çıkar)
+    if (currentTool === 'lasso' && window.isDraggingLassoPoint && typeof currentMousePos !== 'undefined' && currentMousePos) {
+        ctx.save();
+        ctx.beginPath();
+        // Ekranın bir ucundan diğer ucuna yatay ve dikey hizalama çizgileri
+        ctx.moveTo(0, currentMousePos.y);
+        ctx.lineTo(canvas.width, currentMousePos.y);
+        ctx.moveTo(currentMousePos.x, 0);
+        ctx.lineTo(currentMousePos.x, canvas.height);
+        
+        ctx.setLineDash([4, 4]); // Kesikli
+        
+        // Eğer başlangıç noktasına kilitlendiysek çapraz YEŞİL olsun
+        if (window.lassoIsClosing) {
+            ctx.strokeStyle = '#00FF00'; // Kilitlendi Yeşili
+        } else {
+            ctx.strokeStyle = 'rgba(255, 0, 255, 0.7)'; // Normal Pembe
+        }
+        
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Tam dokunduğun yere minik bir merkez noktası
+        ctx.beginPath();
+        ctx.arc(currentMousePos.x, currentMousePos.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = window.lassoIsClosing ? '#00FF00' : '#ff00ff';
+        ctx.fill();
+        ctx.restore(); 
     }
 
-
-} // <-- FONKSİYON BURADA KAPANIYOR
-
+} // <-- redrawAllStrokes FONKSİYONU BURADA TAMAMEN KAPANIYOR
 
 
 function processLassoCut() {
@@ -2201,46 +2231,15 @@ canvas.addEventListener('pointerdown', (e) => {
         lastDist = 0;
     }
 
-// pointerdown fonksiyonun içindeki ilgili yere ekle/değiştir:
 if (currentTool === 'lasso') {
     const pos = getPointerPos(e); 
+    window.isDraggingLassoPoint = true; // Sürükleme ve nişan alma başladı
+    currentMousePos = pos;
+    window.lassoIsClosing = false;
     
-    if (!isDrawingLasso) {
-        // 1. İLK TIKLAMA: Çizimi başlat ve ilk noktayı koy
-        isDrawingLasso = true;
-        lassoPoints = [{ x: pos.x, y: pos.y }];
-        currentMousePos = pos;
-        redrawAllStrokes();
-    } else {
-        // 2. SONRAKİ TIKLAMALAR: Başlangıç noktasına mı tıklandı kontrol et
-        let startPoint = lassoPoints[0];
-        const toleransScale = (typeof globalScale !== 'undefined' && globalScale > 0) ? globalScale : 1;
-        const kapanmaToleransi = 40 / toleransScale; // Başlangıç noktasına 40px yakınına tıklarsa kapat
-        
-        let mesafe = Math.hypot(pos.x - startPoint.x, pos.y - startPoint.y);
-        
-        if (mesafe < kapanmaToleransi) {
-            // A) BAŞLANGICA TIKLANDI: Şekli kapat ve kopyalamayı bitir
-            lassoPoints.push({ x: startPoint.x, y: startPoint.y });
-            isDrawingLasso = false;
-            currentMousePos = null;
-            
-            // ========================================================
-            // KOPYALAMA / KESME FONKSİYONUNU BURADA ÇAĞIRMALISIN
-            // Örneğin: if (window.LassoTool) window.LassoTool.crop(); 
-            // ========================================================
-            
-            redrawAllStrokes();
-        } else {
-            // B) BAŞKA YERE TIKLANDI: Şekle yeni bir köşe (nokta) ekle
-            lassoPoints.push({ x: pos.x, y: pos.y });
-            currentMousePos = pos;
-            redrawAllStrokes();
-        }
-    }
-    return; // Lasso modundayken tıklama ile diğer araçlar karışmasın diye durdur
+    redrawAllStrokes();
+    return; 
 }
-
  // --- BUNU EKLE: Parmağı ekrana değdiği an kaydet ---
     pointers.set(e.pointerId, e); 
     // ------------------------------------------------
@@ -2803,27 +2802,28 @@ canvas.addEventListener('pointermove', (e) => {
 
     if (previewActive) return; 
 
-    // --- 5. AKTİF ÇİZİM (KALEM / SİLGİ) ---
-    // Kritik Düzeltme: isDrawing kontrolünü buraya aldık ki yukarıdaki zoom/move çalışabilsin
-    if (!isDrawing && !(currentTool === 'lasso' && isDrawingLasso)) return;
-
-    // pointermove fonksiyonu içindeki lasso kısmını BUNUNLA DEĞİŞTİR:
-if (currentTool === 'lasso' && isDrawingLasso) {
-    currentMousePos = pos; // Sadece imlecin güncel konumunu al (önizleme çizgisi için)
-    redrawAllStrokes();    // Ekranı tazele
-    return;
-}
+    // --- 5. AKTİF ÇİZİM VE KESKİN NİŞANCI (LASSO) KONTROLÜ ---
+    
+    // 2. ADIM: LASSO İÇİN SÜRÜKLEME (POINTERMOVE) İŞLEMİ
+    if (currentTool === 'lasso') {
+        currentMousePos = pos; 
         
-        // --- YENİ EKLENEN KISIM (2. ADIM) ---
-        // Senin getPointerPos fonksiyonun zaten doğru koordinatı 'pos' içine veriyor,
-        // biz de doğrudan bu koordinatı lasso'nun son noktası olarak kaydediyoruz:
-        currentLassoX = pos.x;
-        currentLassoY = pos.y;
-        // ------------------------------------
+        // Sürüklerken hedef başlangıç noktasına yaklaştı mı kontrol et (Yeşil Işık İçin)
+        if (typeof isDrawingLasso !== 'undefined' && isDrawingLasso && typeof lassoPoints !== 'undefined' && lassoPoints.length > 0) {
+            let startPoint = lassoPoints[0];
+            const toleransScale = (typeof globalScale !== 'undefined' && globalScale > 0) ? globalScale : 1;
+            const kapanmaToleransi = 40 / toleransScale; 
+            let mesafe = Math.hypot(pos.x - startPoint.x, pos.y - startPoint.y);
+            
+            window.lassoIsClosing = (mesafe < kapanmaToleransi); // Yakınsa true olur
+        }
 
         redrawAllStrokes(); 
-        return;
+        return; // Lasso çalışırken alt kısımdaki kalem kodlarına inme
     }
+
+    // Diğer araçlar (Kalem / Silgi) eğer çizim yapılmıyorsa burada dursun
+    if (!isDrawing) return;
 
     if (currentTool === 'pen') {
         const pInfoMove = getPointerInfo(e);
@@ -3073,46 +3073,35 @@ if (currentTool === 'pen') {
     
     if (typeof snapIndicator !== 'undefined' && snapIndicator) snapIndicator.style.display = 'none';
 
-    // --- LASS0 (SERBEST KOPYALAMA) BİTİŞ KONTROLÜ (3. ADIM BURAYA EKLENİYOR) ---
+    // --- 3. ADIM: KESKİN NİŞANCI LASSO NOKTA KOYMA (POINTERUP) ---
     if (currentTool === 'lasso') {
+        if (!window.isDraggingLassoPoint) return;
+        window.isDraggingLassoPoint = false; // Nişan alma bitti, ateşe hazır
         
-        // EĞER LASSO ÇİZİMİ AKTİFSE VE YETERLİ NOKTA ÇİZİLDİYSE ŞEKLİ KAPATMAYA ÇALIŞ
-        if (isDrawingLasso && lassoPoints.length > 2) {
-            let startPoint = lassoPoints[0];
+        if (!isDrawingLasso) {
+            // 1. İLK NOKTAYI ŞİMDİ KOY
+            isDrawingLasso = true;
+            lassoPoints = [{ x: currentMousePos.x, y: currentMousePos.y }];
+        } else if (window.lassoIsClosing) {
+            // 2. ŞEKLİ KAPAT (Başlangıca gelindi)
+            lassoPoints.push({ x: lassoPoints[0].x, y: lassoPoints[0].y });
+            isDrawingLasso = false;
+            window.lassoIsClosing = false;
+            currentMousePos = null;
             
-            // globalScale tanımı senin uygulamanın yukarısında nerede tanımlıysa onu kullanıyor
-            // Eğer undefined hatası alırsan (typeof globalScale === 'undefined' ? 1 : globalScale) yapabilirsin.
-            const toleransScale = (typeof globalScale !== 'undefined' && globalScale > 0) ? globalScale : 1;
-            const kapanmaToleransi = 40 / toleransScale; 
-
-            // Eğer currentLassoX tanımlanmışsa (pointermove'da güncelleniyordu), mesafeyi ölç:
-            if (typeof currentLassoX !== 'undefined') {
-                let mesafe = Math.hypot(currentLassoX - startPoint.x, currentLassoY - startPoint.y);
-
-                // Eğer son nokta başlangıç noktasına yeterince yakınsa (mıknatıs etkisi)
-                if (mesafe < kapanmaToleransi) {
-                    
-                    // Son noktayı zorla başlangıç noktasına bağla (tam kapanma garantisi)
-                    lassoPoints.push({ x: startPoint.x, y: startPoint.y });
-                    
-                    // Çizim tamamlandı bayrağını indir
-                    isDrawingLasso = false;
-                    
-                    // NOT: Projende "lasso ile şekli kapattıktan sonra" çalışan
-                    // kırpma / snapshot alma fonksiyonun hangisiyse, burada onu çağırmalısın.
-                    // Örneğin: if (window.LassoTool) window.LassoTool.finalizeCut();
-                    // veya senin app.js içindeki lasso kırpma algoritman buraya gelecek.
-                }
-            }
+            // ========================================================
+            // KESME FONKSİYONUNU BURADA ÇAĞIRMALISIN
+            // Örneğin: if (window.LassoTool) window.LassoTool.crop(); 
+            // ========================================================
+        } else {
+            // 3. YENİ BİR KÖŞE DAHA EKLE
+            lassoPoints.push({ x: currentMousePos.x, y: currentMousePos.y });
         }
-
-        // --- 3. ADIM: LASSO İÇİN POINTERUP KONTROLÜ ---
-    if (currentTool === 'lasso') {
-        // Tıklama (parmak) ekrandan kalktığında HİÇBİR ŞEY YAPMA.
-        // Çünkü nokta koyma ve şekli kapatma işini artık pointerdown'da (tıklarken) yapıyoruz.
-        // currentMousePos'u null YAPMIYORUZ ki kesikli önizleme çizgisi kopmasın!
-        return; 
+        
+        redrawAllStrokes();
+        return;
     } else {
+        // Lasso dışında bir araçsa ekranı normal güncelle
         redrawAllStrokes();
     }
 
