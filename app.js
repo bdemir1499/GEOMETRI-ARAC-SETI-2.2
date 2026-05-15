@@ -19,6 +19,9 @@ const translations = {
     zh: { yukle: "上传文件", silgi: "橡皮", kalem: "笔", cizgi: "线", nokta: "点", d_cizgi: "直线", dogru: "直线", dogru_parcasi: "线段", isin: "射线", cetvel: "直尺", gonye: "三角板", aciolcer: "量角器", pergel: "圆规", cokgenler: "多边形", cember: "圆", d_ucgen: "三角形", d_dortgen: "正方形", dikdortgen: "长方形", d_besgen: "五边形", d_altigen: "六边形", d_yedigen: "七边形", d_sekizgen: "八边形", oyunlar: "游戏", arac_rengi: "颜色", geri_al: "撤销", hepsini_sil: "清除", tasi: "移动", canlandir: "动画", kutu: "框选", serbest: "自由", yardim: "帮助", ins_t: "安装应用", ins_d: "安装应用以获得更好性能。", ins_b: "安装", ins_c: "关闭", vid_cetvel: "尺子用法", vid_gonye: "三角板用法", vid_aciolcer: "量角器用法", vid_pergel: "圆规用法", vid_canlandir: "动画（复制）", vid_cizgi: "线条菜单用法", vid_cokgenler: "多边形", vid_kalem: "笔", vid_kitap: "加载书籍和图片", vid_oyunlar: "游戏" }
 };
 
+
+let currentLassoX = 0;
+let currentLassoY = 0;
 let isDrawingLasso = false;
 let lassoPoints = [];
 let drawnStrokes = [];
@@ -2802,8 +2805,17 @@ canvas.addEventListener('pointermove', (e) => {
     // Kritik Düzeltme: isDrawing kontrolünü buraya aldık ki yukarıdaki zoom/move çalışabilsin
     if (!isDrawing && !(currentTool === 'lasso' && isDrawingLasso)) return;
 
+    // DEĞİŞTİRECEĞİN VE EKLENTİ YAPACAĞIN KISIM BURASI:
     if (currentTool === 'lasso' && isDrawingLasso) {
         currentMousePos = pos;
+        
+        // --- YENİ EKLENEN KISIM (2. ADIM) ---
+        // Senin getPointerPos fonksiyonun zaten doğru koordinatı 'pos' içine veriyor,
+        // biz de doğrudan bu koordinatı lasso'nun son noktası olarak kaydediyoruz:
+        currentLassoX = pos.x;
+        currentLassoY = pos.y;
+        // ------------------------------------
+
         redrawAllStrokes(); 
         return;
     }
@@ -3056,15 +3068,48 @@ if (currentTool === 'pen') {
     
     if (typeof snapIndicator !== 'undefined' && snapIndicator) snapIndicator.style.display = 'none';
 
-// KRİTİK EKLEME: Parmak kalkınca son hareket noktasını sıfırla ki lasso kuyruğu havada kalmasın
+    // --- LASS0 (SERBEST KOPYALAMA) BİTİŞ KONTROLÜ (3. ADIM BURAYA EKLENİYOR) ---
     if (currentTool === 'lasso') {
+        
+        // EĞER LASSO ÇİZİMİ AKTİFSE VE YETERLİ NOKTA ÇİZİLDİYSE ŞEKLİ KAPATMAYA ÇALIŞ
+        if (isDrawingLasso && lassoPoints.length > 2) {
+            let startPoint = lassoPoints[0];
+            
+            // globalScale tanımı senin uygulamanın yukarısında nerede tanımlıysa onu kullanıyor
+            // Eğer undefined hatası alırsan (typeof globalScale === 'undefined' ? 1 : globalScale) yapabilirsin.
+            const toleransScale = (typeof globalScale !== 'undefined' && globalScale > 0) ? globalScale : 1;
+            const kapanmaToleransi = 40 / toleransScale; 
+
+            // Eğer currentLassoX tanımlanmışsa (pointermove'da güncelleniyordu), mesafeyi ölç:
+            if (typeof currentLassoX !== 'undefined') {
+                let mesafe = Math.hypot(currentLassoX - startPoint.x, currentLassoY - startPoint.y);
+
+                // Eğer son nokta başlangıç noktasına yeterince yakınsa (mıknatıs etkisi)
+                if (mesafe < kapanmaToleransi) {
+                    
+                    // Son noktayı zorla başlangıç noktasına bağla (tam kapanma garantisi)
+                    lassoPoints.push({ x: startPoint.x, y: startPoint.y });
+                    
+                    // Çizim tamamlandı bayrağını indir
+                    isDrawingLasso = false;
+                    
+                    // NOT: Projende "lasso ile şekli kapattıktan sonra" çalışan
+                    // kırpma / snapshot alma fonksiyonun hangisiyse, burada onu çağırmalısın.
+                    // Örneğin: if (window.LassoTool) window.LassoTool.finalizeCut();
+                    // veya senin app.js içindeki lasso kırpma algoritman buraya gelecek.
+                }
+            }
+        }
+
+        // KRİTİK EKLEME: Parmak kalkınca son hareket noktasını sıfırla ki lasso kuyruğu havada kalmasın
         currentMousePos = null; // Canlı uzayan çizgiyi kes
         redrawAllStrokes(); // Ekranı tazele, noktaları birbirine bağlı bırak
+        
     } else {
         redrawAllStrokes();
     }
 
-}, { passive: false });
+}, { passive: false }); // <--- TÜM FONKSİYON ŞİMDİ BURADA KAPANIYOR
 
 
 canvas.addEventListener('wheel', (e) => {
