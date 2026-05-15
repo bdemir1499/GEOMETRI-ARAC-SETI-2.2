@@ -1354,7 +1354,7 @@ function processLassoCut() {
     };
 
     // =======================================================
-    // 5. KESTİĞİNİZ KOPYAYI EKRANA GETİR
+    // 5. KESTİĞİNİZ KOPYAYI EKRANA GETİR VE OTOMATİK SEÇ
     // =======================================================
     const newImgStroke = {
         type: 'image',
@@ -1362,7 +1362,7 @@ function processLassoCut() {
         x: minX, y: minY,
         width: width, height: height,
         rotation: 0,
-        isBackground: false,
+        isBackground: false, // KRİTİK: Butonların çıkması için false olmalı
         imgObj: null 
     };
     
@@ -1374,11 +1374,15 @@ function processLassoCut() {
     };
     drawnStrokes.push(newImgStroke);
     
-    // --- BUTONLARIN ÇIKMASI İÇİN KRİTİK 2 SATIR ---
-    selectedItem = newImgStroke; // Yeni kestiğimiz parçayı anında seçiyoruz
-    isMoving = false;            // Sürükleme kilidini kapalı tutuyoruz (sadece butonlar çıksın)
+    // --- BURASI TABLETTEKİ BUTONLARI AKTİF EDER ---
+    selectedItem = newImgStroke; // Yeni kestiğimiz parçayı "seçili" yap
+    isMoving = false;            // Sürükleme kilidini aç
     
-    // Lasso hayalet çizgilerini tamamen temizle
+    // Aracı 'move' (Taşı) yap
+    if (typeof setActiveTool === 'function') setActiveTool('move');
+    else currentTool = 'move';
+    
+    // Lasso noktalarını sıfırla (Hayalet çizgileri silmek için)
     lassoPoints = [];
     isDrawingLasso = false;
 
@@ -2193,7 +2197,7 @@ canvas.addEventListener('pointerdown', (e) => {
         lastDist = 0;
     }
 
-// --- SERBEST KES (LASSO) - TABLET DOSTU GÜNCELLEME ---
+// --- SERBEST KES (LASSO) - TABLET VE TAHTA İÇİN KESİN ÇÖZÜM ---
     if (currentTool === 'lasso') {
         const pos = getPointerPos(e);
         
@@ -2202,23 +2206,22 @@ canvas.addEventListener('pointerdown', (e) => {
             lassoPoints = [pos];
         } else {
             const startPoint = lassoPoints[0];
-            // Başlangıç noktasına olan uzaklığı hesapla
             const dist = Math.hypot(pos.x - startPoint.x, pos.y - startPoint.y);
             
-            // Tablette parmakla dokunma hassasiyeti için 20 yerine 45 piksel kullanıyoruz
-            if (lassoPoints.length > 2 && dist < 45) { 
+            // TABLET İÇİN: Mesafe toleransını 50 piksele çıkardık (Parmak payı)
+            if (lassoPoints.length > 2 && dist < 50) { 
                 isDrawingLasso = false;
                 
-                // Kesme işlemini başlat
+                // Kesimi işle
                 processLassoCut(); 
                 
-                // Kesim biter bitmez noktaları temizle
+                // Noktaları temizle
                 lassoPoints = []; 
                 
-                // OTOMATİK MOD DEĞİŞİMİ: Kesim bittiği an 'move' moduna geç
+                // MODU ZORLA DEĞİŞTİR: Hemen Taşı/Canlandır moduna geç
                 currentTool = 'move'; 
                 
-                // Görsel olarak butonların aktifliğini güncelle
+                // Butonların aktiflik durumunu (görsel olarak) zorla güncelle
                 document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
                 const moveBtn = document.getElementById('btn-move');
                 if (moveBtn) moveBtn.classList.add('active');
@@ -2230,7 +2233,6 @@ canvas.addEventListener('pointerdown', (e) => {
         if (window.redrawAllStrokes) window.redrawAllStrokes();
         return; 
     }
-
     // --- BUNU EKLE: Parmağı ekrana değdiği an kaydet ---
     pointers.set(e.pointerId, e); 
     // ------------------------------------------------
