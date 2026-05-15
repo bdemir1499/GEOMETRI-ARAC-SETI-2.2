@@ -4462,6 +4462,18 @@ function setLanguage(lang) {
     const overlay = document.getElementById('language-overlay');
     if (overlay) overlay.style.display = 'none';
 
+// --- RUSÇA VE DİĞER UZUN DİLLER İÇİN MENÜ SIFIRLAMA ---
+    // Dil değişimi sırasında butonların taşmasından kaynaklanan otomatik açılmaları kapatır
+    const allOptions = document.querySelectorAll('.tool-options, .tool-options-right');
+    allOptions.forEach(opt => {
+        opt.classList.add('hidden'); // Tüm alt menüleri (çizgi, çokgen vb.) gizle
+    });
+
+    // Eğer aktif bir araç seçili kalmışsa onu temizle (isteğe bağlı)
+    // currentTool = null; 
+    
+    console.log("Menüler uzun kelime taşmasına karşı sıfırlandı.");
+
     // OYUN LİSTESİNİ YENİLE (Oyunlar menüsü açıksa isimler değişsin)
     if (typeof listeleOyunlar === 'function') listeleOyunlar();
 
