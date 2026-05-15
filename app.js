@@ -1353,7 +1353,7 @@ function processLassoCut() {
         if (window.redrawAllStrokes) window.redrawAllStrokes();
     };
 
-    // =======================================================
+   // =======================================================
     // 5. KESTİĞİNİZ KOPYAYI EKRANA GETİR VE OTOMATİK SEÇ
     // =======================================================
     const newImgStroke = {
