@@ -2,21 +2,31 @@
 let currentLang = 'tr'; // Varsayılan dil
 
 const translations = {
-    tr: { yukle: "Resim/Dosya Yükle", silgi: "Silgi", kalem: "Kalem", cizgi: "Çizgi", nokta: "Nokta", d_cizgi: "Düz Çizgi", dogru: "Doğru", dogru_parcasi: "Doğru Parçası", isin: "Işın", cetvel: "Cetvel", gonye: "Gönye", aciolcer: "Açı Ölçer", pergel: "Pergel", cokgenler: "Çokgenler", cember: "Çember", d_ucgen: "Düzgün 3gen", d_dortgen: "Düzgün 4gen", dikdortgen: "Dikdörtgen", d_besgen: "Düzgün 5gen", d_altigen: "Düzgün 6gen", d_yedigen: "Düzgün 7gen", d_sekizgen: "Düzgün 8gen", oyunlar: "Oyunlar", arac_rengi: "Araç Rengi", geri_al: "Geri Al", hepsini_sil: "Hepsini Sil", tasi: "Taşı", canlandir: "Canlandır ✂️", kutu: "Kutu", serbest: "Serbest", yardim: "Video Yardım", ins_t: "Uygulamayı Yükle", ins_d: "Daha iyi performans için uygulamayı yükle.", ins_b: "Yükle", ins_c: "Kapat", vid_cetvel: "Cetvel Kullanımı", vid_gonye: "Gönye Kullanımı", vid_aciolcer: "Açı Ölçer Kullanımı", vid_pergel: "Pergel Kullanımı", vid_canlandir: "Canlandırma (Kopyalama)", vid_cizgi: "Çizgi Menüsü Kullanımı", vid_cokgenler: "Çokgenler", vid_kalem: "Kalem", vid_kitap: "Kitap ve Resim Yükleme", vid_oyunlar: "Oyunlar" },
+    tr: { yukle: "Resim/Dosya Yükle", silgi: "Silgi", kalem: "Kalem", cizgi: "Çizgi", nokta: "Nokta", d_cizgi: "Düz Çizgi", dogru: "Doğru", dogru_parcasi: "Doğru Parçası", isin: "Işın", cetvel: "Cetvel", gonye: "Gönye", aciolcer: "Açı Ölçer", pergel: "Pergel", cokgenler: "Çokgenler", cember: "Çember", d_ucgen: "Düzgün 3gen", d_dortgen: "Düzgün 4gen", dikdortgen: "Dikdörtgen", d_besgen: "Düzgün 5gen", d_altigen: "Düzgün 6gen", d_yedigen: "Düzgün 7gen", d_sekizgen: "Düzgün 8gen", oyunlar: "Oyunlar", arac_rengi: "Araç Rengi", geri_al: "Geri Al", hepsini_sil: "Hepsini Sil", tasi: "Taşı", canlandir: "Canlandır ✂️", kutu: "Kutu", serbest: "Serbest", yardim: "Video Yardım", ins_t: "Uygulamayı Yükle", ins_d: "Daha iyi performans için uygulamayı yükle.", ins_b: "Yükle", ins_c: "Kapat", vid_cetvel: "Cetvel Kullanımı", vid_gonye: "Gönye Kullanımı", vid_aciolcer: "Açı Ölçer Kullanımı", vid_pergel: "Pergel Kullanımı", vid_canlandir: "Canlandırma (Kopyalama)", vid_cizgi: "Çizgi Menüsü Kullanımı", vid_cokgenler: "Çokgenler", vid_kalem: "Kalem", vid_kitap: "Kitap ve Resim Yükleme", vid_oyunlar: "Oyunlar", pdf_soru: "Bu PDF {0} sayfadır. Kaçıncı sayfadan devam etmek istersiniz?" },
     
-    en: { yukle: "Upload Image/PDF", silgi: "Eraser", kalem: "Pen", cizgi: "Line", nokta: "Point", d_cizgi: "Straight Line", dogru: "Line", dogru_parcasi: "Segment", isin: "Ray", cetvel: "Ruler", gonye: "Set Square", aciolcer: "Protractor", pergel: "Compass", cokgenler: "Polygons", cember: "Circle", d_ucgen: "Regular Triangle", d_dortgen: "Square", dikdortgen: "Rectangle", d_besgen: "Pentagon", d_altigen: "Hexagon", d_yedigen: "Heptagon", d_sekizgen: "Octagon", oyunlar: "Games", arac_rengi: "Tool Color", geri_al: "Undo", hepsini_sil: "Clear All", tasi: "Move", canlandir: "Animate ✂️", kutu: "Box", serbest: "Free", yardim: "Video Help", ins_t: "Install App", ins_d: "Install app for better performance.", ins_b: "Install", ins_c: "Close", vid_cetvel: "Ruler Usage", vid_gonye: "Set Square Usage", vid_aciolcer: "Protractor Usage", vid_pergel: "Compass Usage", vid_canlandir: "Animation (Copy)", vid_cizgi: "Line Menu Usage", vid_cokgenler: "Polygons", vid_kalem: "Pen", vid_kitap: "Load Book and Image", vid_oyunlar: "Games" },
+    en: { yukle: "Upload Image/PDF", silgi: "Eraser", kalem: "Pen", cizgi: "Line", nokta: "Point", d_cizgi: "Straight Line", dogru: "Line", dogru_parcasi: "Segment", isin: "Ray", cetvel: "Ruler", gonye: "Set Square", aciolcer: "Protractor", pergel: "Compass", cokgenler: "Polygons", cember: "Circle", d_ucgen: "Regular Triangle", d_dortgen: "Square", dikdortgen: "Rectangle", d_besgen: "Pentagon", d_altigen: "Hexagon", d_yedigen: "Heptagon", d_sekizgen: "Octagon", oyunlar: "Games", arac_rengi: "Tool Color", geri_al: "Undo", hepsini_sil: "Clear All", tasi: "Move", canlandir: "Animate ✂️", kutu: "Box", serbest: "Free", yardim: "Video Help", ins_t: "Install App", ins_d: "Install app for better performance.", ins_b: "Install", ins_c: "Close", vid_cetvel: "Ruler Usage", vid_gonye: "Set Square Usage", vid_aciolcer: "Protractor Usage", vid_pergel: "Compass Usage", vid_canlandir: "Animation (Copy)", vid_cizgi: "Line Menu Usage", vid_cokgenler: "Polygons", vid_kalem: "Pen", vid_kitap: "Load Book and Image", vid_oyunlar: "Games", pdf_soru: "This PDF has {0} pages. Which page would you like to continue from?" },
     
-    de: { yukle: "Bild/PDF hochladen", silgi: "Radierer", kalem: "Stift", cizgi: "Linie", nokta: "Punkt", d_cizgi: "Gerade", dogru: "Gerade", dogru_parcasi: "Strecke", isin: "Strahl", cetvel: "Lineal", gonye: "Geodreieck", aciolcer: "Winkelmesser", pergel: "Zirkel", cokgenler: "Polygone", cember: "Kreis", d_ucgen: "Dreieck", d_dortgen: "Quadrat", dikdortgen: "Rechteck", d_besgen: "Fünfeck", d_altigen: "Sechseck", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Spiele", arac_rengi: "Farbe", geri_al: "Rückgängig", hepsini_sil: "Löschen", tasi: "Bewegen", canlandir: "Animieren", kutu: "Box", serbest: "Frei", yardim: "Hilfe", ins_t: "App installieren", ins_d: "Installieren für bessere Leistung.", ins_b: "Installieren", ins_c: "Schließen", vid_cetvel: "Lineal verwenden", vid_gonye: "Geodreieck verwenden", vid_aciolcer: "Winkelmesser verwenden", vid_pergel: "Zirkel verwenden", vid_canlandir: "Animation (Kopieren)", vid_cizgi: "Linienmenü verwenden", vid_cokgenler: "Vielecke", vid_kalem: "Stift", vid_kitap: "Buch und Bild laden", vid_oyunlar: "Spiele" },
+    de: { yukle: "Bild/PDF hochladen", silgi: "Radierer", kalem: "Stift", cizgi: "Linie", nokta: "Punkt", d_cizgi: "Gerade", dogru: "Gerade", dogru_parcasi: "Strecke", isin: "Strahl", cetvel: "Lineal", gonye: "Geodreieck", aciolcer: "Winkelmesser", pergel: "Zirkel", cokgenler: "Polygone", cember: "Kreis", d_ucgen: "Dreieck", d_dortgen: "Quadrat", dikdortgen: "Rechteck", d_besgen: "Fünfeck", d_altigen: "Sechseck", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Spiele", arac_rengi: "Farbe", geri_al: "Rückgängig", hepsini_sil: "Löschen", tasi: "Bewegen", canlandir: "Animieren", kutu: "Box", serbest: "Frei", yardim: "Hilfe", ins_t: "App installieren", ins_d: "Installieren für bessere Leistung.", ins_b: "Installieren", ins_c: "Schließen", vid_cetvel: "Lineal verwenden", vid_gonye: "Geodreieck verwenden", vid_aciolcer: "Winkelmesser verwenden", vid_pergel: "Zirkel verwenden", vid_canlandir: "Animation (Kopieren)", vid_cizgi: "Linienmenü verwenden", vid_cokgenler: "Vielecke", vid_kalem: "Stift", vid_kitap: "Buch und Bild laden", vid_oyunlar: "Spiele", pdf_soru: "Dieses PDF hat {0} Seiten. Auf welcher Seite möchten Sie fortfahren?" },
     
-    ar: { yukle: "تحميل ملف", silgi: "ممحاة", kalem: "قلم", cizgi: "خط", nokta: "نقطة", d_cizgi: "خط مستقيم", dogru: "مستقيم", dogru_parcasi: "قطعة", isin: "شعاع", cetvel: "مسطرة", gonye: "مثلث", aciolcer: "منقلة", pergel: "فرجار", cokgenler: "مضلعات", cember: "دائرة", d_ucgen: "مثلث منتظم", d_dortgen: "مربع", dikdortgen: "مستطيل", d_besgen: "مخمس", d_altigen: "مسدس", d_yedigen: "مسبع", d_sekizgen: "مثمن", oyunlar: "ألعاب", arac_rengi: "اللون", geri_al: "تراجع", hepsini_sil: "مسح", tasi: "تحريك", canlandir: "تحريك", kutu: "صندوق", serbest: "حر", yardim: "مساعدة", ins_t: "تثبيت التطبيق", ins_d: "ثبت التطبيق لأداء أفضل.", ins_b: "تثبيت", ins_c: "إغلاق", vid_cetvel: "استخدام المسطرة", vid_gonye: "استخدام المثلث", vid_aciolcer: "استخدام المنقلة", vid_pergel: "استخدام الفرجار", vid_canlandir: "رسوم متحركة (نسخ)", vid_cizgi: "استخدام قائمة الخطوط", vid_cokgenler: "مضلعات", vid_kalem: "قلم", vid_kitap: "تحميل كتاب وصورة", vid_oyunlar: "ألعاب" },
+    ar: { yukle: "تحميل ملف", silgi: "ممحاة", kalem: "قلم", cizgi: "خط", nokta: "نقطة", d_cizgi: "خط مستقيم", dogru: "مستقيم", dogru_parcasi: "قطعة", isin: "شعاع", cetvel: "مسطرة", gonye: "مثلث", aciolcer: "منقلة", pergel: "فرجار", cokgenler: "مضلعات", cember: "دائرة", d_ucgen: "مثلث منتظم", d_dortgen: "مربع", dikdortgen: "مستطيل", d_besgen: "مخمس", d_altigen: "مسدس", d_yedigen: "مسبع", d_sekizgen: "مثمن", oyunlar: "ألعاب", arac_rengi: "اللون", geri_al: "تراجع", hepsini_sil: "مسح", tasi: "تحريك", canlandir: "تحريك", kutu: "صندوق", serbest: "حر", yardim: "مساعدة", ins_t: "تثبيت التطبيق", ins_d: "ثبت التطبيق لأداء أفضل.", ins_b: "تثبيت", ins_c: "إغلاق", vid_cetvel: "استخدام المسطرة", vid_gonye: "استخدام المثلث", vid_aciolcer: "استخدام المنقلة", vid_pergel: "استخدام الفرجار", vid_canlandir: "رسوم متحركة (نسخ)", vid_cizgi: "استخدام قائمة الخطوط", vid_cokgenler: "مضلعات", vid_kalem: "قلم", vid_kitap: "تحميل كتاب وصورة", vid_oyunlar: "ألعاب", pdf_soru: "يحتوي هذا الملف على {0} صفحة. من أي صفحة تريد المتابعة؟" },
     
-    hi: { yukle: "फ़ाइल अपलोड", silgi: "इरेज़र", kalem: "पेन", cizgi: "रेखा", nokta: "बिंदु", d_cizgi: "सीधी रेखा", dogru: "रेखा", dogru_parcasi: "खंड", isin: "किरण", cetvel: "पैमाना", gonye: "गुनिया", aciolcer: "चांदा", pergel: "परकार", cokgenler: "बहुभुज", cember: "वृत्त", d_ucgen: "त्रिभुज", d_dortgen: "वर्ग", dikdortgen: "आयत", d_besgen: "पंचभुज", d_altigen: "षट्भुज", d_yedigen: "सप्तभुज", d_sekizgen: "अष्टभुज", oyunlar: "खेल", arac_rengi: "रंग", geri_al: "पूर्ववत", hepsini_sil: "साफ़", tasi: "ले जाएँ", canlandir: "एनिमेट", kutu: "बॉक्स", serbest: "मुक्त", yardim: "सहायता", ins_t: "ऐप इंस्टॉल करें", ins_d: "बेहतर प्रदर्शन के लिए इंस्टॉल करें।", ins_b: "इंस्टॉल", ins_c: "बंद", vid_cetvel: "रूलर का उपयोग", vid_gonye: "सेट स्क्वायर का उपयोग", vid_aciolcer: "चांदा का उपयोग", vid_pergel: "परकार का उपयोग", vid_canlandir: "एनीमेशन (कॉपी)", vid_cizgi: "लाइन मेनू का उपयोग", vid_cokgenler: "बहुभुज", vid_kalem: "पेन", vid_kitap: "पुस्तक और छवि लोड करें", vid_oyunlar: "खेल" },
+    hi: { yukle: "फ़ाइल अपलोड", silgi: "इरेज़र", kalem: "पेन", cizgi: "रेखा", nokta: "बिंदु", d_cizgi: "सीधी रेखा", dogru: "रेखा", dogru_parcasi: "खंड", isin: "किरण", cetvel: "पैमाना", gonye: "गुनिया", aciolcer: "चांदा", pergel: "परकार", cokgenler: "बहुभुज", cember: "वृत्त", d_ucgen: "त्रिभुज", d_dortgen: "वर्ग", dikdortgen: "आयत", d_besgen: "पंचभुज", d_altigen: "षट्भुज", d_yedigen: "सप्तभुज", d_sekizgen: "अष्टभुज", oyunlar: "खेल", arac_rengi: "रंग", geri_al: "पूर्ववत", hepsini_sil: "साफ़", tasi: "ले जाएँ", canlandir: "एनिमेट", kutu: "बॉक्स", serbest: "मुक्त", yardim: "सहायता", ins_t: "ऐप इंस्टॉल करें", ins_d: "बेहतर प्रदर्शन के लिए इंस्टॉल करें।", ins_b: "इंस्टॉल", ins_c: "बंद", vid_cetvel: "रूलर का उपयोग", vid_gonye: "सेट स्क्वायर का उपयोग", vid_aciolcer: "चांदा का उपयोग", vid_pergel: "परकार का उपयोग", vid_canlandir: "एनीमेशन (कॉपी)", vid_cizgi: "लाइन मेनू का उपयोग", vid_cokgenler: "बहुभुज", vid_kalem: "पेन", vid_kitap: "पुस्तक और छवि लोड करें", vid_oyunlar: "खेल", pdf_soru: "इस PDF में {0} पृष्ठ हैं। आप किस पृष्ठ से जारी रखना चाहेंगे?" },
     
-    ms: { yukle: "Muat Naik Fail", silgi: "Pemadam", kalem: "Pen", cizgi: "Garis", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis", dogru_parcasi: "Segmen", isin: "Sinar", cetvel: "Pembaris", gonye: "Sesiku", aciolcer: "Jangka Sudut", pergel: "Jangka Lukis", cokgenler: "Poligon", cember: "Bulatan", d_ucgen: "Segi Tiga", d_dortgen: "Segi Empat", dikdortgen: "Segi Empat Tepat", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna", geri_al: "Batal", hepsini_sil: "Padam", tasi: "Gerak", canlandir: "Animasi", kutu: "Kotak", serbest: "Bebas", yardim: "Bantuan", ins_t: "Pasang Aplikasi", ins_d: "Pasang untuk prestasi lebih baik.", ins_b: "Pasang", ins_c: "Tutup", vid_cetvel: "Penggunaan Pembaris", vid_gonye: "Penggunaan Sesiku", vid_aciolcer: "Penggunaan Jangka Sudut", vid_pergel: "Penggunaan Jangka Lukis", vid_canlandir: "Animasi (Salin)", vid_cizgi: "Penggunaan Menu Garisan", vid_cokgenler: "Poligon", vid_kalem: "Pen", vid_kitap: "Muat Buku dan Imej", vid_oyunlar: "Permainan" },
+    ms: { yukle: "Muat Naik Fail", silgi: "Pemadam", kalem: "Pen", cizgi: "Garis", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis", dogru_parcasi: "Segmen", isin: "Sinar", cetvel: "Pembaris", gonye: "Sesiku", aciolcer: "Jangka Sudut", pergel: "Jangka Lukis", cokgenler: "Poligon", cember: "Bulatan", d_ucgen: "Segi Tiga", d_dortgen: "Segi Empat", dikdortgen: "Segi Empat Tepat", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna", geri_al: "Batal", hepsini_sil: "Padam", tasi: "Gerak", canlandir: "Animasi", kutu: "Kotak", serbest: "Bebas", yardim: "Bantuan", ins_t: "Pasang Aplikasi", ins_d: "Pasang untuk prestasi lebih baik.", ins_b: "Pasang", ins_c: "Tutup", vid_cetvel: "Penggunaan Pembaris", vid_gonye: "Penggunaan Sesiku", vid_aciolcer: "Penggunaan Jangka Sudut", vid_pergel: "Penggunaan Jangka Lukis", vid_canlandir: "Animasi (Salin)", vid_cizgi: "Penggunaan Menu Garisan", vid_cokgenler: "Poligon", vid_kalem: "Pen", vid_kitap: "Muat Buku dan Imej", vid_oyunlar: "Permainan", pdf_soru: "PDF ini mempunyai {0} halaman. Dari halaman mana anda ingin teruskan?" },
     
-    id: { yukle: "Unggah Berkas", silgi: "Penghapus", kalem: "Pena", cizgi: "Garis", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis", dogru_parcasi: "Segmen", isin: "Sinar", cetvel: "Penggaris", gonye: "Segitiga", aciolcer: "Busur", pergel: "Jangka", cokgenler: "Poligon", cember: "Lingkaran", d_ucgen: "Segitiga", d_dortgen: "Persegi", dikdortgen: "Persegi Panjang", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna", geri_al: "Urung", hepsini_sil: "Hapus", tasi: "Pindah", canlandir: "Animasi", kutu: "Kotak", serbest: "Bebas", yardim: "Bantuan", ins_t: "Instal Aplikasi", ins_d: "Instal untuk performa lebih baik.", ins_b: "Instal", ins_c: "Tutup", vid_cetvel: "Penggunaan Penggaris", vid_gonye: "Penggunaan Penggaris Segitiga", vid_aciolcer: "Penggunaan Busur Derajat", vid_pergel: "Penggunaan Jangka", vid_canlandir: "Animasi (Salin)", vid_cizgi: "Penggunaan Menu Garis", vid_cokgenler: "Poligon", vid_kalem: "Pena", vid_kitap: "Muat Buku dan Gambar", vid_oyunlar: "Permainan" },
+    id: { yukle: "Unggah Berkas", silgi: "Penghapus", kalem: "Pena", cizgi: "Garis", nokta: "Titik", d_cizgi: "Garis Lurus", dogru: "Garis", dogru_parcasi: "Segmen", isin: "Sinar", cetvel: "Penggaris", gonye: "Segitiga", aciolcer: "Busur", pergel: "Jangka", cokgenler: "Poligon", cember: "Lingkaran", d_ucgen: "Segitiga", d_dortgen: "Persegi", dikdortgen: "Persegi Panjang", d_besgen: "Pentagon", d_altigen: "Heksagon", d_yedigen: "Heptagon", d_sekizgen: "Oktagon", oyunlar: "Permainan", arac_rengi: "Warna", geri_al: "Urung", hepsini_sil: "Hapus", tasi: "Pindah", canlandir: "Animasi", kutu: "Kotak", serbest: "Bebas", yardim: "Bantuan", ins_t: "Instal Aplikasi", ins_d: "Instal untuk performa lebih baik.", ins_b: "Instal", ins_c: "Tutup", vid_cetvel: "Penggunaan Penggaris", vid_gonye: "Penggunaan Penggaris Segitiga", vid_aciolcer: "Penggunaan Busur Derajat", vid_pergel: "Penggunaan Jangka", vid_canlandir: "Animasi (Salin)", vid_cizgi: "Penggunaan Menu Garis", vid_cokgenler: "Poligon", vid_kalem: "Pena", vid_kitap: "Muat Buku dan Gambar", vid_oyunlar: "Permainan", pdf_soru: "PDF ini memiliki {0} halaman. Dari halaman mana Anda ingin melanjutkan?" },
     
-    zh: { yukle: "上传文件", silgi: "橡皮", kalem: "笔", cizgi: "线", nokta: "点", d_cizgi: "直线", dogru: "直线", dogru_parcasi: "线段", isin: "射线", cetvel: "直尺", gonye: "三角板", aciolcer: "量角器", pergel: "圆规", cokgenler: "多边形", cember: "圆", d_ucgen: "三角形", d_dortgen: "正方形", dikdortgen: "长方形", d_besgen: "五边形", d_altigen: "六边形", d_yedigen: "七边形", d_sekizgen: "八边形", oyunlar: "游戏", arac_rengi: "颜色", geri_al: "撤销", hepsini_sil: "清除", tasi: "移动", canlandir: "动画", kutu: "框选", serbest: "自由", yardim: "帮助", ins_t: "安装应用", ins_d: "安装应用以获得更好性能。", ins_b: "安装", ins_c: "关闭", vid_cetvel: "尺子用法", vid_gonye: "三角板用法", vid_aciolcer: "量角器用法", vid_pergel: "圆规用法", vid_canlandir: "动画（复制）", vid_cizgi: "线条菜单用法", vid_cokgenler: "多边形", vid_kalem: "笔", vid_kitap: "加载书籍和图片", vid_oyunlar: "游戏" }
+    zh: { yukle: "上传文件", silgi: "橡皮", kalem: "笔", cizgi: "线", nokta: "点", d_cizgi: "直线", dogru: "直线", dogru_parcasi: "线段", isin: "射线", cetvel: "直尺", gonye: "三角板", aciolcer: "量角器", pergel: "圆规", cokgenler: "多边形", cember: "圆", d_ucgen: "三角形", d_dortgen: "正方形", dikdortgen: "长方形", d_besgen: "五边形", d_altigen: "六边形", d_yedigen: "七边形", d_sekizgen: "八边形", oyunlar: "游戏", arac_rengi: "颜色", geri_al: "撤销", hepsini_sil: "清除", tasi: "移动", canlandir: "动画", kutu: "框选", serbest: "自由", yardim: "帮助", ins_t: "安装应用", ins_d: "安装应用以获得更好性能。", ins_b: "安装", ins_c: "关闭", vid_cetvel: "尺子用法", vid_gonye: "三角板用法", vid_aciolcer: "量角器用法", vid_pergel: "圆规用法", vid_canlandir: "动画（复制）", vid_cizgi: "线条菜单用法", vid_cokgenler: "多边形", vid_kalem: "笔", vid_kitap: "加载书籍和图片", vid_oyunlar: "游戏", pdf_soru: "此 PDF 共有 {0} 页。您想从哪一页开始继续？" },
+
+    ru: { yukle: "Загрузить файл", silgi: "Ластик", kalem: "Ручка", cizgi: "Линия", nokta: "Точка", d_cizgi: "Прямая линия", dogru: "Прямая", dogru_parcasi: "Отрезок", isin: "Луч", cetvel: "Линейка", gonye: "Угольник", aciolcer: "Транспортир", pergel: "Циркуль", cokgenler: "Многоугольники", cember: "Круг", d_ucgen: "Правильный треугольник", d_dortgen: "Квадрат", dikdortgen: "Прямоугольник", d_besgen: "Пятиугольник", d_altigen: "Шестиугольник", d_yedigen: "Семиугольник", d_sekizgen: "Восьмиугольник", oyunlar: "Игры", arac_rengi: "Цвет инструмента", geri_al: "Отменить", hepsini_sil: "Очистить всё", tasi: "Переместить", canlandir: "Анимация ✂️", kutu: "Коробка", serbest: "Свободно", yardim: "Справка", ins_t: "Установить", ins_d: "Установите для лучшей работы.", ins_b: "Установить", ins_c: "Закрыть", vid_cetvel: "Как использовать линейку", vid_gonye: "Как использовать угольник", vid_aciolcer: "Как использовать транспортир", vid_pergel: "Как использовать циркуль", vid_canlandir: "Анимация (Копия)", vid_cizgi: "Меню линий", vid_cokgenler: "Многоугольники", vid_kalem: "Ручка", vid_kitap: "Загрузка книг", vid_oyunlar: "Игры", pdf_soru: "В этом PDF {0} страниц. С какой страницы вы хотите продолжить?" },
+
+    es: { yukle: "Subir Archivo", silgi: "Borrador", kalem: "Lápiz", cizgi: "Línea", nokta: "Punto", d_cizgi: "Línea Recta", dogru: "Recta", dogru_parcasi: "Segmento", isin: "Rayo", cetvel: "Regla", gonye: "Escuadra", aciolcer: "Transportador", pergel: "Compás", cokgenler: "Polígonos", cember: "Círculo", d_ucgen: "Triángulo", d_dortgen: "Cuadrado", dikdortgen: "Rectángulo", d_besgen: "Pentágono", d_altigen: "Hexágono", d_yedigen: "Heptágono", d_sekizgen: "Octágono", oyunlar: "Juegos", arac_rengi: "Color", geri_al: "Deshacer", hepsini_sil: "Borrar Todo", tasi: "Mover", canlandir: "Animar ✂️", kutu: "Caja", serbest: "Libre", yardim: "Ayuda", ins_t: "Instalar App", ins_d: "Instalar para mejor rendimiento.", ins_b: "Instalar", ins_c: "Cerrar", vid_cetvel: "Uso de Regla", vid_gonye: "Uso de Escuadra", vid_aciolcer: "Uso de Transportador", vid_pergel: "Uso de Compás", vid_canlandir: "Animación (Copiar)", vid_cizgi: "Menú de Líneas", vid_cokgenler: "Polígonos", vid_kalem: "Lápiz", vid_kitap: "Cargar Libro", vid_oyunlar: "Juegos", pdf_soru: "Este PDF tiene {0} páginas. ¿Desde qué página te gustaría continuar?" },
+
+    fr: { yukle: "Télécharger", silgi: "Gomme", kalem: "Stylo", cizgi: "Ligne", nokta: "Point", d_cizgi: "Ligne Droite", dogru: "Droite", dogru_parcasi: "Segment", isin: "Demi-droite", cetvel: "Règle", gonye: "Équerre", aciolcer: "Rapporteur", pergel: "Compas", cokgenler: "Polygones", cember: "Cercle", d_ucgen: "Triangle", d_dortgen: "Carré", dikdortgen: "Rectangle", d_besgen: "Pentagone", d_altigen: "Hexagone", d_yedigen: "Heptagone", d_sekizgen: "Octogone", oyunlar: "Jeux", arac_rengi: "Couleur", geri_al: "Annuler", hepsini_sil: "Effacer Tout", tasi: "Déplacer", canlandir: "Animer ✂️", kutu: "Boîte", serbest: "Libre", yardim: "Aide", ins_t: "Installer App", ins_d: "Installez pour de meilleures performances.", ins_b: "Installer", ins_c: "Fermer", vid_cetvel: "Utilisation de la Règle", vid_gonye: "Utilisation de l'Équerre", vid_aciolcer: "Utilisation du Rapporteur", vid_pergel: "Utilisation du Compas", vid_canlandir: "Animation (Copie)", vid_cizgi: "Menu des Lignes", vid_cokgenler: "Polygones", vid_kalem: "Stylo", vid_kitap: "Charger Livre", vid_oyunlar: "Jeux", pdf_soru: "Ce PDF contient {0} pages. À partir de quelle page voulez-vous continuer ?" },
+
+    pt: { yukle: "Carregar Ficheiro", silgi: "Borracha", kalem: "Caneta", cizgi: "Linha", nokta: "Ponto", d_cizgi: "Linha Reta", dogru: "Reta", dogru_parcasi: "Segmento", isin: "Semirreta", cetvel: "Régua", gonye: "Esquadro", aciolcer: "Transferidor", pergel: "Compasso", cokgenler: "Polígonos", cember: "Círculo", d_ucgen: "Triângulo", d_dortgen: "Quadrado", dikdortgen: "Retângulo", d_besgen: "Pentágono", d_altigen: "Hexágono", d_yedigen: "Heptágono", d_sekizgen: "Octógono", oyunlar: "Jogos", arac_rengi: "Cor", geri_al: "Desfazer", hepsini_sil: "Apagar Tudo", tasi: "Mover", canlandir: "Animar ✂️", kutu: "Caixa", serbest: "Livre", yardim: "Ajuda", ins_t: "Instalar App", ins_d: "Instale para melhor desempenho.", ins_b: "Instalar", ins_c: "Fechar", vid_cetvel: "Uso da Régua", vid_gonye: "Uso do Esquadro", vid_aciolcer: "Uso do Transferidor", vid_pergel: "Uso do Compasso", vid_canlandir: "Animação (Cópia)", vid_cizgi: "Menu de Linhas", vid_cokgenler: "Polígonos", vid_kalem: "Caneta", vid_kitap: "Carregar Livro", vid_oyunlar: "Jogos", pdf_soru: "Este PDF tem {0} páginas. A partir de qual página gostaria de continuar?" },
+
+    ja: { yukle: "アップロード", silgi: "消しゴム", kalem: "ペン", cizgi: "線", nokta: "点", d_cizgi: "直線", dogru: "直線", dogru_parcasi: "線分", isin: "半直線", cetvel: "定規", gonye: "三角定規", aciolcer: "分度器", pergel: "コンパス", cokgenler: "多角形", cember: "円", d_ucgen: "正三角形", d_dortgen: "正方形", dikdortgen: "長方形", d_besgen: "五角形", d_altigen: "六角形", d_yedigen: "七角形", d_sekizgen: "八角形", oyunlar: "ゲーム", arac_rengi: "ツールの色", geri_al: "元に戻す", hepsini_sil: "すべて消去", tasi: "移動", canlandir: "アニメ ✂️", kutu: "ボックス", serbest: "自由", yardim: "ヘルプ", ins_t: "アプリをインストール", ins_d: "パフォーマンス向上のためインストール", ins_b: "インストール", ins_c: "閉じる", vid_cetvel: "定規の使い方", vid_gonye: "三角定規の使い方", vid_aciolcer: "分度器の使い方", vid_pergel: "コンパスの使い方", vid_canlandir: "アニメーション (コピー)", vid_cizgi: "線メニューの使い方", vid_cokgenler: "多角形", vid_kalem: "ペン", vid_kitap: "本と画像を読み込む", vid_oyunlar: "ゲーム", pdf_soru: "このPDFは{0}ページあります。どのページから続行しますか？" }
 };
 
 
@@ -42,7 +52,7 @@ let initialHeight = 0;
 let isPenActive = false; // Avuç içi reddi için
 let penActiveTimer = null;
 
-// --- ÇOK DİLLİ OYUNLAR LİSTESİ ---
+// --- ÇOK DİLLİ OYUNLAR LİSTESİ (TÜM DİLLER GÜNCELLENDİ) ---
 window.OyunListesi = [
     {
         tr: "ÇEMBERLERDEN ÜÇGEN İNŞASI",
@@ -53,6 +63,11 @@ window.OyunListesi = [
         ms: "PEMBINAAN SEGI TIGA DARIPADA BULATAN",
         id: "KONSTRUKSI SEGITIGA DARI LINGKARAN",
         zh: "从圆构建三角形",
+        ru: "ПОСТРОЕНИЕ ТРЕУГОЛЬНИКА ИЗ ОКРУЖНОСТЕЙ",
+        es: "CONSTRUCCIÓN DE TRIÁNGULOS DESDE CÍRCULOS",
+        fr: "CONSTRUCTION DE TRIANGLES À PARTIR DE CERCLES",
+        pt: "CONSTRUÇÃO DE TRIÂNGULOS A PARTIR DE CÍRCULOS",
+        ja: "円からの三角形の構築",
         link: "https://bekrmatmt25.my.canva.site/cemberden-ucgen-elde-etme"
     },
     {
@@ -64,6 +79,11 @@ window.OyunListesi = [
         ms: "PERMAINAN PENEMPATAN JANGKA SUDUT",
         id: "PERMAINAN PENEMPATAN BUSUR DERAJAT",
         zh: "量角器放置游戏",
+        ru: "ИГРА НА РАЗМЕЩЕНИЕ ТРАНСПОРТИРА",
+        es: "JUEGO DE COLOCACIÓN DEL TRANSPORTADOR",
+        fr: "JEU DE PLACEMENT DU RAPPORTEUR",
+        pt: "JOGO DE COLOCAÇÃO DO TRANSFERIDOR",
+        ja: "分度器配置ゲーム",
         link: "https://bekrmatmt2507.my.canva.site/a-l-er-yar-mas"
     },
     {
@@ -75,6 +95,11 @@ window.OyunListesi = [
         ms: "SERENJANG DARI TITIK LUAR",
         id: "TEGAK LURUS DARI TITIK LUAR",
         zh: "从外部点画垂线",
+        ru: "ПЕРПЕНДИКУЛЯР ИЗ ВНЕШНЕЙ ТОЧКИ",
+        es: "PERPENDICULAR DESDE UN PUNTO EXTERNO",
+        fr: "PERPENDICULAIRE À PARTIR D'UN POINT EXTERNE",
+        pt: "PERPENDICULAR A PARTIR DE UM PONTO EXTERNO",
+        ja: "外部の点からの垂線",
         link: "https://bekrmatmt25.my.canva.site/dogruya-disindeki-noktadan-dikme-cizmek"
     },
     {
@@ -86,6 +111,11 @@ window.OyunListesi = [
         ms: "PERJALANAN DUA GARIS DALAM SATAH YANG SAMA",
         id: "PERJALANAN DUA GARIS DALAM BIDANG YANG SAMA",
         zh: "同一平面内两条线的旅程",
+        ru: "ПУТЕШЕСТВИЕ ДВУХ ЛИНИЙ В ОДНОЙ ПЛОСКОСТИ",
+        es: "EL VIAJE DE DOS LÍNEAS EN EL MISMO PLANO",
+        fr: "LE VOYAGE DE DEUX LIGNES DANS LE MÊME PLAN",
+        pt: "A JORNADA DE DUAS LINHAS NO MESMO PLANO",
+        ja: "同一平面上の2本の線の旅",
         link: "https://bdemir1499.github.io/ayni-duzlemde-iki-dogru/"
     },
     {
@@ -97,6 +127,11 @@ window.OyunListesi = [
         ms: "KEDUDUKAN 3 GARIS DALAM SATAH YANG SAMA",
         id: "POSISI 3 GARIS DALAM BIDANG YANG SAMA",
         zh: "同一平面内3条线的位置",
+        ru: "ПОЛОЖЕНИЯ 3 ЛИНИЙ В ОДНОЙ ПЛОСКОСТИ",
+        es: "POSICIONES DE 3 LÍNEAS EN EL MISMO PLANO",
+        fr: "POSITIONS DE 3 LIGNES DANS LE MÊME PLAN",
+        pt: "POSIÇÕES DE 3 LINHAS NO MESMO PLANO",
+        ja: "同一平面上の3本の線の位置",
         link: "https://bekrmatmt2507.my.canva.site/ayniduzlemdeucdogrunundurumlari"
     },
     {
@@ -108,6 +143,11 @@ window.OyunListesi = [
         ms: "JENIS SUDUT (PELENGKAP/PENGGENAP/BERSEBELAH)",
         id: "JENIS SUDUT (BERPELURUS/BERPENYIKU/BERDAMPINGAN)",
         zh: "角的类型（余角/补角/邻角）",
+        ru: "ТИПЫ УГЛОВ (ДОПОЛНИТЕЛЬНЫЕ/СМЕЖНЫЕ)",
+        es: "TIPOS DE ÁNGULOS (COMPLEMENTARIOS/SUPLEMENTARIOS/ADYACENTES)",
+        fr: "TYPES D'ANGLES (COMPLÉMENTAIRES/SUPPLÉMENTAIRES/ADJACENTS)",
+        pt: "TIPOS DE ÂNGULOS (COMPLEMENTARES/SUPLEMENTARES/ADJACENTES)",
+        ja: "角のタイプ（余角/補角/隣接角）",
         link: "https://bdemir1499.github.io/tumler-butunler-komsutumler-komsubutunler/"
     },
     {
@@ -119,6 +159,11 @@ window.OyunListesi = [
         ms: "SEGI TIGA MENGIKUT SUDUT",
         id: "SEGITIGA BERDASARKAN SUDUTNYA",
         zh: "按角分类的三角形",
+        ru: "ТРЕУГОЛЬНИКИ ПО ТИПАМ УГЛОВ",
+        es: "TRIÁNGULOS SEGÚN SUS ÁNGULOS",
+        fr: "TRIANGLES SELON LEURS ANGLES",
+        pt: "TRIÂNGULOS DE ACORDO COM SEUS ÂNGULOS",
+        ja: "角による三角形の分類",
         link: "https://bekrmatmt25.my.canva.site/acilarina-gire-ucgenler"
     },
     {
@@ -130,6 +175,11 @@ window.OyunListesi = [
         ms: "JENIS SUDUT (TIRUS, TEGAK, CAWAK dsb.)",
         id: "JENIS SUDUT (LANCIP, SIKU, TUMPUL dll.)",
         zh: "角的类型（锐角、直角、钝角等）",
+        ru: "ВИДЫ УГЛОВ (ОСТРЫЙ, ПРЯМОЙ, ТУПОЙ и т.д.)",
+        es: "TIPOS DE ÁNGULOS (AGUDO, RECTO, OBTUSO, etc.)",
+        fr: "TYPES D'ANGLES (AIGU, DROIT, OBTUS, etc.)",
+        pt: "TIPOS DE ÂNGULOS (AGUDO, RETO, OBTUSO, etc.)",
+        ja: "角のタイプ（鋭角、直角、鈍角など）",
         link: "https://bekrmatmt2507.my.canva.site/aci-cesitleri"
     },
     {
@@ -141,6 +191,11 @@ window.OyunListesi = [
         ms: "BENTUK GEOMETRI ASAS",
         id: "BENTUK GEOMETRIS DASAR",
         zh: "基本几何图形",
+        ru: "ОСНОВНЫЕ ГЕОМЕТРИЧЕСКИЕ ФИГУРЫ",
+        es: "FORMAS GEOMÉTRICAS BÁSICAS",
+        fr: "FORMES GÉOMÉTRIQUES DE BASE",
+        pt: "FORMAS GEOMÉTRICAS BÁSICAS",
+        ja: "基本的な幾何学図形",
         link: "https://bekrmatmt25.my.canva.site/temel-geometrik-sekiller"
     },
     {
@@ -152,6 +207,11 @@ window.OyunListesi = [
         ms: "ELEMEN POLIGON",
         id: "UNSUR-UNSUR POLIGON",
         zh: "多边形的要素",
+        ru: "ЭЛЕМЕНТЫ МНОГОУГОЛЬНИКОВ",
+        es: "ELEMENTOS DE LOS POLÍGONOS",
+        fr: "ÉLÉMENTS DES POLYGONES",
+        pt: "ELEMENTOS DOS POLÍGONOS",
+        ja: "多角形の要素",
         link: "https://bekrmatmt2507.my.canva.site/cokgenlerin-elemanlari"
     },
     {
@@ -159,10 +219,15 @@ window.OyunListesi = [
         en: "ANGLES FORMED BY TWO PARALLELS AND A TRANSVERSAL (1)",
         de: "WINKEL AN PARALLELEN UND SCHNEIDENDEN LINIEN (1)",
         ar: "الزوايا الناتجة عن متوازيين وقاطع (1)",
-        hi: "दो समांतर रेखाओं और एक तिर्यक रेखा द्वारा बने कोण (1)",
+        hi: "दो समांतर रेखाओं और bir तिर्यक रेखा द्वारा बने कोण (1)",
         ms: "SUDUT YANG DIBENTUK OLEH DUA GARIS SELARI DAN KERENTAS (1)",
         id: "SUDUT YANG DIBENTUK OLEH DUA GARIS SEJAJAR DAN TRANSVERSAL (1)",
         zh: "两条平行线和一条截线形成的角 (1)",
+        ru: "УГЛЫ ПРИ ПАРАЛЛЕЛЬНЫХ И СЕКУЩЕЙ (1)",
+        es: "ÁNGULOS ENTRE DOS PARALELAS Y UNA TRANSVERSAL (1)",
+        fr: "ANGLES FORMÉS PAR DEUX PARALLÈLES ET UNE TRANSVERSALE (1)",
+        pt: "ÂNGULOS FORMADOS POR DUAS PARALELAS E UMA TRANSVERSAL (1)",
+        ja: "2本の平行線と1本の横断線によって形成される角 (1)",
         link: "https://bekrmatmt25.my.canva.site/k-paralel-dogrunun-b-r-kesenle-yapt-g-ac-lar"
     },
     {
@@ -174,6 +239,11 @@ window.OyunListesi = [
         ms: "PERSILANGAN TIGA GARIS SECARA BERPASANGAN",
         id: "PERPOTONGAN TIGA GARIS BERPASANGAN",
         zh: "三条线两两相交",
+        ru: "ПОПАРНОЕ ПЕРЕСЕЧЕНИЕ ТРЕХ ПРЯМЫХ",
+        es: "INTERSECCIÓN DE TRES LÍNEAS EN PARES",
+        fr: "INTERSECTION DE TROIS LIGNES PAR PAIRES",
+        pt: "INTERSEÇÃO DE TRÊS LINHAS EM PARES",
+        ja: "3本の線のペアごとの交差",
         link: "https://bekrmatmt2507.my.canva.site/ikiser-kesisen-dogru"
     },
     {
@@ -185,6 +255,11 @@ window.OyunListesi = [
         ms: "PERIMETER DAN LUAS SEGI EMPAT TEPAT",
         id: "KELILING DAN LUAS PERSEGI PANJANG",
         zh: "长方形的周长和面积",
+        ru: "ПЕРИМЕТР И ПЛОЩАДЬ ПРЯМОУГОЛЬНИКА",
+        es: "PERÍMETRO Y ÁREA DEL RECTÁNGULO",
+        fr: "PÉRIMÈTRE ET AIRE DU RECTANGLE",
+        pt: "PERÍMETRO E ÁREA DO RETÂNGULO",
+        ja: "長方形の周囲と面積",
         link: "https://bdemir1499.github.io/dikdortgen-cevre-ve-alan/"
     },
     {
@@ -196,6 +271,11 @@ window.OyunListesi = [
         ms: "SIFAT-SIFAT SISI EMPAT (INDUKSI)",
         id: "SIFAT-SIFAT SEGI EMPAT (INDUKSI)",
         zh: "四边形的属性（归纳法）",
+        ru: "СВОЙСТВА ЧЕТЫРЕХУГОЛЬНИКОВ (ИНДУКЦИЯ)",
+        es: "PROPIEDADES DE LOS CUADRILÁTEROS (INDUCCIÓN)",
+        fr: "PROPRIÉTÉS DES QUADRILATÈRES (INDUCTION)",
+        pt: "PROPRIEDADES DOS QUADRILÁTEROS (INDUÇÃO)",
+        ja: "四角形の性質（帰納法）",
         link: "https://bekrmatmt25.my.canva.site/dortgenler-ve-ozellikleri-tumevarim"
     },
     {
@@ -207,6 +287,11 @@ window.OyunListesi = [
         ms: "SIFAT-SIFAT SISI EMPAT (DEDUKSI)",
         id: "SIFAT-SIFAT SEGI EMPAT (DEDUKSI)",
         zh: "四边形的属性（演绎法）",
+        ru: "СВОЙСТВА ЧЕТЫРЕХУГОЛЬНИКОВ (ДЕДУКЦИЯ)",
+        es: "PROPIEDADES DE LOS CUADRILÁTEROS (DEDUCCIÓN)",
+        fr: "PROPRIÉTÉS DES QUADRILATÈRES (DÉDUCTION)",
+        pt: "PROPRIEDADES DOS QUADRILÁTEROS (DEDUÇÃO)",
+        ja: "四角形の性質（演繹法）",
         link: "https://bdemir1499.github.io/dortgen-ve-ozellikleri-tumdengelim/"
     },
     {
@@ -218,6 +303,11 @@ window.OyunListesi = [
         ms: "SUDUT YANG DIBENTUK OLEH DUA GARIS SELARI DAN KERENTAS (2)",
         id: "SUDUT YANG DIBENTUK OLEH DUA GARIS SEJAJAR DAN TRANSVERSAL (2)",
         zh: "两条平行线和一条截线形成的角 (2)",
+        ru: "УГЛЫ ПРИ ПАРАЛЛЕЛЬНЫХ И СЕКУЩЕЙ (2)",
+        es: "ÁNGULOS ENTRE DOS PARALELAS Y UNA TRANSVERSAL (2)",
+        fr: "ANGLES FORMÉS PAR DEUX PARALLÈLES ET UNE TRANSVERSALE (2)",
+        pt: "ÂNGULOS FORMADOS POR DUAS PARALELAS E UMA TRANSVERSAL (2)",
+        ja: "2本の平行線と1本の横断線によって形成される角 (2)",
         link: "https://bekrmatmt25.my.canva.site/iki-paralel-dogrunun-bir-kesenle-yapt-g-ac-lar"
     },
     {
@@ -229,6 +319,11 @@ window.OyunListesi = [
         ms: "GEOMETRI TRANSFORMASI (TRANSLASI/PANTULAN)",
         id: "GEOMETRI TRANSFORMASI (TRANSLASI/REFLEKSI)",
         zh: "变换几何（平移/反射）",
+        ru: "ГЕОМЕТРИЯ ПРЕОБРАЗОВАНИЙ (ПЕРЕНОС/ОТРАЖЕНИЕ)",
+        es: "GEOMETRÍA DE TRANSFORMACIÓN (TRASLACIÓN/REFLEXIÓN)",
+        fr: "GÉOMÉTRIE DE TRANSFORMATION (TRANSLATION/RÉFLEXION)",
+        pt: "GEOMETRIA DE TRANSFORMAÇÃO (TRANSLAÇÃO/REFLEXÃO)",
+        ja: "変換幾何学（平移/反射）",
         link: "https://bekrmatmt25.my.canva.site/oteleme-ve-yansima"
     },
     {
@@ -240,6 +335,11 @@ window.OyunListesi = [
         ms: "PETA KONSEP JENIS SISI EMPAT",
         id: "PETA KONSEP JENIS SEGI EMPAT",
         zh: "四边形类型概念图",
+        ru: "КОНЦЕПТУАЛЬНАЯ КАРТА ТИПОВ ЧЕТЫРЕХУГОЛЬНИКОВ",
+        es: "MAPA CONCEPTUAL DE TIPOS DE CUADRILÁTEROS",
+        fr: "CARTE CONCEPTUELLE DES TYPES DE QUADRILATÈRES",
+        pt: "MAPA CONCEITUAL DE TIPOS DE QUADRILÁTEROS",
+        ja: "四角形のタイプの概念図",
         link: "https://bekrmatmt25.my.canva.site/dortgenler-kavram-haritasi"
     },
     {
@@ -251,6 +351,11 @@ window.OyunListesi = [
         ms: "INFERENS UMUM TENTANG SISI EMPAT",
         id: "KESIMPULAN UMUM TENTANG SEGI EMPAT",
         zh: "关于四边形的一般推论",
+        ru: "ОБЩИЕ ВЫВОДЫ О ЧЕТЫРЕХУГОЛЬНИКАХ",
+        es: "INFERENCIAS GENERALES SOBRE CUADRILÁTEROS",
+        fr: "INFERENCES GÉNÉRALES SUR LES QUADRILATÈRES",
+        pt: "INFERÊNCIAS GERAIS SOBRE QUADRILÁTEROS",
+        ja: "四角形に関する一般的な推論",
         link: "https://bekrmatmt25.my.canva.site/dortgenler-genel-cikarimlar"
     },
     {
@@ -262,6 +367,11 @@ window.OyunListesi = [
         ms: "PERWAKILAN PECAHAN YANG BERBEZA",
         id: "BERBAGAI REPRESENTASI PECAHAN",
         zh: "分数的不同表示形式",
+        ru: "РАЗЛИЧНЫЕ ПРЕДСТАВЛЕНИЯ ДРОБЕЙ",
+        es: "DIFERENTES REPRESENTACIONES DE FRACCIONES",
+        fr: "DIFFÉRENTES REPRÉSENTATIONS DES FRACTIONS",
+        pt: "DIFERENTES REPRESENTAÇÕES DE FRAÇÕES",
+        ja: "分数のさまざまな表現",
         link: "https://bekrmatmt25.my.canva.site/kesirlerin-farkl-g-sterimleri"
     },
     {
@@ -273,6 +383,11 @@ window.OyunListesi = [
         ms: "DARIPADA PEPENJURU KEPADA SISI EMPAT (1)",
         id: "DARI DIAGONAL KE SEGI EMPAT (1)",
         zh: "从对角线到四边形 (1)",
+        ru: "ОТ ДИАГОНАЛЕЙ К ЧЕТЫРЕХУГОЛЬНИКАМ (1)",
+        es: "DE LAS DIAGONALES A LOS CUADRILÁTEROS (1)",
+        fr: "DES DIAGONALES AUX QUADRILATÈRES (1)",
+        pt: "DAS DIAGONAIS AOS QUADRILÁTEROS (1)",
+        ja: "対角線から四角形へ (1)",
         link: "https://bekrmatmt25.my.canva.site/k-egenlerden-d-rtgenlere"
     },
     {
@@ -284,6 +399,11 @@ window.OyunListesi = [
         ms: "UNGKAPAN ALGEBRA KONSEP ASAS",
         id: "KONSEP DASAR EKSPRESI ALJABAR",
         zh: "代数式基本概念",
+        ru: "АЛГЕБРАИЧЕСКИЕ ВЫРАЖЕНИЯ: ОСНОВНЫЕ ПОНЯТИЯ",
+        es: "EXPRESIONES ALGEBRAICAS CONCEPTOS BÁSICOS",
+        fr: "EXPRESSIONS ALGÉBRIQUES CONCEPTS DE BASE",
+        pt: "EXPRESSÕES ALGÉBRICAS CONCEITOS BÁSICOS",
+        ja: "代数式の基本概念",
         link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-temel-kavramlar"
     },
     {
@@ -295,6 +415,11 @@ window.OyunListesi = [
         ms: "UNGKAPAN ALGEBRA DARIPADA LISAN KEPADA ALGEBRA",
         id: "EKSPRESI ALJABAR DARI VERBAL KE ALJABAR",
         zh: "代数式：从语言到代数",
+        ru: "АЛГЕБРАИЧЕСКИЕ ВЫРАЖЕНИЯ: ОТ СЛОВ К АЛГЕБРЕ",
+        es: "EXPRESIONES ALGEBRAICAS DE VERBAL A ALGEBRAICO",
+        fr: "EXPRESSIONS ALGÉBRIQUES DU VERBAL À L'ALGÉBRIQUE",
+        pt: "EXPRESSÕES ALGÉBRICAS DO VERBAL PARA O ALGÉBRICO",
+        ja: "代数式：言語から代数へ",
         link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerle-oyun-tasar-m-kopyas"
     },
     {
@@ -306,6 +431,11 @@ window.OyunListesi = [
         ms: "UNGKAPAN ALGEBRA DARIPADA ALGEBRA KEPADA LISAN",
         id: "EKSPRESI ALJABAR DARI ALJABAR KE VERBAL",
         zh: "代数式：从代数到语言",
+        ru: "АЛГЕБРАИЧЕСКИЕ ВЫРАЖЕНИЯ: ОТ АЛГЕБРЫ К СЛОВАМ",
+        es: "EXPRESIONES ALGEBRAICAS DE ALGEBRAICO A VERBAL",
+        fr: "EXPRESSIONS ALGÉBRIQUES DE L'ALGÉBRIQUE AU VERBAL",
+        pt: "EXPRESSÕES ALGÉBRICAS DO ALGÉBRICO PARA O VERBAL",
+        ja: "代数式：代数から言語へ",
         link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadeler-2-cebirden-s-zele"
     },
     {
@@ -317,6 +447,11 @@ window.OyunListesi = [
         ms: "MENGIRA NILAI UNGKAPAN ALGEBRA",
         id: "MENGHITUNG NILAI EKSPRESI ALJABAR",
         zh: "计算代数式的值",
+        ru: "ВЫЧИСЛЕНИЕ ЗНАЧЕНИЙ АЛГЕБРАИЧЕСКИХ ВЫРАЖЕНИЙ",
+        es: "CALCULAR VALORES DE EXPRESIONES ALGEBRAICAS",
+        fr: "CALCUL DES VALEURS D'EXPRESSIONS ALGÉBRIQUES",
+        pt: "CALCULAR VALORES DE EXPRESSÕES ALGÉBRICAS",
+        ja: "代数式の値の計算",
         link: "https://bekrmatmt25.my.canva.site/cebirsel-ifadelerin-degerini-hesaplamak"
     },
     {
@@ -328,6 +463,11 @@ window.OyunListesi = [
         ms: "LANGKAH PENYELIDIKAN (Canva)",
         id: "LANGKAH PENELITIAN (Canva)",
         zh: "研究步骤 (Canva)",
+        ru: "ЭТАПЫ ИССЛЕДОВАНИЯ (Canva)",
+        es: "PASOS DE INVESTIGACIÓN (Canva)",
+        fr: "ÉTAPES DE RECHERCHE (Canva)",
+        pt: "PASSOS DE PESQUISA (Canva)",
+        ja: "研究のステップ (Canva)",
         link: "https://bekrmatmt25.my.canva.site/5-sinif-arastirma-adimlari"
     },
     {
@@ -339,6 +479,11 @@ window.OyunListesi = [
         ms: "LANGKAH PENYELIDIKAN (GitHub)",
         id: "LANGKAH PENELITIAN (GitHub)",
         zh: "研究步骤 (GitHub)",
+        ru: "ЭТАПЫ ИССЛЕДОВАНИЯ (GitHub)",
+        es: "PASOS DE INVESTIGACIÓN (GitHub)",
+        fr: "ÉTAPES DE RECHERCHE (GitHub)",
+        pt: "PASSOS DE PESQUISA (GitHub)",
+        ja: "研究のステップ (GitHub)",
         link: "https://bdemir1499.github.io/5.sinif-arastirma-asamalari/"
     },
     {
@@ -350,6 +495,11 @@ window.OyunListesi = [
         ms: "ELEMEN PEMBANTU DALAM SEGI TIGA",
         id: "UNSUR PEMBANTU DALAM SEGITIGA",
         zh: "三角形中的辅助要素",
+        ru: "ВСПОМОГАТЕЛЬНЫЕ ЭЛЕМЕНТЫ В ТРЕУГОЛЬНИКАХ",
+        es: "ELEMENTOS AUXILIARES EN TRIÁNGULOS",
+        fr: "ÉLÉMENTS AUXILIAIRES DANS LES TRIANGLES",
+        pt: "ELEMENTOS AUXILIARES EM TRIÂNGULOS",
+        ja: "三角形の補助要素",
         link: "https://bekrmatmt25.my.canva.site/ucgende-yardim-i-elemanlar"
     },
     {
@@ -361,6 +511,11 @@ window.OyunListesi = [
         ms: "LUKISAN SEGI TIGA",
         id: "MENGGAMBAR SEGITIGA",
         zh: "三角形绘制",
+        ru: "ПОСТРОЕНИЕ ТРЕУГОЛЬНИКА",
+        es: "DIBUJO DE TRIÁNGULOS",
+        fr: "DESSIN DE TRIANGLE",
+        pt: "DESENHO DE TRIÂNGULOS",
+        ja: "三角形の作図",
         link: "https://bekrmatmt25.my.canva.site/ucgen-cizim-sartlari"
     },
     {
@@ -372,6 +527,11 @@ window.OyunListesi = [
         ms: "KONGRUEN DAN KESERUPAAN DALAM SEGI TIGA",
         id: "KEKONGRUENAN DAN KESEBANGUNAN DALAM SEGITIGA",
         zh: "三角形的全等和相似",
+        ru: "КОНГРУЭНТНОСТЬ И ПОДОБИЕ ТРЕУГОЛЬНИКОВ",
+        es: "CONGRUENCIA Y SEMEJANZA EN TRIÁNGULOS",
+        fr: "CONGRUENCE ET SIMILITUDE DANS LES TRIANGLES",
+        pt: "CONGRUÊNCIA E SEMELHANÇA EM TRIÂNGULOS",
+        ja: "三角形の合同と相似",
         link: "https://bdemir1499.github.io/eslikvebenzerlik/"
     },
     {
@@ -383,6 +543,11 @@ window.OyunListesi = [
         ms: "ELEMEN PRISMA",
         id: "UNSUR-UNSUR PRISMA",
         zh: "棱柱的要素",
+        ru: "ЭЛЕМЕНТЫ ПРИЗМ",
+        es: "ELEMENTOS DE LOS PRISMAS",
+        fr: "ÉLÉMENTS DES PRISMES",
+        pt: "ELEMENTOS DOS PRISMAS",
+        ja: "柱体の要素",
         link: "https://bekrmatmt25.my.canva.site/prizmalarin-elemanlar-ve-a-inimlari"
     },
     {
@@ -394,6 +559,11 @@ window.OyunListesi = [
         ms: "PIRAMID DAN BENTANGANNYA",
         id: "LIMAS DAN JARING-JARINGNYA",
         zh: "棱锥及其展开图",
+        ru: "ПИРАМИДА И ЕЕ РАЗВЕРТКА",
+        es: "PIRÁMIDE Y SU DESARROLLO",
+        fr: "PYRAMIDE ET SON PATRON",
+        pt: "PIRÂMIDE E SUA PLANIFICAÇÃO",
+        ja: "錐体とその展開図",
         link: "https://bekrmatmt25.my.canva.site/piramidin-elemanlar-ve-acinimi"
     },
     {
@@ -401,10 +571,15 @@ window.OyunListesi = [
         en: "PRISM, PYRAMID, CONE, CYLINDER",
         de: "PRISMA, PYRAMIDE, KEGEL, ZYLINDER",
         ar: "المنشور، الهرم، المخروط، الاسطوانة",
-        hi: "प्रिज्म, पिरामिड, शंकु, बेलन",
+        hi: "प्रिज्म, पिраमिड, शंकु, बेलन",
         ms: "PRISMA, PIRAMID, KON, SILINDIR",
         id: "PRISMA, LIMAS, KERUCUT, TABUNG",
         zh: "棱柱、棱锥、圆锥、圆柱",
+        ru: "ПРИЗМА, ПИРАМИДА, КОНУС, ЦИЛИНДР",
+        es: "PRISMA, PIRÁMIDE, CONO, CILINDRO",
+        fr: "PRISME, PYRAMIDE, CÔNE, CYLINDRE",
+        pt: "PRISMA, PIRÂMIDE, CONE, CILINDRO",
+        ja: "柱体、錐体、円錐、円柱",
         link: "https://sites.google.com/view/uc-boyutlu-sekiller/ana-sayfa_1"
     },
     {
@@ -416,6 +591,11 @@ window.OyunListesi = [
         ms: "DARIPADA PEPENJURU KEPADA SISI EMPAT (2)",
         id: "DARI DIAGONAL KE SEGI EMPAT (2)",
         zh: "从对角线到四边形 (2)",
+        ru: "ОТ ДИАГОНАЛЕЙ К ЧЕТЫРЕХУГОЛЬНИКАМ (2)",
+        es: "DE LAS DIAGONALES A LOS CUADRILÁTEROS (2)",
+        fr: "DES DIAGONALES AUX QUADRILATÈRES (2)",
+        pt: "DAS DIAGONAIS AOS QUADRILÁTEROS (2)",
+        ja: "対角線から四角形へ (2)",
         link: "https://bekrmatmt25.my.canva.site/kosegenlerden-dortgenlere"
     }
 ];
@@ -1818,14 +1998,18 @@ if (pageCountLabel) {
     pageCountLabel.addEventListener('click', () => {
         if (!currentPDF) return;
         
-        const gitSayfa = prompt(`${totalPDFPages} sayfa arasından gitmek istediğiniz numarayı yazın:`, currentPDFPage);
+        // --- ÇEVİRİ ENTEGRASYONU ---
+        let t = translations[currentLang];
+        let soruMetni = t.pdf_soru.replace('{0}', totalPDFPages);
+        
+        const gitSayfa = prompt(soruMetni, currentPDFPage);
         if (gitSayfa !== null) {
             const num = parseInt(gitSayfa);
             if (num > 0 && num <= totalPDFPages) {
                 currentPDFPage = num;
                 renderPDFPage(currentPDFPage);
             } else {
-                alert("Geçersiz sayfa numarası girdiniz!");
+                alert("Geçersiz sayfa numarası girdiniz!"); // İstersen burayı da ileride sözlüğe ekleyebilirsin
             }
         }
     });
@@ -1854,9 +2038,12 @@ if (uploadButton && fileInput) {
                     // Sayfayı ekrana çiz (Buton işlem bitince addNewImageToCanvas içinde açılacak)
                     renderPDFPage(currentPDFPage);
 
-                    // --- YENİ: SAYFA SEÇİM PENCERESİNİ AÇ ---
+                    // --- YENİ: SAYFA SEÇİM PENCERESİNİ AÇ (ÇEVİRİLİ) ---
                     setTimeout(() => {
-                        const sayfaGrisi = prompt(`Bu PDF toplam ${totalPDFPages} sayfadır.\nKaçıncı sayfadan devam etmek istersiniz?`, "1");
+                        let t = translations[currentLang];
+                        let soruMetni = t.pdf_soru.replace('{0}', totalPDFPages);
+                        
+                        const sayfaGrisi = prompt(soruMetni, "1");
                         if (sayfaGrisi !== null) {
                             const hedefSayfa = parseInt(sayfaGrisi);
                             if (hedefSayfa > 0 && hedefSayfa <= totalPDFPages) {
@@ -1890,7 +2077,6 @@ if (uploadButton && fileInput) {
         e.target.value = ''; // Aynı dosyayı tekrar seçebilmek için temizle
     };
 }
-
 function addToCanvasAsObject(img) {
     let startWidth = 400;
     if (img.width < 400) startWidth = img.width;
