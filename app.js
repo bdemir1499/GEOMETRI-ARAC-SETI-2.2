@@ -1374,10 +1374,14 @@ function processLassoCut() {
     };
     drawnStrokes.push(newImgStroke);
     
-    selectedItem = newImgStroke;
-    if (typeof setActiveTool === 'function') setActiveTool('move');
-    else currentTool = 'move';
+    // --- BUTONLARIN ÇIKMASI İÇİN KRİTİK 2 SATIR ---
+    selectedItem = newImgStroke; // Yeni kestiğimiz parçayı anında seçiyoruz
+    isMoving = false;            // Sürükleme kilidini kapalı tutuyoruz (sadece butonlar çıksın)
     
+    // Lasso hayalet çizgilerini tamamen temizle
+    lassoPoints = [];
+    isDrawingLasso = false;
+
     if (window.redrawAllStrokes) window.redrawAllStrokes();
 }
 
@@ -2189,32 +2193,43 @@ canvas.addEventListener('pointerdown', (e) => {
         lastDist = 0;
     }
 
-// --- YENİ ÇOKGEN KESME ARACI (Tıkla-Tıkla) ---
+// --- SERBEST KES (LASSO) - TABLET DOSTU GÜNCELLEME ---
     if (currentTool === 'lasso') {
         const pos = getPointerPos(e);
         
         if (!isDrawingLasso) {
-            // İlk tıklama: Kesime başla
             isDrawingLasso = true;
             lassoPoints = [pos];
         } else {
-            // Sonraki tıklamalar: Başlangıç noktasına yakınsa KESİMİ BİTİR
             const startPoint = lassoPoints[0];
+            // Başlangıç noktasına olan uzaklığı hesapla
             const dist = Math.hypot(pos.x - startPoint.x, pos.y - startPoint.y);
             
-            if (lassoPoints.length > 2 && dist < 20) {
+            // Tablette parmakla dokunma hassasiyeti için 20 yerine 45 piksel kullanıyoruz
+            if (lassoPoints.length > 2 && dist < 45) { 
                 isDrawingLasso = false;
-                processLassoCut(); // Kesimi yap
-                lassoPoints = [];  // Hafızayı temizle
+                
+                // Kesme işlemini başlat
+                processLassoCut(); 
+                
+                // Kesim biter bitmez noktaları temizle
+                lassoPoints = []; 
+                
+                // OTOMATİK MOD DEĞİŞİMİ: Kesim bittiği an 'move' moduna geç
+                currentTool = 'move'; 
+                
+                // Görsel olarak butonların aktifliğini güncelle
+                document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+                const moveBtn = document.getElementById('btn-move');
+                if (moveBtn) moveBtn.classList.add('active');
+
             } else {
-                // Değilse yeni köşe ekle
                 lassoPoints.push(pos);
             }
         }
-        redrawAllStrokes();
-        return;
+        if (window.redrawAllStrokes) window.redrawAllStrokes();
+        return; 
     }
-
 
     // --- BUNU EKLE: Parmağı ekrana değdiği an kaydet ---
     pointers.set(e.pointerId, e); 
