@@ -1373,22 +1373,15 @@ function processLassoCut() {
         newImgStroke.imgObj = tempImg;
         if (window.redrawAllStrokes) window.redrawAllStrokes();
     };
-    drawnStrokes.push(newImgStroke);
+   drawnStrokes.push(newImgStroke);
     
-   // --- BUTONLARIN ÇIKMASI İÇİN ŞART ---
-    selectedItem = newImgStroke; // Yeni parçayı anında seç
-    isMoving = false;            // Sürükleme kilidini sıfırla
+    // --- TABLETTE BUTONLARIN ÇIKMASI İÇİN ŞART ---
+    selectedItem = newImgStroke; // Yeni kestiğin parçayı anında seç
+    isMoving = false;            // Sürükleme durumunu kapat
     
-    if (window.redrawAllStrokes) window.redrawAllStrokes();
+    // Aracı 'move' yap (Yukarıda da yaptık ama burada da olması güvenlidir)
+    currentTool = 'move'; 
     
-    // Aracı 'move' (Taşı) yap
-    if (typeof setActiveTool === 'function') setActiveTool('move');
-    else currentTool = 'move';
-    
-    // Lasso noktalarını sıfırla (Hayalet çizgileri silmek için)
-    lassoPoints = [];
-    isDrawingLasso = false;
-
     if (window.redrawAllStrokes) window.redrawAllStrokes();
 }
 
