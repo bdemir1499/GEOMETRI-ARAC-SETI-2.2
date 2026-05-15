@@ -3084,7 +3084,7 @@ if (currentTool === 'pen') {
     
     if (typeof snapIndicator !== 'undefined' && snapIndicator) snapIndicator.style.display = 'none';
 
-    // --- 3. ADIM: KESKİN NİŞANCI LASSO NOKTA KOYMA VE KOPYALAMA (POINTERUP) ---
+   // --- 3. ADIM: KESKİN NİŞANCI LASSO NOKTA KOYMA VE KOPYALAMA (POINTERUP) ---
     if (currentTool === 'lasso') {
         if (!window.isDraggingLassoPoint) return;
         window.isDraggingLassoPoint = false; // Nişangahı kapat
@@ -3104,7 +3104,7 @@ if (currentTool === 'pen') {
                 // 2. ŞEKLİ KAPAT VE KOPYALA (HEDEFE VURULDU!)
                 lassoPoints.push({ x: startPoint.x, y: startPoint.y });
 
-                // --- ÇOKGEN KOPYALAMA (KIRPMA) ALGORİTMASI ---
+                // --- A) ÇOKGEN KOPYALAMA (KIRPMA) ALGORİTMASI ---
                 let minX = Math.min(...lassoPoints.map(p => p.x));
                 let minY = Math.min(...lassoPoints.map(p => p.y));
                 let maxX = Math.max(...lassoPoints.map(p => p.x));
@@ -3124,9 +3124,8 @@ if (currentTool === 'pen') {
                     tempCtx.lineTo(lassoPoints[i].x - minX, lassoPoints[i].y - minY);
                 }
                 tempCtx.closePath();
-                tempCtx.clip(); // <--- İÇİNİ KESECEK MAKAS
+                tempCtx.clip(); 
 
-                // Arka planı (PDF) ve çizimleri maskeye al
                 const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
                 if (bgLayer) {
                     const sX = bgLayer.width / bgLayer.offsetWidth;
@@ -3137,8 +3136,48 @@ if (currentTool === 'pen') {
                 tempCtx.restore();
 
                 const finalImage = tempCanvas.toDataURL('image/png');
+
+
+                // --- B) AKILLI RENK SENSÖRÜ (YENİ EKLENDİ) ---
+                // Çokgenin geometrik merkezini hesapla
+                let cx = 0, cy = 0;
+                for (let p of lassoPoints) { cx += p.x; cy += p.y; }
+                cx /= lassoPoints.length;
+                cy /= lassoPoints.length;
+
+                // Merkezden, ilk noktaya doğru bir vektör fırlat ve 10 piksel daha dışarı çık
+                let dx = lassoPoints[0].x - cx;
+                let dy = lassoPoints[0].y - cy;
+                let dist = Math.hypot(dx, dy) || 1;
                 
-                // Kopya, orijinalin 30px sağ alt çaprazında belirecek
+                let sampleX = lassoPoints[0].x + (dx / dist) * 10;
+                let sampleY = lassoPoints[0].y + (dy / dist) * 10;
+                
+                // Varsayılan zemin rengi (Sensör okuyamazsa buna döner)
+                let detectedColor = (typeof window.isToolThemeBlack !== 'undefined' && window.isToolThemeBlack) ? '#222222' : '#ffffff'; 
+
+                try {
+                    // Ana canvas'tan o hedeflenen noktanın RGB renk kodunu em!
+                    let pxl = canvas.getContext('2d').getImageData(sampleX, sampleY, 1, 1).data;
+                    // Eğer nokta tamamen şeffaf değilse (yani bir renk varsa) o rengi al
+                    if (pxl[3] > 0) { 
+                        detectedColor = `rgba(${pxl[0]}, ${pxl[1]}, ${pxl[2]}, ${pxl[3]/255})`;
+                    }
+                } catch (e) {
+                    // PDF'ler bazen CORS güvenlik duvarına takılırsa program çökmesin diye sessizce atla
+                    console.log("Renk okuma güvenlik duvarına takıldı, varsayılan renk kullanılıyor.");
+                }
+
+                // --- C) KESİLEN YERE BULUNAN RENKTE YAMA YAP (MASKE) ---
+                const maskStroke = {
+                    type: 'lasso-mask',
+                    points: lassoPoints.map(p => ({ x: p.x, y: p.y })),
+                    fillColor: detectedColor // SENSÖRÜN BULDUĞU RENK!
+                };
+                drawnStrokes.push(maskStroke); // Kopyadan ÖNCE yamayı koy
+
+
+                // --- D) KOPYAYI EKRANA YERLEŞTİR ---
                 const newImgStroke = {
                     type: 'image',
                     imgData: finalImage,
@@ -3161,13 +3200,13 @@ if (currentTool === 'pen') {
                 
                 drawnStrokes.push(newImgStroke);
                 
-                // Modu anında "Taşı" yap ve kestiğimiz yeni parçayı seç
+                // Modu Taşı yap
                 if (typeof setActiveTool === 'function') setActiveTool('move');
                 else currentTool = 'move';
                 
                 selectedItem = newImgStroke;
 
-                // İşlemi tamamen sıfırla, kırmızı noktaları sil
+                // İşlemi sıfırla
                 isDrawingLasso = false;
                 window.lassoIsClosing = false;
                 currentMousePos = null;
