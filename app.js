@@ -2913,10 +2913,30 @@ canvas.addEventListener('pointermove', (e) => {
             ctx.stroke();
         }
         else if (isDrawingRectangle && rectStartPoint) {
-            ctx.beginPath();
-            ctx.rect(Math.min(rectStartPoint.x, endPos.x), Math.min(rectStartPoint.y, endPos.y), Math.abs(endPos.x - rectStartPoint.x), Math.abs(endPos.y - rectStartPoint.y));
-            ctx.stroke();
-        } 
+    ctx.beginPath();
+    const rectX = Math.min(rectStartPoint.x, endPos.x);
+    const rectY = Math.min(rectStartPoint.y, endPos.y);
+    const rectW = Math.abs(endPos.x - rectStartPoint.x);
+    const rectH = Math.abs(endPos.y - rectStartPoint.y);
+    
+    ctx.rect(rectX, rectY, rectW, rectH);
+    ctx.stroke();
+
+    // --- ANLIK ÖLÇÜ ETİKETİ GÜNCELLEME ---
+    if (polygonPreviewLabel) {
+        // Uygulamandaki 30px = 1cm kalibrasyonunu kullanıyoruz
+        const cmW = (rectW / 30).toFixed(1).replace('.', ',');
+        const cmH = (rectH / 30).toFixed(1).replace('.', ',');
+        
+        polygonPreviewLabel.innerText = `${cmW} x ${cmH} cm`;
+        
+        // Etiketi imlecin hemen yanına konumlandır
+        polygonPreviewLabel.style.left = (endPos.x + 15) + 'px';
+        polygonPreviewLabel.style.top = (endPos.y - 35) + 'px';
+        polygonPreviewLabel.style.display = 'block';
+        polygonPreviewLabel.classList.remove('hidden');
+    }
+} 
         else if (window.tempPolygonData && window.tempPolygonData.center) {
             const cx = window.tempPolygonData.center.x;
             const cy = window.tempPolygonData.center.y;
