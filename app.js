@@ -736,7 +736,7 @@ let initialDistance = 0;          // Başlangıç parmak mesafesi (zoom için)
 let initialScale = 0;             // Başlangıçta seçili nesnenin genişliği
 let initialCenter = { x: 0, y:  0 }; // İki parmağın merkez noktası (pan için)
 let currentPenColor = '#FFFFFF'; 
-let currentPenWidth = 3;
+let currentPenWidth = 2;
 window.currentLineColor = '#FFFFFF'; // Varsayılan Renk: BEYAZ
 const SNAP_THRESHOLD = 10;
 let returnToSnapshot = false; // İşlem bitince geri dönülecek mi? 
@@ -2828,9 +2828,23 @@ canvas.addEventListener('pointermove', (e) => {
             }
         }
 
+// D) ÇİZGİ UÇ NOKTASI 1 (p1) TAŞIMA
+        else if (selectedPointKey === 'p1') {
+            selectedItem.p1.x = pos.x;
+            selectedItem.p1.y = pos.y;
+            if (selectedItem.vertices) selectedItem.vertices = null;
+        } 
+        // E) ÇİZGİ UÇ NOKTASI 2 (p2) TAŞIMA
+        else if (selectedPointKey === 'p2') {
+            selectedItem.p2.x = pos.x;
+            selectedItem.p2.y = pos.y;
+            if (selectedItem.vertices) selectedItem.vertices = null;
+        }
+
         redrawAllStrokes();
         return; 
     }
+
 
     const isPhysicalTool = ['ruler', 'gonye', 'aciolcer', 'pergel'].includes(currentTool);
     if (isPhysicalTool || currentTool === 'none') return;
