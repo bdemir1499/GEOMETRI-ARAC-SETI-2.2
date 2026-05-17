@@ -736,7 +736,7 @@ let initialDistance = 0;          // Başlangıç parmak mesafesi (zoom için)
 let initialScale = 0;             // Başlangıçta seçili nesnenin genişliği
 let initialCenter = { x: 0, y:  0 }; // İki parmağın merkez noktası (pan için)
 let currentPenColor = '#FFFFFF'; 
-let currentPenWidth = 2;
+let currentPenWidth = 3;
 window.currentLineColor = '#FFFFFF'; // Varsayılan Renk: BEYAZ
 const SNAP_THRESHOLD = 10;
 let returnToSnapshot = false; // İşlem bitince geri dönülecek mi? 
@@ -2828,23 +2828,9 @@ canvas.addEventListener('pointermove', (e) => {
             }
         }
 
-// D) ÇİZGİ UÇ NOKTASI 1 (p1) TAŞIMA
-        else if (selectedPointKey === 'p1') {
-            selectedItem.p1.x = pos.x;
-            selectedItem.p1.y = pos.y;
-            if (selectedItem.vertices) selectedItem.vertices = null;
-        } 
-        // E) ÇİZGİ UÇ NOKTASI 2 (p2) TAŞIMA
-        else if (selectedPointKey === 'p2') {
-            selectedItem.p2.x = pos.x;
-            selectedItem.p2.y = pos.y;
-            if (selectedItem.vertices) selectedItem.vertices = null;
-        }
-
         redrawAllStrokes();
         return; 
     }
-
 
     const isPhysicalTool = ['ruler', 'gonye', 'aciolcer', 'pergel'].includes(currentTool);
     if (isPhysicalTool || currentTool === 'none') return;
@@ -2927,30 +2913,10 @@ canvas.addEventListener('pointermove', (e) => {
             ctx.stroke();
         }
         else if (isDrawingRectangle && rectStartPoint) {
-    ctx.beginPath();
-    const rectX = Math.min(rectStartPoint.x, endPos.x);
-    const rectY = Math.min(rectStartPoint.y, endPos.y);
-    const rectW = Math.abs(endPos.x - rectStartPoint.x);
-    const rectH = Math.abs(endPos.y - rectStartPoint.y);
-    
-    ctx.rect(rectX, rectY, rectW, rectH);
-    ctx.stroke();
-
-    // --- ANLIK ÖLÇÜ ETİKETİ GÜNCELLEME ---
-    if (polygonPreviewLabel) {
-        // Uygulamandaki 30px = 1cm kalibrasyonunu kullanıyoruz
-        const cmW = (rectW / 30).toFixed(1).replace('.', ',');
-        const cmH = (rectH / 30).toFixed(1).replace('.', ',');
-        
-        polygonPreviewLabel.innerText = `${cmW} x ${cmH} cm`;
-        
-        // Etiketi imlecin hemen yanına konumlandır
-        polygonPreviewLabel.style.left = (endPos.x + 15) + 'px';
-        polygonPreviewLabel.style.top = (endPos.y - 35) + 'px';
-        polygonPreviewLabel.style.display = 'block';
-        polygonPreviewLabel.classList.remove('hidden');
-    }
-} 
+            ctx.beginPath();
+            ctx.rect(Math.min(rectStartPoint.x, endPos.x), Math.min(rectStartPoint.y, endPos.y), Math.abs(endPos.x - rectStartPoint.x), Math.abs(endPos.y - rectStartPoint.y));
+            ctx.stroke();
+        } 
         else if (window.tempPolygonData && window.tempPolygonData.center) {
             const cx = window.tempPolygonData.center.x;
             const cy = window.tempPolygonData.center.y;
