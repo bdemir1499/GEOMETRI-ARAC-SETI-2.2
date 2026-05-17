@@ -36,6 +36,8 @@ let isDrawingLasso = false;
 let lassoPoints = [];
 let drawnStrokes = [];
 window.drawnStrokes = drawnStrokes;
+let boxCopies = [];
+window.boxCopies = boxCopies;
 let isDrawing = false;
 let isDrawingRectangle = false;
 let isDrawingPolygon = false;
@@ -1360,6 +1362,7 @@ else if (stroke.type === 'rectangle') {
         if (s.label1 && s.label1.charCodeAt(0) > maxCode) maxCode = s.label1.charCodeAt(0);
         if (s.label2 && s.label2.charCodeAt(0) > maxCode) maxCode = s.label2.charCodeAt(0);
     });
+
     
     // Sıradaki harfe geçer (Z'yi geçerse A'ya döner)
     let nextCode = maxCode + 1;
@@ -1592,7 +1595,8 @@ function processLassoCut() {
         newImgStroke.imgObj = tempImg;
         if (window.redrawAllStrokes) window.redrawAllStrokes();
     };
-   drawnStrokes.push(newImgStroke);
+   boxCopies.push(newImgStroke);
+
     
     // --- TABLETTE BUTONLARIN ÇIKMASI İÇİN ŞART ---
     selectedItem = newImgStroke; // Yeni kestiğin parçayı anında seç
@@ -3153,24 +3157,31 @@ canvas.addEventListener('pointerup', (e) => {
 
             const finalImage = tempCanvas.toDataURL('image/png');
                 
-                // --- 1. EKSİK OLAN SİHİR: KESİLEN YERİ ZEMİN RENGİYLE YAMA YAP (MASKE) ---
-                const maskStroke = {
-                    type: 'lasso-mask',
-                    points: lassoPoints.map(p => ({ x: p.x, y: p.y })), // Kesilen noktaların hafızası
-                    fillColor: (typeof window.isToolThemeBlack !== 'undefined' && window.isToolThemeBlack) ? '#222222' : '#ffffff' // Temana göre delik rengi (Beyaz veya Koyu)
-                };
-                drawnStrokes.push(maskStroke); // Kopyadan ÖNCE maskeyi ekle ki yama altta kalsın
-                // --------------------------------------------------------------------------
+            // --- 1. EKSİK OLAN SİHİR: KESİLEN YERİ ZEMİN RENGİYLE YAMA YAP (MASKE) ---
+            // DÜZELTME: lassoPoints yerine kutunun 4 köşesini verdik
+            const maskStroke = {
+                type: 'lasso-mask',
+                points: [
+                    { x: x, y: y }, 
+                    { x: x + w, y: y }, 
+                    { x: x + w, y: y + h }, 
+                    { x: x, y: y + h }
+                ],
+                fillColor: (typeof window.isToolThemeBlack !== 'undefined' && window.isToolThemeBlack) ? '#222222' : '#ffffff' 
+            };
+            drawnStrokes.push(maskStroke); // Kopyadan ÖNCE maskeyi ekle ki yama altta kalsın
+            // --------------------------------------------------------------------------
 
-                // --- 2. KOPYAYI OLUŞTUR ---
-                // Kopya, orijinalin 30px sağ alt çaprazında belirecek
-                const newImgStroke = {
-                    type: 'image',
+            // --- 2. KOPYAYI OLUŞTUR ---
+            const newImgStroke = {
+                type: 'image',
                 imgData: finalImage,
                 x: x, y: y,
                 width: w, height: h,
                 rotation: 0,
                 isBackground: false,
+                isBoxCopy: true, // DÜZELTME 1: Sayfa değişince silinmemesi için!
+                pageOwner: typeof currentPDFPage !== 'undefined' ? currentPDFPage : 1, // DÜZELTME 2: Hangi PDF sayfasında oluşturulduğunu hatırla
                 imgObj: null 
             };
             
@@ -3180,7 +3191,12 @@ canvas.addEventListener('pointerup', (e) => {
                 newImgStroke.imgObj = tempImg;
                 redrawAllStrokes();
             };
+            
+            // DÜZELTME 3: Yeni kopyayı EKRANA ÇİZDİRMEK için ana listeye de (drawnStrokes) ekledik!
             drawnStrokes.push(newImgStroke);
+            
+            if (!window.boxCopies) window.boxCopies = [];
+            window.boxCopies.push(newImgStroke);
             
             // 3. Modu taşıma yap ve yeni parçayı seç
             if (typeof setActiveTool === 'function') setActiveTool('move');
@@ -3191,7 +3207,6 @@ canvas.addEventListener('pointerup', (e) => {
             redrawAllStrokes();
         }
     }
-
     // --- DİKDÖRTGENİ TAMAMLAMA VE SİSTEME KAYDETME (TEK NESNE MODU) ---
 if (isDrawingRectangle && rectStartPoint && finalPos) {
     const widthPx = Math.abs(finalPos.x - rectStartPoint.x);
@@ -3552,12 +3567,38 @@ async function renderPDFPage(num) {
     const img = new Image();
     img.onload = () => {
         addNewImageToCanvas(img, true);
+        
+        // --- KUTU KOPYALARINI PDF SAYFASINA GÖRE GERİ YÜKLEME YAMASI ---
+        if (window.boxCopies) {
+            window.boxCopies.forEach(copy => {
+                // Eğer kopya mevcut sayfaya aitse VEYA sayfalar arası bağımsızsa ekrana geri bas
+                if (!copy.pageOwner || copy.pageOwner === num) {
+                    // Eğer resim nesnesi henüz yüklenmediyse yeniden oluştur
+                    if (!copy.imgObj) {
+                        const tImg = new Image();
+                        tImg.src = copy.imgData;
+                        tImg.onload = () => {
+                            copy.imgObj = tImg;
+                            if (window.drawnStrokes && !window.drawnStrokes.includes(copy)) {
+                                window.drawnStrokes.push(copy);
+                            }
+                            if (window.redrawAllStrokes) window.redrawAllStrokes();
+                        };
+                    } else {
+                        // Resim zaten yüklüyse doğrudan çizim dizisine geri ekle
+                        if (window.drawnStrokes && !window.drawnStrokes.includes(copy)) {
+                            window.drawnStrokes.push(copy);
+                        }
+                    }
+                }
+            });
+            if (window.redrawAllStrokes) window.redrawAllStrokes();
+        }
     };
     img.src = tempCanvas.toDataURL();
     
     if(pageCountLabel) pageCountLabel.innerText = `Sayfa: ${num} / ${totalPDFPages}`;
 }
-
 
 // --- app.js İÇİNDEKİ addNewImageToCanvas FONKSİYONU ---
 
@@ -3586,18 +3627,17 @@ if (isPDF && typeof pdfImageStroke !== 'undefined' && pdfImageStroke !== null) {
         // 1. Eski PDF sayfasını (arka planı) temizle
         if (stroke === pdfImageStroke) return false;
         
-        // 2. Havada asılı duran KESİLMİŞ PARÇALARI temizle
-        if (stroke.type === 'image' && stroke.isBackground === false) return false;
+        // 2. Havada asılı duran KESİLMİŞ PARÇALARI temizle (KUTU KOPYALARI HARİÇ)
+        if (stroke.type === 'image' && stroke.isBackground === false && !stroke.isBoxCopy) return false;
 
         // 3. ARKADA KALAN YAMALARI (Boyaları) temizle
-        if (stroke.isPatch === true) return false;
+        if (stroke.isPatch === true || stroke.type === 'lasso-mask') return false;
 
-        // Diğer her şeyi (kalem çizimleri vs.) koru
+        // Diğer her şeyi (kalem çizimleri, kutu kopyalarını) koru
         return true;
     }); 
     window.drawnStrokes = drawnStrokes; 
-}
-    // --------------------------------------------
+}    // --------------------------------------------
 
 
     drawnStrokes.push(newStroke);
@@ -4119,46 +4159,87 @@ function olusturYuzenKopya(imgSrc, startX, startY, width, height) {
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp); // Tarayıcı hatasında da bırak
 
-    // --- BOŞLUĞA TIKLAYINCA ANA KANVASA MÜHÜRLE (TABLET ÇOKLU KOPYA ÖNLEYİCİ) ---
+   // --- BOŞLUĞA TIKLAYINCA ANA KANVASA MÜHÜRLE (TABLET ÇOKLU KOPYA ÖNLEYİCİ) ---
     setTimeout(() => {
         let isStamped = false; // Çoklu kopyayı engelleyen kilit
 
         const disariTiklama = (e) => {
-            // 1. Eğer zaten mühürlendiyse veya tıklanan yer kutunun içindeyse işlem yapma
             if (isStamped || container.contains(e.target)) return;
 
-            // 2. Kilidi hemen kapat (Birden fazla kopya oluşmasını engeller)
+            // Eğer döndürme veya boyutlandırma butonlarına basılıyorsa mühürleme yapma
+            if (e.target.closest('.rotate-handle') || e.target.closest('.resize-handle')) return;
+
             isStamped = true;
             window.removeEventListener('pointerdown', disariTiklama, true);
 
-            const rect = canvas.getBoundingClientRect();
-            
-            if (window.drawnStrokes) {
-                // Sadece dikdörtgen içindeki alanı kanvasa mühürle
-                window.drawnStrokes.push({
-                    type: 'image',
-                    imgData: imgSrc, 
-                    // --- KAYMAYI SIFIRLAYAN KESİN KOORDİNATLAR ---
-                    x: parseFloat(container.style.left) - rect.left,
-                    y: parseFloat(container.style.top) - rect.top,
-                    width: parseFloat(container.style.width),
-                    height: parseFloat(container.style.height),
-                    rotation: parseFloat(container.dataset.rotation) || 0,
-                    isBackground: false 
-                });
+            // Sizin orijinal canvas referansınıza (canvas) göre tam uyumlu koordinat yakalama
+            const containerRect = container.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect(); 
 
-                // Ekranı güncelle ve kopyayı kalıcı hale getir
-                if (window.redrawAllStrokes) window.redrawAllStrokes(); 
+            let xKoordinati = parseFloat(container.style.left);
+            let yKoordinati = parseFloat(container.style.top);
+            let genislik = parseFloat(container.style.width);
+            let yukseklik = parseFloat(container.style.height);
+
+            // Dokunmatik ekrandan el çekildiğinde koordinat kaybolursa fiziksel pikselleri kurtar
+            if (isNaN(xKoordinati) || isNaN(yKoordinati)) {
+                xKoordinati = containerRect.left - canvasRect.left;
+                yKoordinati = containerRect.top - canvasRect.top;
+                genislik = containerRect.width;
+                yukseklik = containerRect.height;
             }
-            
-            // 3. Yüzen kutuyu ve diğer izleyicileri temizle
-            container.remove();
+
+            // Hatalı/boş tıklamaları engelle
+            if (genislik < 5 || yukseklik < 5) {
+                if (container && container.parentNode) container.parentNode.removeChild(container);
+                return;
+            }
+
+            // PDF ve Sayfa Hafızasıyla tam uyumlu yeni kopya objesi
+            const newCopy = {
+                type: 'image',
+                imgData: imgSrc, 
+                x: xKoordinati - canvasRect.left, // Kanvasın sol boşluğunu net olarak düşüyoruz
+                y: yKoordinati - canvasRect.top,  // Kanvasın üst boşluğunu net olarak düşüyoruz
+                width: genislik,
+                height: yukseklik,
+                rotation: parseFloat(container.dataset.rotation) || 0,
+                isBackground: false,
+                isBoxCopy: true, 
+                pageOwner: typeof currentPDFPage !== 'undefined' ? currentPDFPage : 1, 
+                imgObj: null
+            };
+
+            // Kanvas çizim motoru tetikleyicisi
+            const imgObj = new Image();
+            imgObj.src = imgSrc;
+            imgObj.onload = () => {
+                newCopy.imgObj = imgObj;
+                
+                // Ana çizim dizisine ekle
+                if (typeof drawnStrokes !== 'undefined') {
+                    drawnStrokes.push(newCopy);
+                }
+                
+                // PDF sayfa hafıza dizisine ekle
+                if (!window.boxCopies) window.boxCopies = [];
+                window.boxCopies.push(newCopy);
+
+                // Kanvas ekranını anında tazeleyip resmi görünür kıl
+                if (window.redrawAllStrokes) window.redrawAllStrokes();
+                
+                console.log("Kutu kopyası başarıyla kanvas hafızasına mühürlendi!");
+            };
+
+            // Geçici çizgili kutuyu ve diğer izleyicileri temizle
+            if (container && container.parentNode) {
+                container.parentNode.removeChild(container);
+            }
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', onUp);
             window.removeEventListener('pointercancel', onUp);
         };
 
-        // 'true' parametresi ile olay yakalama (capture) modunda dinliyoruz
         window.addEventListener('pointerdown', disariTiklama, true); 
     }, 200);
 }
@@ -4680,7 +4761,7 @@ canvas.addEventListener('pointerleave', () => {
 });
 
 // =========================================================================
-// --- OTOMATİK AKILLI YAMA VE KOPYA TEMİZLEME MOTORU (EN ALTA EKLENECEK) ---
+// --- OTOMATİK AKILLI YAMA VE KOPYA TEMİZLEME MOTORU ---
 // =========================================================================
 
 window.temizleLassoVeKopyalar = function() {
@@ -4691,23 +4772,25 @@ window.temizleLassoVeKopyalar = function() {
         for (let i = drawnStrokes.length - 1; i >= 0; i--) {
             let s = drawnStrokes[i];
             
-            // Eğer bu bir yamaysa (lasso-mask) VEYA kesilmiş bir kopyaysa onu sil!
-            if (s.type === 'lasso-mask' || (s.type === 'image' && s.isBackground === false)) {
+            // DÜZELTME: isBoxCopy (Kutu veya Kement kopyası) ise SİLME!
+            // Sadece maskeler (delikler) temizlensin, kopyalar ekranda silgiye kadar yaşasın.
+            if (s.type === 'lasso-mask' || (s.type === 'image' && s.isBackground === false && !s.isBoxCopy)) {
                 drawnStrokes.splice(i, 1);
                 silinenOlduMu = true;
             }
         }
         
-        // Eğer kesilen parça o an elimizde (seçili) ise onu da bırak
-        if (typeof selectedItem !== 'undefined') window.selectedItem = null;
+        // Eğer seçili olan şey silinen bir şeyse seçimi iptal et
+        if (typeof selectedItem !== 'undefined' && selectedItem && !selectedItem.isBoxCopy) {
+             window.selectedItem = null;
+        }
         
-        // Sadece bir şey silindiyse ekranı tazele (Gereksiz yorulmayı önler)
+        // Sadece bir şey silindiyse ekranı tazele
         if (silinenOlduMu && typeof window.redrawAllStrokes === 'function') {
             window.redrawAllStrokes();
         }
     }
 };
-
 // --- OTOMATİK TETİKLEYİCİ (GÖZLEMCİ) - GÜNCELLENMİŞ ---
 document.addEventListener('click', function(e) {
     let element = e.target.closest('button, div, a, i'); 
