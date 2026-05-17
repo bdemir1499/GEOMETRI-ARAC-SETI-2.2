@@ -3133,32 +3133,66 @@ canvas.addEventListener('pointerup', (e) => {
     }
 
 
-// --- E) CANLANDIR (SNAPSHOT) BÖLÜMÜ (GÜNCEL NOKTA ATIŞI KESİM) ---
+// --- E) CANLANDIR (SNAPSHOT) BÖLÜMÜ (MAKSİMUM ÇÖZÜNÜRLÜK - ULTRA HD) ---
     if (currentTool === 'snapshot' && snapshotStart && currentMousePos) {
-        const x = Math.min(snapshotStart.x, currentMousePos.x);
-        const y = Math.min(snapshotStart.y, currentMousePos.y);
-        const w = Math.abs(currentMousePos.x - snapshotStart.x);
-        const h = Math.abs(currentMousePos.y - snapshotStart.y);
+        const x = Math.round(Math.min(snapshotStart.x, currentMousePos.x));
+        const y = Math.round(Math.min(snapshotStart.y, currentMousePos.y));
+        const w = Math.round(Math.abs(currentMousePos.x - snapshotStart.x));
+        const h = Math.round(Math.abs(currentMousePos.y - snapshotStart.y));
 
         if (w > 10 && h > 10) {
+            const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
+            
+            // 1. ÇÖZÜNÜRLÜĞÜ CİDDİ ORANDA ARTIR (Eskiye göre çok daha yüksek)
+            const dpr = window.devicePixelRatio || 1;
+            const KALITE = dpr * 10; // Çarpanı 5'e çıkardık! Gerekirse burayı 6 veya 7 yapabilirsin.
+
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = w;
-            tempCanvas.height = h;
+            tempCanvas.width = w * KALITE;
+            tempCanvas.height = h * KALITE;
             const tempCtx = tempCanvas.getContext('2d');
 
-            // 1. Arka planı ve çizimleri kes
-            const bgLayer = document.getElementById('pdf-canvas') || document.querySelector('.pdf-page-canvas');
-            if (bgLayer) {
-                const sX = bgLayer.width / bgLayer.offsetWidth;
-                const sY = bgLayer.height / bgLayer.offsetHeight;
-                tempCtx.drawImage(bgLayer, x * sX, y * sY, w * sX, h * sY, 0, 0, w, h);
-            }
-            tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
+            // 2. Yüksek çözünürlükte yazıların kenarlarının tırtıklı olmaması için kaliteyi "high" yap
+            tempCtx.imageSmoothingEnabled = true;
+            tempCtx.imageSmoothingQuality = 'high';
 
-            const finalImage = tempCanvas.toDataURL('image/png');
+            if (bgLayer) {
+                const bgRect = bgLayer.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+
+                const offsetX = canvasRect.left - bgRect.left;
+                const offsetY = canvasRect.top - bgRect.top;
+
+                const oranX = bgLayer.width / bgRect.width;
+                const oranY = bgLayer.height / bgRect.height;
+
+                const pdfX = Math.round((x + offsetX) * oranX);
+                const pdfY = Math.round((y + offsetY) * oranY);
+                const pdfW = Math.round(w * oranX);
+                const pdfH = Math.round(h * oranY);
+
+                tempCtx.drawImage(
+                    bgLayer, 
+                    pdfX, pdfY, pdfW, pdfH, 
+                    0, 0, tempCanvas.width, tempCanvas.height 
+                );
+            }
+            
+            if (canvas) {
+                const cRect = canvas.getBoundingClientRect();
+                const cOranX = canvas.width / cRect.width;
+                const cOranY = canvas.height / cRect.height;
                 
-            // --- 1. EKSİK OLAN SİHİR: KESİLEN YERİ ZEMİN RENGİYLE YAMA YAP (MASKE) ---
-            // DÜZELTME: lassoPoints yerine kutunun 4 köşesini verdik
+                tempCtx.drawImage(
+                    canvas, 
+                    Math.round(x * cOranX), Math.round(y * cOranY), Math.round(w * cOranX), Math.round(h * cOranY),
+                    0, 0, tempCanvas.width, tempCanvas.height
+                );
+            }
+
+            const finalImage = tempCanvas.toDataURL('image/png', 1.0);
+            
+            // --- MASKE (YAMA) ---
             const maskStroke = {
                 type: 'lasso-mask',
                 points: [
@@ -3169,10 +3203,9 @@ canvas.addEventListener('pointerup', (e) => {
                 ],
                 fillColor: (typeof window.isToolThemeBlack !== 'undefined' && window.isToolThemeBlack) ? '#222222' : '#ffffff' 
             };
-            drawnStrokes.push(maskStroke); // Kopyadan ÖNCE maskeyi ekle ki yama altta kalsın
-            // --------------------------------------------------------------------------
+            drawnStrokes.push(maskStroke);
 
-            // --- 2. KOPYAYI OLUŞTUR ---
+            // --- KOPYAYI OLUŞTUR ---
             const newImgStroke = {
                 type: 'image',
                 imgData: finalImage,
@@ -3180,8 +3213,8 @@ canvas.addEventListener('pointerup', (e) => {
                 width: w, height: h,
                 rotation: 0,
                 isBackground: false,
-                isBoxCopy: true, // DÜZELTME 1: Sayfa değişince silinmemesi için!
-                pageOwner: typeof currentPDFPage !== 'undefined' ? currentPDFPage : 1, // DÜZELTME 2: Hangi PDF sayfasında oluşturulduğunu hatırla
+                isBoxCopy: true, 
+                pageOwner: typeof currentPDFPage !== 'undefined' ? currentPDFPage : 1, 
                 imgObj: null 
             };
             
@@ -3189,16 +3222,14 @@ canvas.addEventListener('pointerup', (e) => {
             tempImg.src = finalImage;
             tempImg.onload = () => {
                 newImgStroke.imgObj = tempImg;
-                redrawAllStrokes();
+                redrawAllStrokes(); 
             };
             
-            // DÜZELTME 3: Yeni kopyayı EKRANA ÇİZDİRMEK için ana listeye de (drawnStrokes) ekledik!
             drawnStrokes.push(newImgStroke);
             
             if (!window.boxCopies) window.boxCopies = [];
             window.boxCopies.push(newImgStroke);
             
-            // 3. Modu taşıma yap ve yeni parçayı seç
             if (typeof setActiveTool === 'function') setActiveTool('move');
             else currentTool = 'move';
             
@@ -3207,7 +3238,9 @@ canvas.addEventListener('pointerup', (e) => {
             redrawAllStrokes();
         }
     }
-    // --- DİKDÖRTGENİ TAMAMLAMA VE SİSTEME KAYDETME (TEK NESNE MODU) ---
+
+
+  // --- DİKDÖRTGENİ TAMAMLAMA VE SİSTEME KAYDETME (TEK NESNE MODU) ---
 if (isDrawingRectangle && rectStartPoint && finalPos) {
     const widthPx = Math.abs(finalPos.x - rectStartPoint.x);
     const heightPx = Math.abs(finalPos.y - rectStartPoint.y);
@@ -3552,12 +3585,28 @@ async function renderPDFPage(num) {
     if (!currentPDF) return;
     
     const page = await currentPDF.getPage(num);
-    const viewport = page.getViewport({ scale: 2.0 }); // Netlik için 2x kalite
+    
+    // --- BURASI DEĞİŞTİ: OTOMATİK VE YÜKSEK ÇÖZÜNÜRLÜK AYARI ---
+    // Cihazın piksel yoğunluğunu al (Tabletlerde 2 veya 3 olur, PC'de 1 olur)
+    const dpr = window.devicePixelRatio || 1;
+    
+    // NETLİK ÇARPANI: Eski sabit 2.0 yerine, dpr ile çarpılan güçlü bir değer giriyoruz.
+    // Başlangıç için 3 idealdir. (Hala bulanıksa burayı 4 veya 5 yapabilirsin)
+    const KALITE_CARPANI = 3; 
+    const hdScale = dpr * KALITE_CARPANI;
+    
+    const viewport = page.getViewport({ scale: hdScale }); 
+    // -----------------------------------------------------------
 
     const tempCanvas = document.createElement('canvas');
     const tempCtx = tempCanvas.getContext('2d');
     tempCanvas.height = viewport.height;
     tempCanvas.width = viewport.width;
+
+    // --- BURASI EKLENDİ: YAZI KENARLARINI KESKİNLEŞTİRME FİLTRESİ ---
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
+    // ----------------------------------------------------------------
 
     await page.render({
         canvasContext: tempCtx,
@@ -3571,9 +3620,7 @@ async function renderPDFPage(num) {
         // --- KUTU KOPYALARINI PDF SAYFASINA GÖRE GERİ YÜKLEME YAMASI ---
         if (window.boxCopies) {
             window.boxCopies.forEach(copy => {
-                // Eğer kopya mevcut sayfaya aitse VEYA sayfalar arası bağımsızsa ekrana geri bas
                 if (!copy.pageOwner || copy.pageOwner === num) {
-                    // Eğer resim nesnesi henüz yüklenmediyse yeniden oluştur
                     if (!copy.imgObj) {
                         const tImg = new Image();
                         tImg.src = copy.imgData;
@@ -3585,7 +3632,6 @@ async function renderPDFPage(num) {
                             if (window.redrawAllStrokes) window.redrawAllStrokes();
                         };
                     } else {
-                        // Resim zaten yüklüyse doğrudan çizim dizisine geri ekle
                         if (window.drawnStrokes && !window.drawnStrokes.includes(copy)) {
                             window.drawnStrokes.push(copy);
                         }
@@ -3595,11 +3641,10 @@ async function renderPDFPage(num) {
             if (window.redrawAllStrokes) window.redrawAllStrokes();
         }
     };
-    img.src = tempCanvas.toDataURL();
+    img.src = tempCanvas.toDataURL('image/png', 1.0); // Kalite kaybı olmasın diye 1.0 parametresi eklendi
     
     if(pageCountLabel) pageCountLabel.innerText = `Sayfa: ${num} / ${totalPDFPages}`;
 }
-
 // --- app.js İÇİNDEKİ addNewImageToCanvas FONKSİYONU ---
 
 function addNewImageToCanvas(img, isPDF = false) {
