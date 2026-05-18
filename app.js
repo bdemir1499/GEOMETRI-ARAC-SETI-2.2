@@ -2394,7 +2394,16 @@ if (animateButton) {
 
 
 // --- 1. POINTERDOWN (ÖZELLİK KORUMALI & STABİLİZE) ---
+
+
 canvas.addEventListener('pointerdown', (e) => {
+    if (e.cancelable) e.preventDefault();
+    
+    // AKILLI TAHTA İÇİN: Hareket sinyalini bu kanvasa kilitle
+    try { canvas.setPointerCapture(e.pointerId); } catch(err) {}
+
+
+
     // Avuç içi reddi (Palm Rejection)
     if (e.pointerType === 'pen') {
         isPenActive = true;

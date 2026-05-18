@@ -77,15 +77,16 @@ html, body {
     width: 100vw;
     height: 100vh;
     background-color: #0a0a1f; 
-    
-    /* Çizim yaparken tarayıcının 'sayfayı kaydır' demesini engeller */
+    /* Akıllı tahta için hayati kilitler */
     touch-action: none !important; 
-    -ms-touch-action: none !important;
-    
-    /* Kalemin her hareketini yakalaması için zorla aktif yap */
+    user-select: none !important;
+    -webkit-user-select: none !important;
     pointer-events: auto !important;
-    cursor: crosshair;
 }
+
+
+
+
 /* --- BURADAN AŞAĞISI SİZİN PANELLER VE ARAÇ STİLLERİNİZ OLSUN (.panel, .tool-button vs.) --- */
 /* Panellerin Genel Stili */
 .panel {
