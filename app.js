@@ -4270,7 +4270,7 @@ function akilliSekilTani(stroke) {
     const cx = minX + w / 2;
     const cy = minY + h / 2;
 
-    if (maxBoyut < 30) return null; 
+    if (maxBoyut < 75) return null; 
     
     const col = stroke.color;
     const wid = stroke.baseWidth || 3;
