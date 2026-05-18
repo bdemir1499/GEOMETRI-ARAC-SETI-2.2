@@ -2543,10 +2543,10 @@ canvas.addEventListener('pointerdown', (e) => {
 
 
 canvas.addEventListener('pointermove', (e) => {
-    // PARDUS KORUMASI: Tarayıcı müdahalesini engelle
+    // 1. PARDUS/VESTEL KORUMASI: Tarayıcının sayfayı kaydırmasını kesin engelle
     if (e.cancelable) e.preventDefault();
 
-    // --- AVUÇ İÇİ REDDİ (PALM REJECTION) ---
+    // 2. AVUÇ İÇİ REDDİ (Senin orijinal mantığın)
     const currentPointerMove = getPointerInfo(e);
     if (currentPointerMove.type === 'pen') {
         isPenActive = true;
@@ -2556,7 +2556,7 @@ canvas.addEventListener('pointermove', (e) => {
         return; 
     }
 
-    // --- PARDUS ÇİFT SİNYAL FİLTRESİ ---
+    // 3. PARDUS ÇİFT SİNYAL ENGELLEYİCİ
     if (e.pointerType === 'mouse') {
         let hasTouch = false;
         for (let p of pointers.values()) {
@@ -2565,15 +2565,13 @@ canvas.addEventListener('pointermove', (e) => {
         if (hasTouch) return; 
     }
 
-    // Parmağı/Kalemi kaydet
+    // Parmağı/Kalemi sisteme kaydet (e.touches yerine güvenli Map kullanımı)
     pointers.set(e.pointerId, e); 
 
-    // --- TABLET/AKILLI TAHTA: İKİ PARMAK ZOOM ---
+    // --- ZOOM KONTROLÜ (Senin orijinal mantığın - Stabilize edildi) ---
     if (pointers.size === 2) {
         const p = Array.from(pointers.values());
-        const p1 = { x: p[0].clientX, y: p[0].clientY };
-        const p2 = { x: p[1].clientX, y: p[1].clientY };
-        const currentDist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        const currentDist = Math.hypot(p[0].clientX - p[1].clientX, p[0].clientY - p[1].clientY);
 
         if (lastDist > 0) {
             const zoomStep = 1 + (currentDist - lastDist) * 0.003;
@@ -2584,8 +2582,7 @@ canvas.addEventListener('pointermove', (e) => {
                     const newH = bg.height * zoomStep;
                     bg.x -= (newW - bg.width) / 2;
                     bg.y -= (newH - bg.height) / 2;
-                    bg.width = newW;
-                    bg.height = newH;
+                    bg.width = newW; bg.height = newH;
                 });
                 redrawAllStrokes();
             }
@@ -2594,22 +2591,18 @@ canvas.addEventListener('pointermove', (e) => {
         return; 
     }
 
-    // Tek parmak kontrolü
-    if (pointers.size > 1 && e.isPrimary === false) return; 
-
+    // --- KRİTİK DÜZELTME: isPrimary KONTROLÜ KALDIRILDI ---
+    // (Akıllı tahtada çizimin nokta kalmaması için her hareketi kabul etmeliyiz)
     const pos = getPointerPos(e); 
-    currentMousePos = pos;
+    currentMousePos = pos; 
 
-    // --- KESİLEN PARÇA (IMAGE) DÖNDÜRME / BOYUTLANDIRMA ---
+    // 4. KESİLEN PARÇA DÖNDÜRME VE BOYUTLANDIRMA (Senin orijinal mantığın)
     if (window.isImageRotating && selectedItem) {
         const cX = selectedItem.x + selectedItem.width / 2;
         const cY = selectedItem.y + selectedItem.height / 2;
-        const angle = Math.atan2(pos.y - cY, pos.x - cX);
-        selectedItem.rotation = (angle * 180 / Math.PI) + 90;
-        redrawAllStrokes();
-        return;
+        selectedItem.rotation = (Math.atan2(pos.y - cY, pos.x - cX) * 180 / Math.PI) + 90;
+        redrawAllStrokes(); return;
     }
-
     if (window.isImageResizing && selectedItem) {
         const cX = selectedItem.x + selectedItem.width / 2;
         const cY = selectedItem.y + selectedItem.height / 2;
@@ -2618,11 +2611,10 @@ canvas.addEventListener('pointermove', (e) => {
         selectedItem.height = window.startImageHeight * ratio;
         selectedItem.x = cX - selectedItem.width / 2;
         selectedItem.y = cY - selectedItem.height / 2;
-        redrawAllStrokes();
-        return;
+        redrawAllStrokes(); return;
     }
 
-    // --- TAŞIMA (MOVE) MANTIĞI ---
+    // 5. TAŞIMA (MOVE) MANTIĞI (Senin orijinal mantığın)
     if (currentTool === 'move' && isMoving && selectedItem) {
         const dx = pos.x - dragStartPos.x;
         const dy = pos.y - dragStartPos.y;
@@ -2639,81 +2631,55 @@ canvas.addEventListener('pointermove', (e) => {
                 selectedItem.y = (originalStartPos.y || 0) + dy;
             }
             if (selectedItem.vertices) selectedItem.vertices = null;
-        } 
-        else if (selectedPointKey === 'rotate' || selectedPointKey === 'image_rotate') {
+        } else if (['rotate', 'image_rotate', 'resize', 'image_resize'].includes(selectedPointKey)) {
             const isRect = ['rectangle', 'rect', 'image'].includes(selectedItem.type);
             const cX = isRect ? selectedItem.x + selectedItem.width / 2 : selectedItem.center.x;
             const cY = isRect ? selectedItem.y + selectedItem.height / 2 : selectedItem.center.y;
-            const currentAngle = Math.atan2(pos.y - cY, pos.x - cX);
-            const startAngle = Math.atan2(dragStartPos.y - cY, dragStartPos.x - cX);
-            selectedItem.rotation = (originalStartPos.rotation || 0) + (currentAngle - startAngle) * (180 / Math.PI);
-            if (selectedItem.vertices) selectedItem.vertices = null;
-        } 
-        else if (selectedPointKey === 'resize' || selectedPointKey === 'image_resize') {
-            const isRect = ['rectangle', 'rect', 'image'].includes(selectedItem.type);
-            if (isRect) {
-                const sW = initialWidth || selectedItem.width;
-                const sH = initialHeight || selectedItem.height;
-                const startCX = (originalStartPos.x || 0) + (sW / 2);
-                const startCY = (originalStartPos.y || 0) + (sH / 2);
-                const ratio = Math.hypot(pos.x - startCX, pos.y - startCY) / Math.hypot(dragStartPos.x - startCX, dragStartPos.y - startCY);
-                selectedItem.width = sW * ratio;
-                selectedItem.height = sH * ratio;
-                selectedItem.x = startCX - (selectedItem.width / 2);
-                selectedItem.y = startCY - (selectedItem.height / 2);
+            if (selectedPointKey.includes('rotate')) {
+                selectedItem.rotation = (originalStartPos.rotation || 0) + (Math.atan2(pos.y - cY, pos.x - cX) - Math.atan2(dragStartPos.y - cY, dragStartPos.x - cX)) * (180 / Math.PI);
             } else {
-                const distRatio = Math.hypot(pos.x - selectedItem.center.x, pos.y - selectedItem.center.y) / Math.hypot(dragStartPos.x - selectedItem.center.x, dragStartPos.y - selectedItem.center.y);
-                selectedItem.radius = originalStartPos.radius * distRatio;
+                const ratio = Math.hypot(pos.x - cX, pos.y - cY) / Math.hypot(dragStartPos.x - cX, dragStartPos.y - cY);
+                if (isRect) {
+                    selectedItem.width = initialWidth * ratio;
+                    selectedItem.height = initialHeight * ratio;
+                    selectedItem.x = cX - (selectedItem.width / 2);
+                    selectedItem.y = cY - (selectedItem.height / 2);
+                } else { selectedItem.radius = originalStartPos.radius * ratio; }
             }
             if (selectedItem.vertices) selectedItem.vertices = null;
         }
-        redrawAllStrokes();
-        return; 
+        redrawAllStrokes(); return;
     }
 
-    // --- AKILLI YAKALAMA (SNAP) ---
+    // 6. SNAP VE ÖNİZLEMELER (Senin orijinal mantığın)
     if (['point', 'straightLine', 'pen', 'segment'].includes(currentTool)) {
-        const potentialSnap = findSnapPoint(pos); 
-        if (potentialSnap) {
-            snapTarget = potentialSnap;
-            snapIndicator.style.left = `${snapTarget.x}px`;
-            snapIndicator.style.top = `${snapTarget.y}px`;
+        const snap = findSnapPoint(pos); 
+        if (snap) {
+            snapTarget = snap;
+            snapIndicator.style.left = `${snap.x}px`; snapIndicator.style.top = `${snap.y}px`;
             snapIndicator.style.display = 'block';
-        } else {
-            snapTarget = null;
-            snapIndicator.style.display = 'none';
-        }
+        } else { snapTarget = null; snapIndicator.style.display = 'none'; }
     }
 
-    // --- SİLGİ ÖNİZLEMESİ ---
     if (currentTool === 'eraser') {
-        eraserPreview.style.left = `${pos.x}px`;
-        eraserPreview.style.top = `${pos.y}px`;
+        eraserPreview.style.left = `${pos.x}px`; eraserPreview.style.top = `${pos.y}px`;
         eraserPreview.style.display = 'block';
-    } else if (typeof eraserPreview !== 'undefined') {
-        eraserPreview.style.display = 'none';
-    }
+    } else if (typeof eraserPreview !== 'undefined') { eraserPreview.style.display = 'none'; }
 
-    // --- ÇİZİM ÖNİZLEME TETİKLEYİCİSİ (ÇİZGİ VE ÇOKGENLER İÇİN KRİTİK) ---
-    const endPos = snapTarget || pos;
+    // --- ÇİZİM VE LASSO ÖNİZLEME (ÇOKGENLERİN OLUŞMASI İÇİN ŞART) ---
     const isDrawingTool = isDrawingLine || isDrawingInfinityLine || isDrawingSegment || isDrawingRay || isDrawingRectangle || (window.tempPolygonData && window.tempPolygonData.center) || (currentTool === 'snapshot' && snapshotStart);
 
-    if (isDrawingTool) {
-        redrawAllStrokes(); // Akıllı tahtada önizlemenin görünmesini sağlar
-    } else if (currentTool === 'lasso') {
-        if (typeof isDrawingLasso !== 'undefined' && isDrawingLasso) {
-            const mesafe = Math.hypot(pos.x - lassoPoints[0].x, pos.y - lassoPoints[0].y);
-            window.lassoIsClosing = (mesafe < (40 / (globalScale || 1)));
+    if (isDrawingTool || currentTool === 'lasso') {
+        if (currentTool === 'lasso' && isDrawingLasso) {
+            window.lassoIsClosing = Math.hypot(pos.x - lassoPoints[0].x, pos.y - lassoPoints[0].y) < (40 / (globalScale || 1));
         }
-        redrawAllStrokes();
+        redrawAllStrokes(); 
     } else if (isDrawing && currentTool === 'pen') {
-        const pressureMove = currentPointerMove.type === 'pen' ? currentPointerMove.pressure : 1;
-        drawnStrokes[drawnStrokes.length - 1].path.push({x: pos.x, y: pos.y, p: pressureMove});
+        drawnStrokes[drawnStrokes.length - 1].path.push({x: pos.x, y: pos.y, p: currentPointerMove.type === 'pen' ? currentPointerMove.pressure : 1});
         redrawAllStrokes();
     }
 
 }, { passive: false });
-
 
 canvas.addEventListener('pointerup', (e) => {
     isDrawing = false;
