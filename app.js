@@ -2552,7 +2552,7 @@ canvas.addEventListener('pointerdown', (e) => {
 
 
 canvas.addEventListener('pointermove', (e) => {
-    // 1. PARDUS/VESTEL KORUMASI: Tarayıcı kaydırmasını kesin engelle
+    // 1. PARDUS/VESTEL KORUMASI: Tarayıcının sayfayı kaydırmasını kesin engelle
     if (e.cancelable) e.preventDefault();
 
     // 2. AVUÇ İÇİ REDDİ (Senin orijinal mantığın)
@@ -2577,35 +2577,32 @@ canvas.addEventListener('pointermove', (e) => {
     // Parmağı/Kalemi sisteme kaydet
     pointers.set(e.pointerId, e); 
 
-    // --- ZOOM KONTROLÜ (Senin orijinal mantığın - Stabilize edildi) ---
+    // --- ZOOM KONTROLÜ (Senin orijinal mantığın - Özellik korundu) ---
     if (pointers.size === 2) {
         const p = Array.from(pointers.values());
         const currentDist = Math.hypot(p[0].clientX - p[1].clientX, p[0].clientY - p[1].clientY);
-
         if (lastDist > 0) {
             const zoomStep = 1 + (currentDist - lastDist) * 0.003;
             const bgStrokes = drawnStrokes.filter(s => s.isBackground === true);
-            if (bgStrokes.length > 0) {
-                bgStrokes.forEach(bg => {
-                    const newW = bg.width * zoomStep;
-                    const newH = bg.height * zoomStep;
-                    bg.x -= (newW - bg.width) / 2;
-                    bg.y -= (newH - bg.height) / 2;
-                    bg.width = newW; bg.height = newH;
-                });
-                redrawAllStrokes();
-            }
+            bgStrokes.forEach(bg => {
+                const newW = bg.width * zoomStep;
+                const newH = bg.height * zoomStep;
+                bg.x -= (newW - bg.width) / 2;
+                bg.y -= (newH - bg.height) / 2;
+                bg.width = newW; bg.height = newH;
+            });
+            redrawAllStrokes();
         }
         lastDist = currentDist;
         return; 
     }
 
-    // --- KRİTİK DÜZELTME: NOKTA KALMAMASI İÇİN isPrimary ŞARTI KALDIRILDI ---
-    // (Akıllı tahtada çizimin devam etmesi için her hareketi kabul etmeliyiz)
+    // --- AKILLI TAHTA FIX: isPrimary ŞARTI KALDIRILDI ---
+    // Bu satır silindiği için artık kalem hareketleri nokta olarak takılmayacak.
     const pos = getPointerPos(e); 
     currentMousePos = pos; 
 
-    // 4. KESİLEN PARÇA DÖNDÜRME VE BOYUTLANDIRMA (Senin orijinal mantığın)
+    // 4. KESİLEN PARÇA (IMAGE) DÖNDÜRME / BOYUTLANDIRMA (Özellik korundu)
     if (window.isImageRotating && selectedItem) {
         const cX = selectedItem.x + selectedItem.width / 2;
         const cY = selectedItem.y + selectedItem.height / 2;
@@ -2623,51 +2620,53 @@ canvas.addEventListener('pointermove', (e) => {
         redrawAllStrokes(); return;
     }
 
-    // 5. TAŞIMA (MOVE) MANTIĞI (Senin orijinal mantığın - Tüm detaylar dahil)
+    // 5. TAŞIMA (MOVE) MANTIĞI VE CM ETİKETLERİ (Özellik korundu)
     if (currentTool === 'move' && isMoving && selectedItem) {
         const dx = pos.x - dragStartPos.x;
         const dy = pos.y - dragStartPos.y;
 
         if (selectedPointKey === 'self' || selectedPointKey === 'center') {
             if (selectedItem.type === 'arc') {
-                selectedItem.cx = originalStartPos.x + dx;
-                selectedItem.cy = originalStartPos.y + dy;
+                selectedItem.cx = originalStartPos.x + dx; selectedItem.cy = originalStartPos.y + dy;
             } else if (selectedItem.center) {
-                selectedItem.center.x = originalStartPos.x + dx;
-                selectedItem.center.y = originalStartPos.y + dy;
+                selectedItem.center.x = originalStartPos.x + dx; selectedItem.center.y = originalStartPos.y + dy;
             } else {
-                selectedItem.x = (originalStartPos.x || 0) + dx;
-                selectedItem.y = (originalStartPos.y || 0) + dy;
+                selectedItem.x = (originalStartPos.x || 0) + dx; selectedItem.y = (originalStartPos.y || 0) + dy;
             }
-        } else if (['rotate', 'image_rotate', 'resize', 'image_resize'].includes(selectedPointKey)) {
+        } 
+        else if (['rotate', 'image_rotate', 'resize', 'image_resize'].includes(selectedPointKey)) {
             const isRect = ['rectangle', 'rect', 'image'].includes(selectedItem.type);
             const cX = isRect ? selectedItem.x + selectedItem.width / 2 : selectedItem.center.x;
             const cY = isRect ? selectedItem.y + selectedItem.height / 2 : selectedItem.center.y;
+            
             if (selectedPointKey.includes('rotate')) {
-                selectedItem.rotation = (originalStartPos.rotation || 0) + (Math.atan2(pos.y - cY, pos.x - cX) - Math.atan2(dragStartPos.y - cY, dragStartPos.x - cX)) * (180 / Math.PI);
+                const curAng = Math.atan2(pos.y - cY, pos.x - cX);
+                const startAng = Math.atan2(dragStartPos.y - cY, dragStartPos.x - cX);
+                selectedItem.rotation = (originalStartPos.rotation || 0) + (curAng - startAng) * (180 / Math.PI);
             } else {
                 const ratio = Math.hypot(pos.x - cX, pos.y - cY) / Math.hypot(dragStartPos.x - cX, dragStartPos.y - cY);
                 if (isRect) {
-                    selectedItem.width = initialWidth * ratio;
-                    selectedItem.height = initialHeight * ratio;
+                    selectedItem.width = (initialWidth || selectedItem.width) * ratio;
+                    selectedItem.height = (initialHeight || selectedItem.height) * ratio;
                     selectedItem.x = cX - (selectedItem.width / 2);
                     selectedItem.y = cY - (selectedItem.height / 2);
-                    // CM Etiket Gösterimi (Senin mantığın)
+                    // CM Etiket Gösterimi (Senin orijinal mantığın)
                     const previewLabel = document.getElementById('polygon-preview-label');
                     if (previewLabel && selectedItem.type !== 'image') {
                         previewLabel.innerText = `w: ${(selectedItem.width / 30).toFixed(1)} cm, h: ${(selectedItem.height / 30).toFixed(1)} cm`;
-                        previewLabel.style.left = (pos.x + 15) + 'px';
-                        previewLabel.style.top = (pos.y - 35) + 'px';
-                        previewLabel.style.display = 'block';
+                        previewLabel.style.left = (pos.x + 15) + 'px'; previewLabel.style.top = (pos.y - 35) + 'px';
+                        previewLabel.style.display = 'block'; previewLabel.classList.remove('hidden');
                     }
-                } else { selectedItem.radius = originalStartPos.radius * ratio; }
+                } else { 
+                    selectedItem.radius = (originalStartPos.radius || selectedItem.radius) * ratio; 
+                }
             }
         }
         if (selectedItem.vertices) selectedItem.vertices = null;
         redrawAllStrokes(); return;
     }
 
-    // 6. SNAP VE SİLGİ (Senin orijinal mantığın)
+    // 6. SNAP SİSTEMİ (Özellik korundu)
     if (['point', 'straightLine', 'pen', 'segment'].includes(currentTool)) {
         const snap = findSnapPoint(pos); 
         if (snap) {
@@ -2677,26 +2676,28 @@ canvas.addEventListener('pointermove', (e) => {
         } else { snapTarget = null; snapIndicator.style.display = 'none'; }
     }
 
+    // 7. SİLGİ ÖNİZLEMESİ (Özellik korundu)
     if (currentTool === 'eraser') {
         eraserPreview.style.left = `${pos.x}px`; eraserPreview.style.top = `${pos.y}px`;
         eraserPreview.style.display = 'block';
     } else if (typeof eraserPreview !== 'undefined') { eraserPreview.style.display = 'none'; }
 
-    // 7. ÇİZİM VE LASSO ÖNİZLEME (ÇOKGENLERİN OLUŞMASI İÇİN ŞART)
+    // 8. ÇİZİM VE LASSO ÖNİZLEME (Özellik korundu)
     const isDrawingTool = isDrawingLine || isDrawingInfinityLine || isDrawingSegment || isDrawingRay || isDrawingRectangle || (window.tempPolygonData && window.tempPolygonData.center) || (currentTool === 'snapshot' && snapshotStart);
 
     if (isDrawingTool || currentTool === 'lasso') {
         if (currentTool === 'lasso' && isDrawingLasso) {
-            window.lassoIsClosing = Math.hypot(pos.x - lassoPoints[0].x, pos.y - lassoPoints[0].y) < (40 / (globalScale || 1));
+            const dist = Math.hypot(pos.x - lassoPoints[0].x, pos.y - lassoPoints[0].y);
+            window.lassoIsClosing = dist < (40 / (globalScale || 1));
         }
         redrawAllStrokes(); 
     } else if (isDrawing && currentTool === 'pen') {
-        drawnStrokes[drawnStrokes.length - 1].path.push({x: pos.x, y: pos.y, p: currentPointerMove.type === 'pen' ? currentPointerMove.pressure : 1});
+        const pVal = currentPointerMove.type === 'pen' ? currentPointerMove.pressure : 1;
+        drawnStrokes[drawnStrokes.length - 1].path.push({x: pos.x, y: pos.y, p: pVal});
         redrawAllStrokes();
     }
 
 }, { passive: false });
-
 
 
 canvas.addEventListener('pointerup', (e) => {
