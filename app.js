@@ -2646,22 +2646,7 @@ if (typeof eraserPreview !== 'undefined' && eraserPreview) {
 canvas.addEventListener('pointermove', (e) => {
     if (e.cancelable) e.preventDefault();
 
-    // AVUÇ İÇİ REDDİ (SÜREKLİ GÜNCELLEME YAMASI)
-    const currentPointerMove = getPointerInfo(e);
-    
-    if (currentPointerMove.type === 'pen') {
-        isPenActive = true;
-        clearTimeout(penActiveTimer); 
-        penActiveTimer = setTimeout(() => { isPenActive = false; }, 600); 
-    } 
-    // Kalem aktifken gelen sinyal touch ise ve birden fazla parmak/avuç değiyorsa engelle
-    else if (currentPointerMove.type === 'touch' && isPenActive) {
-        if (!e.isPrimary || (e.touches && e.touches.length > 1)) {
-            return; 
-        }
-    }
-    // --- AKILLI TAHTA DONANIM SİNYAL FİLTRESİ (YENİ) ---
-    // Eğer aynı piksele veya 1 piksel yakınına 30ms içinde çift sinyal gelirse hayalettir, engelle.
+    // 1. DONANIM SİNYAL FİLTRESİ (Çift tetiklenmeyi önler)
     if (window.lastEventTime && 
         Math.abs(e.clientX - window.lastEventX) <= 1 && 
         Math.abs(e.clientY - window.lastEventY) <= 1 && 
@@ -2671,12 +2656,15 @@ canvas.addEventListener('pointermove', (e) => {
     window.lastEventX = e.clientX;
     window.lastEventY = e.clientY;
     window.lastEventTime = Date.now();
-    // --------------------------------------------------
 
-    // --- YENİ: PARMAK TAKİBİ VE ZOOM ---
-    pointers.set(e.pointerId, e); 
+    // 2. AKILLI TAHTA SIFIRLAMA YAMASI (HAYALET PARMAKLARI TEMİZLE)
+    // IR Ekranlar parmak kayarken yeni ID üretebilir. Eğer tek temas varsa hafızayı zorla süpürün.
+    if (e.pointerType === 'touch' && (!e.touches || e.touches.length <= 1)) {
+        if (pointers.size > 1) pointers.clear();
+    }
+    pointers.set(e.pointerId, e);
 
-    // --- TABLET/PARDUS: İKİ PARMAK ZOOM ---
+    // 3. İKİ PARMAK ZOOM KONTROLÜ
     if (pointers.size === 2 || (e.touches && e.touches.length === 2)) {
         let p1x, p1y, p2x, p2y;
         if (e.touches && e.touches.length === 2) {
@@ -2687,13 +2675,10 @@ canvas.addEventListener('pointermove', (e) => {
             p1x = p[0].clientX; p1y = p[0].clientY;
             p2x = p[1].clientX; p2y = p[1].clientY;
         }
-
         const currentDist = Math.hypot(p1x - p2x, p1y - p2y);
         if (lastDist > 0) {
-            const delta = currentDist - lastDist;
             const zoomSpeed = 0.003; 
-            const zoomStep = 1 + (delta * zoomSpeed);
-
+            const zoomStep = 1 + (currentDist - lastDist) * zoomSpeed;
             const bgStrokes = drawnStrokes.filter(s => s.isBackground === true);
             if (bgStrokes.length > 0) {
                 bgStrokes.forEach(bg => {
@@ -2711,8 +2696,12 @@ canvas.addEventListener('pointermove', (e) => {
         return; 
     }
 
-    if (pointers.size > 1 && e.isPrimary === false) return; 
+    if (pointers.size > 1 && e.isPrimary === false && (e.touches && e.touches.length > 1)) {
+        // Sadece ekranda GERÇEKTEN birden fazla fiziksel parmak/avuç içi varsa ve birincil değilse engelle
+        return; 
+    }
 
+    // 4. KOORDİNATLARI AKITMAYA BAŞLA (Tıkanıklığı açan ana kısım)
     const pos = getPointerPos(e); 
     currentMousePos = pos;
 
