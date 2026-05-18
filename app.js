@@ -2543,7 +2543,7 @@ canvas.addEventListener('pointerdown', (e) => {
 
 
 canvas.addEventListener('pointermove', (e) => {
-    // 1. PARDUS/VESTEL KORUMASI: Tarayıcının sayfayı kaydırmasını kesin engelle
+    // 1. PARDUS/VESTEL KORUMASI: Tarayıcı kaydırmasını kesin engelle
     if (e.cancelable) e.preventDefault();
 
     // 2. AVUÇ İÇİ REDDİ (Senin orijinal mantığın)
@@ -2556,7 +2556,7 @@ canvas.addEventListener('pointermove', (e) => {
         return; 
     }
 
-    // 3. PARDUS ÇİFT SİNYAL ENGELLEYİCİ
+    // 3. PARDUS ÇİFT SİNYAL ENGELLEYİCİ (Senin orijinal mantığın)
     if (e.pointerType === 'mouse') {
         let hasTouch = false;
         for (let p of pointers.values()) {
@@ -2565,7 +2565,7 @@ canvas.addEventListener('pointermove', (e) => {
         if (hasTouch) return; 
     }
 
-    // Parmağı/Kalemi sisteme kaydet (e.touches yerine güvenli Map kullanımı)
+    // Parmağı/Kalemi sisteme kaydet
     pointers.set(e.pointerId, e); 
 
     // --- ZOOM KONTROLÜ (Senin orijinal mantığın - Stabilize edildi) ---
@@ -2591,8 +2591,8 @@ canvas.addEventListener('pointermove', (e) => {
         return; 
     }
 
-    // --- KRİTİK DÜZELTME: isPrimary KONTROLÜ KALDIRILDI ---
-    // (Akıllı tahtada çizimin nokta kalmaması için her hareketi kabul etmeliyiz)
+    // --- KRİTİK DÜZELTME: NOKTA KALMAMASI İÇİN isPrimary ŞARTI KALDIRILDI ---
+    // (Akıllı tahtada çizimin devam etmesi için her hareketi kabul etmeliyiz)
     const pos = getPointerPos(e); 
     currentMousePos = pos; 
 
@@ -2614,7 +2614,7 @@ canvas.addEventListener('pointermove', (e) => {
         redrawAllStrokes(); return;
     }
 
-    // 5. TAŞIMA (MOVE) MANTIĞI (Senin orijinal mantığın)
+    // 5. TAŞIMA (MOVE) MANTIĞI (Senin orijinal mantığın - Tüm detaylar dahil)
     if (currentTool === 'move' && isMoving && selectedItem) {
         const dx = pos.x - dragStartPos.x;
         const dy = pos.y - dragStartPos.y;
@@ -2630,7 +2630,6 @@ canvas.addEventListener('pointermove', (e) => {
                 selectedItem.x = (originalStartPos.x || 0) + dx;
                 selectedItem.y = (originalStartPos.y || 0) + dy;
             }
-            if (selectedItem.vertices) selectedItem.vertices = null;
         } else if (['rotate', 'image_rotate', 'resize', 'image_resize'].includes(selectedPointKey)) {
             const isRect = ['rectangle', 'rect', 'image'].includes(selectedItem.type);
             const cX = isRect ? selectedItem.x + selectedItem.width / 2 : selectedItem.center.x;
@@ -2644,14 +2643,22 @@ canvas.addEventListener('pointermove', (e) => {
                     selectedItem.height = initialHeight * ratio;
                     selectedItem.x = cX - (selectedItem.width / 2);
                     selectedItem.y = cY - (selectedItem.height / 2);
+                    // CM Etiket Gösterimi (Senin mantığın)
+                    const previewLabel = document.getElementById('polygon-preview-label');
+                    if (previewLabel && selectedItem.type !== 'image') {
+                        previewLabel.innerText = `w: ${(selectedItem.width / 30).toFixed(1)} cm, h: ${(selectedItem.height / 30).toFixed(1)} cm`;
+                        previewLabel.style.left = (pos.x + 15) + 'px';
+                        previewLabel.style.top = (pos.y - 35) + 'px';
+                        previewLabel.style.display = 'block';
+                    }
                 } else { selectedItem.radius = originalStartPos.radius * ratio; }
             }
-            if (selectedItem.vertices) selectedItem.vertices = null;
         }
+        if (selectedItem.vertices) selectedItem.vertices = null;
         redrawAllStrokes(); return;
     }
 
-    // 6. SNAP VE ÖNİZLEMELER (Senin orijinal mantığın)
+    // 6. SNAP VE SİLGİ (Senin orijinal mantığın)
     if (['point', 'straightLine', 'pen', 'segment'].includes(currentTool)) {
         const snap = findSnapPoint(pos); 
         if (snap) {
@@ -2666,7 +2673,7 @@ canvas.addEventListener('pointermove', (e) => {
         eraserPreview.style.display = 'block';
     } else if (typeof eraserPreview !== 'undefined') { eraserPreview.style.display = 'none'; }
 
-    // --- ÇİZİM VE LASSO ÖNİZLEME (ÇOKGENLERİN OLUŞMASI İÇİN ŞART) ---
+    // 7. ÇİZİM VE LASSO ÖNİZLEME (ÇOKGENLERİN OLUŞMASI İÇİN ŞART)
     const isDrawingTool = isDrawingLine || isDrawingInfinityLine || isDrawingSegment || isDrawingRay || isDrawingRectangle || (window.tempPolygonData && window.tempPolygonData.center) || (currentTool === 'snapshot' && snapshotStart);
 
     if (isDrawingTool || currentTool === 'lasso') {
@@ -2680,6 +2687,8 @@ canvas.addEventListener('pointermove', (e) => {
     }
 
 }, { passive: false });
+
+
 
 canvas.addEventListener('pointerup', (e) => {
     isDrawing = false;
