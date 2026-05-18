@@ -2660,14 +2660,18 @@ canvas.addEventListener('pointermove', (e) => {
             return; 
         }
     }
-    // --- PARDUS ÇİFT SİNYAL ENGELLEYİCİ ---
-    if (e.pointerType === 'mouse') {
-        let hasTouch = false;
-        for (let p of pointers.values()) {
-            if (p.pointerType === 'touch' || p.pointerType === 'pen') hasTouch = true;
-        }
-        if (hasTouch) return; 
+    // --- AKILLI TAHTA DONANIM SİNYAL FİLTRESİ (YENİ) ---
+    // Eğer aynı piksele veya 1 piksel yakınına 30ms içinde çift sinyal gelirse hayalettir, engelle.
+    if (window.lastEventTime && 
+        Math.abs(e.clientX - window.lastEventX) <= 1 && 
+        Math.abs(e.clientY - window.lastEventY) <= 1 && 
+        (Date.now() - window.lastEventTime) < 30) {
+        return;
     }
+    window.lastEventX = e.clientX;
+    window.lastEventY = e.clientY;
+    window.lastEventTime = Date.now();
+    // --------------------------------------------------
 
     // --- YENİ: PARMAK TAKİBİ VE ZOOM ---
     pointers.set(e.pointerId, e); 
@@ -3043,16 +3047,12 @@ canvas.addEventListener('pointerup', (e) => {
    
     if (e.pointerType === 'touch' && e.cancelable) e.preventDefault();
 
-// --- PARDUS ÇİFT SİNYAL ENGELLEYİCİ ---
-    if (e.pointerType === 'mouse') {
-        let hasTouch = false;
-        for (let p of pointers.values()) {
-            if (p.pointerType === 'touch' || p.pointerType === 'pen') hasTouch = true;
-        }
-        if (hasTouch) return; // Hayalet fare kalkış yapmasın
+// --- AKILLI TAHTA UP SİNYAL KORUMASI (YENİ) ---
+    if (window.lastUpTime && (Date.now() - window.lastUpTime) < 50) {
+        return; // Çok kısa süreli çift bırakma sinyallerini eler
     }
-    // --------------------------------------
-
+    window.lastUpTime = Date.now();
+    // ----------------------------------------------
 
 // --- BUNLARI EKLE: Kalkan parmağı sil ve zoom'u sıfırla ---
     pointers.delete(e.pointerId); 
@@ -4633,34 +4633,22 @@ if (document.readyState === 'loading') {
 }// Akıllı tahtada parmak/kalem kaydırırken tarayıcının araya girmesini kesin olarak engeller
 const canvasEl = document.getElementById('drawing-canvas');
 
-canvasEl.addEventListener('touchstart', function(e) {
-    if (e.cancelable) e.preventDefault();
-}, { passive: false });
-
-canvasEl.addEventListener('touchmove', function(e) {
-    if (e.cancelable) e.preventDefault();
-}, { passive: false });
-
-
-// Akıllı tahtalarda kalemin sayfayı kaydırmasını (scroll) JS seviyesinde durdurur
-const canvasElement = document.getElementById('drawing-canvas');
-
-canvasElement.addEventListener('touchstart', (e) => {
-    if (e.cancelable) e.preventDefault();
-}, { passive: false });
-
-canvasElement.addEventListener('touchmove', (e) => {
-    if (e.cancelable) e.preventDefault();
-}, { passive: false });
-
-// AKILLI TAHTALARDA KALEMİN KAYDIRMA (SCROLL) YAPMASINI KESİN ENGELLER
-const kanvasSabitleyici = document.getElementById('drawing-canvas');
-if (kanvasSabitleyici) {
-    kanvasSabitleyici.addEventListener('touchmove', function(e) {
-        if (e.cancelable) e.preventDefault();
-    }, { passive: false });
-}
-
+// =========================================================================
+// AKILLI TAHTA KATI EKRAN VE KAYDIRMA (SCROLL) ENGELLEYİCİ SAFEBOCK
+// =========================================================================
+window.addEventListener('load', () => {
+    const kanvasSabitleyici = document.getElementById('drawing-canvas');
+    if (kanvasSabitleyici) {
+        // Tarayıcının kendi iç hareket mekanizmasını CSS ile de tamamen ezüyoruz
+        kanvasSabitleyici.style.touchAction = 'none';
+        kanvasSabitleyici.style.userSelect = 'none';
+        
+        const engelle = (e) => { if (e.cancelable) e.preventDefault(); };
+        
+        kanvasSabitleyici.addEventListener('touchstart', engelle, { passive: false });
+        kanvasSabitleyici.addEventListener('touchmove', engelle, { passive: false });
+    }
+});
 // // =========================================================================
 // KUSURSUZ AKILLI NESNE SİLGİSİ v2 (DİKDÖRTGEN VE İMLEÇ DESTEKLİ)
 // =========================================================================
