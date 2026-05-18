@@ -18,74 +18,67 @@
 }
 
 
-/* ==========================================================
-   1. EVRENSEL SIFIRLAMA VE AKILLI TAHTA (PARDUS) KİLİDİ
-   ========================================================== */
+/* =========================================
+   1. EVRENSEL SIFIRLAMA VE DOKUNMATİK KİLİDİ
+   ========================================= */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     
-    /* Metin seçimini ve sağ tık menüsünü kesin engeller (Nokta sorununu çözer) */
-    -webkit-user-select: none !important;
-    -moz-user-select: none !important;
-    -ms-user-select: none !important;
-    user-select: none !important;
-    
-    -webkit-touch-callout: none !important; /* Uzun basınca çıkan menüyü engeller */
+    /* Metin seçimini ve tıklama parlamalarını engelle (Uygulama hissi) */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
 
 /* Input alanlarına metin seçim izni geri ver */
 input, textarea {
-    -webkit-user-select: text !important;
-    user-select: text !important;
+    -webkit-user-select: text;
+    user-select: text;
 }
 
-/* ==========================================================
-   2. EKRAN SABİTLEME (ADRES ÇUBUĞU ZIPLAMASINI ENGELLER)
-   ========================================================== */
+/* =========================================
+   2. TARAYICI ARAYÜZÜNÜ VE KAYDIRMAYI ÇİVİLEME
+   ========================================= */
 html, body {
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     margin: 0;
     padding: 0;
     
-    /* SAYFAYI EKRANA ÇİVİLER: Tahtada parmakla kaydırmayı imkansız hale getirir */
+    /* SAYFAYI EKRANA ÇİVİLER: Adres çubuğunun ekranı kaydırmasını KESİN engeller */
     position: fixed; 
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     
+    /* Tüm yaylanma, kaydırma ve zoom hareketlerini kapatır */
     overflow: hidden !important; 
-    overscroll-behavior: none !important; /* Kenar yaylanma efektini kapatır */
-    
-    /* Tarayıcıya "dokunma hareketlerine karışma" talimatı verir */
+    overscroll-behavior: none !important; 
     touch-action: none !important; 
-    -ms-touch-action: none !important; 
     
+    /* Tema renkleriniz */
+    font-family: 'Arial', sans-serif;
     background-color: #0d0d2b; 
     color: #00ffcc; 
 }
 
-/* ==========================================================
-   3. KANVAS (ÇİZİM ALANI) - NOKTA BIRAKMA ÇÖZÜMÜ
-   ========================================================== */
+/* =========================================
+   3. ANA ÇİZİM ALANI (KANVAS)
+   ========================================= */
 #drawing-canvas {
     display: block;
     width: 100vw;
     height: 100vh;
     background-color: #0a0a1f; 
-    /* Akıllı tahta için hayati kilitler */
+    
+    /* Kanvas üzerindeki tüm dokunmatik hareketleri JS'e bırak */
     touch-action: none !important; 
-    user-select: none !important;
-    -webkit-user-select: none !important;
-    pointer-events: auto !important;
 }
-
-
-
 
 /* --- BURADAN AŞAĞISI SİZİN PANELLER VE ARAÇ STİLLERİNİZ OLSUN (.panel, .tool-button vs.) --- */
 /* Panellerin Genel Stili */
@@ -1026,4 +1019,3 @@ canvas {
     background: #00ffcc !important;
     color: #0d0d2b !important;
 }
-
