@@ -601,6 +601,8 @@ window.OyunListesi = [
         link: "https://bekrmatmt25.my.canva.site/kosegenlerden-dortgenlere"
     }
 ];
+
+
 // Sayfa açıldığında kırmızı butonun yanlışlıkla görünmesini engellemek için:
 const closePdfBtn = document.getElementById('btn-close-pdf');
 if (closePdfBtn) {
@@ -2395,24 +2397,26 @@ if (animateButton) {
 
 // Mevcut pointerdown dinleyicisinin en başına (yaklaşık 5100. satırlar civarı)
 canvas.addEventListener('pointerdown', (e) => {
-// (Mühürleme kodu tamamen silindi)
-    // AKILLI TAHTA YAMASI:
-    // Eğer kalemle dokunuluyorsa, dokunmatik (el) verisini geçici olarak devre dışı bırak
+    // AKILLI TAHTA GÜVENLİ AVUÇ İÇİ REDDİ YAMASI:
+    // Eğer gelen pointer gerçek bir kalemse korumayı başlat
     if (e.pointerType === 'pen') {
         isPenActive = true;
         clearTimeout(penActiveTimer);
-        // Kalem aktifken el dokunuşlarını 1 saniye boyunca görmezden gel
-        penActiveTimer = setTimeout(() => { isPenActive = false; }, 1000);
+        penActiveTimer = setTimeout(() => { isPenActive = false; }, 600); // Süreyi biraz optimize ettik
     }
 
-    // Eğer el dokunuşu gelirse ve kalem o an aktifse, bu dokunuşu iptal et (Avuç içi engeli)
+    // ÇAKIŞMA ENGELLEYİCİ: Akıllı tahta kalemi touch report ediyorsa 
+    // ve ekranda tek bir temas noktası varsa avuç içi engeline takılma!
     if (e.pointerType === 'touch' && isPenActive) {
-        return; 
+        // Eğer çoklu dokunma (avuç içi) değilse, çizime izin ver
+        if (e.isPrimary === false || (e.touches && e.touches.length > 1)) {
+            console.log("Avuç içi başarıyla reddedildi.");
+            return; 
+        }
     }
-
-    // 1. Tarayıcıyı sabitle
-    if (e.cancelable) e.preventDefault();
-    // NOT: setPointerCapture komutu Vestel tahtaları kilitlediği için tamamen kaldırıldı.
+    
+    // Tarayıcının 'pointercancel' tetiklemesini engelleyen altın vuruş
+    if (e.cancelable) e.preventDefault();    // NOT: setPointerCapture komutu Vestel tahtaları kilitlediği için tamamen kaldırıldı.
 
     // --- KRİTİK EKLENTİ: HAYALET PARMAK SIFIRLAYICI ---
     // Eğer dokunmatik ekrandaysak ve ekrana sadece 1 parmak değiyorsa,
@@ -2640,23 +2644,22 @@ if (typeof eraserPreview !== 'undefined' && eraserPreview) {
 }, { passive: false });
 
 canvas.addEventListener('pointermove', (e) => {
-    // PARDUS KORUMASI: Sürükleme sırasında tarayıcının araya girmesini kesin engelle
     if (e.cancelable) e.preventDefault();
 
-    // --- AVUÇ İÇİ REDDİ (SÜREKLİ GÜNCELLEME) ---
+    // AVUÇ İÇİ REDDİ (SÜREKLİ GÜNCELLEME YAMASI)
     const currentPointerMove = getPointerInfo(e);
     
-    // Eğer kalem ekrana değiyorsa VEYA havadan ekranın üzerinde geziniyorsa (hover)
     if (currentPointerMove.type === 'pen') {
         isPenActive = true;
         clearTimeout(penActiveTimer); 
-        penActiveTimer = setTimeout(() => { isPenActive = false; }, 1000); 
+        penActiveTimer = setTimeout(() => { isPenActive = false; }, 600); 
     } 
-    // Kalem aktifken bir el/parmak değerse REDDET
+    // Kalem aktifken gelen sinyal touch ise ve birden fazla parmak/avuç değiyorsa engelle
     else if (currentPointerMove.type === 'touch' && isPenActive) {
-        return; 
+        if (!e.isPrimary || (e.touches && e.touches.length > 1)) {
+            return; 
+        }
     }
-
     // --- PARDUS ÇİFT SİNYAL ENGELLEYİCİ ---
     if (e.pointerType === 'mouse') {
         let hasTouch = false;
@@ -3207,6 +3210,8 @@ canvas.addEventListener('pointerup', (e) => {
             redrawAllStrokes();
         }
     }
+
+
     // --- DİKDÖRTGENİ TAMAMLAMA VE SİSTEME KAYDETME (TEK NESNE MODU) ---
 if (isDrawingRectangle && rectStartPoint && finalPos) {
     const widthPx = Math.abs(finalPos.x - rectStartPoint.x);
@@ -4569,6 +4574,11 @@ function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     if (window.redrawAllStrokes) window.redrawAllStrokes();
+
+// Kanvasın tarayıcı jestlerini tamamen öldürün (CSS seviyesinde kilit)
+canvas.style.touchAction = 'none';
+canvas.style.userSelect = 'none';
+canvas.style.WebkitUserSelect = 'none';
 }
 
 // ================================================================
